@@ -81,5 +81,5 @@ Verbinden Sie sich mit dem WiFi-Netzwerk (Standard-SSID: `MotoOiler_Config`, kei
 4.  Projekt kompilieren und hochladen (`Upload`).
 5.  Dateisystem ist nicht notwendig (Daten werden im NVS/Preferences gespeichert).
 
----
-*Entwickelt mit ❤️ für Motorradfahrer.*
+
+
