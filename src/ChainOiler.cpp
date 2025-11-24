@@ -64,8 +64,13 @@ void ChainOiler::updateGPS() {
     if (currentMillis - lastGPSUpdate >= GPS_UPDATE_INTERVAL) {
         lastGPSUpdate = currentMillis;
         
-        // Check for valid fix
-        if (gps.location.isValid() && gps.location.age() < 2000) {
+        // Get satellite count first
+        if (gps.satellites.isValid()) {
+            satellites = gps.satellites.value();
+        }
+        
+        // Check for valid fix with minimum satellite count
+        if (gps.location.isValid() && gps.location.age() < 2000 && satellites >= MIN_SATELLITES) {
             gpsFixValid = true;
             lastValidFix = currentMillis;
             
@@ -79,11 +84,6 @@ void ChainOiler::updateGPS() {
                 if (currentSpeed < 0) {
                     currentSpeed = 0;
                 }
-            }
-            
-            // Get satellite count
-            if (gps.satellites.isValid()) {
-                satellites = gps.satellites.value();
             }
             
             // Update distance calculation
