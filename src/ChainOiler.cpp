@@ -142,8 +142,7 @@ uint32_t ChainOiler::calculateOilInterval(float speed) {
                        (SPEED_THRESHOLD_MAX - SPEED_THRESHOLD_MIN);
     
     // Clamp ratio to 0.0 - 1.0
-    if (speedRatio > 1.0f) speedRatio = 1.0f;
-    if (speedRatio < 0.0f) speedRatio = 0.0f;
+    speedRatio = constrain(speedRatio, 0.0f, 1.0f);
     
     // Calculate interval (inverse relationship with speed)
     uint32_t interval = OIL_INTERVAL_MAX - 
@@ -163,8 +162,7 @@ uint8_t ChainOiler::calculatePumpDuty(float speed) {
                        (SPEED_THRESHOLD_MAX - SPEED_THRESHOLD_MIN);
     
     // Clamp ratio to 0.0 - 1.0
-    if (speedRatio > 1.0f) speedRatio = 1.0f;
-    if (speedRatio < 0.0f) speedRatio = 0.0f;
+    speedRatio = constrain(speedRatio, 0.0f, 1.0f);
     
     // Calculate duty cycle
     uint8_t duty = PUMP_MIN_DUTY + 

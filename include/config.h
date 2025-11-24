@@ -78,7 +78,8 @@
 #define GPS_FIX_TIMEOUT 10000  // Consider GPS lost if no fix for 10 seconds
 
 // Satellite count minimum for valid fix
-// 4 satellites are required for accurate 3D positioning (latitude, longitude, altitude)
+// Minimum 4 satellites recommended: 3 for 2D positioning (lat/long) + 1 for improved accuracy
+// While 3 satellites can provide basic 2D position, 4+ ensures better reliability for speed data
 #define MIN_SATELLITES 4
 
 #endif // CONFIG_H
