@@ -76,14 +76,8 @@ void ChainOiler::updateGPS() {
             
             // Get speed in km/h
             if (gps.speed.isValid()) {
-                currentSpeed = gps.speed.kmph();
-                // Cap speed to reasonable values
-                if (currentSpeed > SPEED_THRESHOLD_MAX) {
-                    currentSpeed = SPEED_THRESHOLD_MAX;
-                }
-                if (currentSpeed < 0) {
-                    currentSpeed = 0;
-                }
+                // Constrain speed to valid range
+                currentSpeed = constrain(gps.speed.kmph(), 0.0f, SPEED_THRESHOLD_MAX);
             }
             
             // Update distance calculation
