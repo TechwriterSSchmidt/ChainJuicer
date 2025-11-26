@@ -129,12 +129,17 @@ void Oiler::handleButton() {
         
         // > 10s: Bleeding Mode
         if (duration > BLEEDING_PRESS_MS) {
-            bleedingMode = true;
-            bleedingStartTime = millis();
-            Serial.println("Bleeding Mode STARTED");
-            
-            pumpCycles++; // Bleeding counts as 1 cycle
-            saveConfig(); // Save immediately
+            // SAFETY: Only allow in standstill (< 7 km/h)
+            if (currentSpeed < 7.0) {
+                bleedingMode = true;
+                bleedingStartTime = millis();
+                Serial.println("Bleeding Mode STARTED");
+                
+                pumpCycles++; // Bleeding counts as 1 cycle
+                saveConfig(); // Save immediately
+            } else {
+                Serial.println("Bleeding blocked: Speed > 7 km/h");
+            }
 
             // Reset button start time to avoid re-triggering immediately
             buttonPressStartTime = millis(); 
@@ -328,6 +333,18 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     if (!gpsValid) {
         hasFix = false;
         
+        // Auto-Emergency Mode Logic
+        // If no GPS for > 5 Minutes, activate Emergency Mode automatically
+        if (lastEmergUpdate == 0) {
+            lastEmergUpdate = now; // Start timer
+        } else {
+            // Check if 5 minutes passed without GPS
+            if (now - lastEmergUpdate > 300000) { // 5 Min = 300000 ms
+                emergencyMode = true;
+                // Note: We don't save this to flash, so it resets on reboot if GPS is back
+            }
+        }
+
         // Emergency Mode: If active and no GPS, simulate 50 km/h
         if (emergencyMode) {
             // 50 km/h
@@ -335,10 +352,12 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             // Distance in km = (Speed km/h * Time h)
             // We use the difference to the last execution.
             
-            if (lastEmergUpdate == 0) lastEmergUpdate = now;
-            
-            unsigned long dt = now - lastEmergUpdate;
-            lastEmergUpdate = now;
+            // Use a separate timer for distance calculation to not mess up the 5min timer
+            static unsigned long lastSimStep = 0;
+            if (lastSimStep == 0) lastSimStep = now;
+
+            unsigned long dt = now - lastSimStep;
+            lastSimStep = now;
             
             // Avoid huge jumps if loop was blocked
             if (dt > 1000) dt = 1000; // Cap at 1 second max per iteration
@@ -346,6 +365,10 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
             
             processDistance(distKm, simSpeed);
+        } else {
+            // Reset sim timer if not in emergency mode
+            static unsigned long lastSimStep = 0;
+            lastSimStep = 0; 
         }
         
         return;
@@ -357,11 +380,13 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastLon = lon;
         hasFix = true;
         lastEmergUpdate = 0; // Reset Emergency Timer when GPS is back
+        emergencyMode = false; // Disable Emergency Mode automatically
         return;
     }
     
     // Reset Emergency Timer if we have valid GPS
     lastEmergUpdate = 0;
+    emergencyMode = false; // Disable Emergency Mode automatically
 
     // Calculate distance (Haversine or TinyGPS function)
     double distKm = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon) / 1000.0;
