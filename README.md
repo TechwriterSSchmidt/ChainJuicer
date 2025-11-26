@@ -70,6 +70,7 @@ Verbinden Sie sich mit dem WiFi-Netzwerk (Standard-SSID: `MotoOiler_Config`, kei
 ## ⚙️ Technische Details
 
 *   **Non-Blocking:** Die Ansteuerung der Pumpe erfolgt asynchron. GPS-Daten werden auch während des Pumpens weiter verarbeitet.
+*   **Smart Oiling (Hysterese):** Die Ölung wird bereits bei **95% der errechneten Distanz** ausgelöst. Diese Sicherheitsmarge verhindert "Double Oiling" bei Geschwindigkeitswechseln und stellt sicher, dass Intervalle zuverlässig eingehalten werden.
 *   **Speicherschutz:** Der Kilometerstand wird intelligent gespeichert (bei Stillstand, aber max. alle 2 Minuten), um den Flash-Speicher zu schonen.
 *   **Zeitzone:** Automatische Berechnung der Mitteleuropäischen Zeit (MEZ/MESZ) basierend auf dem GPS-Datum.
 

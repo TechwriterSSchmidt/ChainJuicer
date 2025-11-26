@@ -411,7 +411,10 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             // Debug Output
             // Serial.printf("Speed: %.1f, Dist: %.4f, Prog: %.4f\n", speedKmh, distKm, currentProgress);
 
-            if (currentProgress >= 1.0) {
+            // Early Oiling: 95% instead of 100% Virtual Distance
+            // Prevents edge cases during mode switches
+            // 5% safety margin eliminates double oilings
+            if (currentProgress >= 0.95) {
                 triggerOil(ranges[activeRangeIndex].pulses);
                 currentProgress = 0.0; // Reset
                 saveProgress(); // Save progress
