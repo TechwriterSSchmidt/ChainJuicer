@@ -7,11 +7,11 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 *   **Geschwindigkeitsabhängige Ölung:** 5 konfigurierbare Geschwindigkeitsbereiche mit individuellen Intervallen (km) und Pump-Impulsen.
 *   **GPS-Präzision:** Exakte Distanzmessung via GPS-Modul (TinyGPS++).
 *   **Regenmodus:** Verdoppelt die Ölmenge bei Nässe. Aktivierbar per Taster. Automatische Abschaltung nach 30 Minuten.
-*   **Notlauf-Modus (Emergency Mode):** Simuliert eine Geschwindigkeit von 50 km/h bei GPS-Ausfall, um die Kettenschmierung sicherzustellen.
+*   **Notlauf-Modus (Emergency Mode):** Aktiviert sich automatisch, wenn länger als 5 Minuten kein GPS-Signal empfangen wird (auch direkt nach dem Start). Simuliert 50 km/h, um die Schmierung sicherzustellen. Deaktiviert sich automatisch bei GPS-Empfang.
 *   **Smart WiFi & Webinterface:**
     *   Konfiguration aller Parameter bequem per Smartphone.
-    *   Aktivierung nur im Stand (Sicherheitsfeature).
-    *   Automatische Abschaltung bei Fahrtantritt (> 10 km/h) oder Inaktivität.
+    *   Aktivierung nur im Stand (< 7 km/h) durch langen Tastendruck (> 3s).
+    *   Automatische Abschaltung bei Fahrtantritt (> 10 km/h) oder Inaktivität (5 Min).
 *   **Nachtmodus:** Automatische Dimmung der Status-LED basierend auf der GPS-Uhrzeit (inkl. Sommerzeit-Korrektur).
 *   **Entlüftungsmodus (Bleeding):** Dauerpumpen zum Füllen der Ölleitung nach Wartungsarbeiten.
 *   **Datensicherheit:** Kilometerstand und Einstellungen werden dauerhaft im Flash-Speicher (NVS) gespeichert.
@@ -44,8 +44,8 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 | Aktion | Dauer | Bedingung | Funktion |
 | :--- | :--- | :--- | :--- |
 | **Kurz drücken** | < 1.5s | Immer | **Regenmodus** Ein/Aus (LED: Blau) |
-| **Halten** | > 3s | Im Stand (< 5 km/h) | **WiFi & Webinterface** aktivieren (LED: Weiß blinkend) |
-| **Lang halten** | > 10s | Immer | **Entlüftungsmodus** (Bleeding) starten (LED: Rot blinkend) |
+| **Halten** | > 3s | Im Stand (< 7 km/h) | **WiFi & Webinterface** aktivieren (LED: Weiß blinkend) |
+| **Lang halten** | > 10s | Im Stand (< 7 km/h) | **Entlüftungsmodus** (Bleeding) starten (LED: Rot blinkend) |
 
 ### LED Status-Codes
 

@@ -1,0 +1,17 @@
+{
+    "configurations": [
+        {
+            "name": "PlatformIO",
+            "includePath": [],
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true,
+                "path": []
+            },
+            "compileCommands": "${workspaceFolder}/compile_commands.json",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
