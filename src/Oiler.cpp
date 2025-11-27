@@ -60,6 +60,14 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     nightBrightness = 15; // Very dim
     currentHour = 12;    // Default noon
 
+    // Tank Monitor Defaults
+    tankMonitorEnabled = false;
+    tankCapacityMl = 100.0;
+    currentTankLevelMl = 100.0;
+    dropsPerMl = 20;
+    dropsPerPulse = 5;
+    tankWarningThresholdPercent = 10;
+    
     lastEmergUpdate = 0;
     lastStandstillSaveTime = 0;
     
@@ -222,6 +230,15 @@ void Oiler::updateLED() {
         color = strip.Color(0, 255, 0);
     }
 
+    // Tank Warning Overlay (Red Blink if low)
+    // Blink every 2 seconds for 200ms if tank is low
+    if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+        if ((now % 2000) < 200) {
+            strip.setBrightness(ledBrightnessHigh); // Bright warning
+            color = strip.Color(255, 0, 0); // Red
+        }
+    }
+
     strip.setPixelColor(0, color);
     strip.show();
 }
@@ -251,6 +268,14 @@ void Oiler::loadConfig() {
     // Load Stats
     totalDistance = preferences.getDouble("totalDist", 0.0);
     pumpCycles = preferences.getUInt("pumpCount", 0);
+
+    // Load Tank Monitor
+    tankMonitorEnabled = preferences.getBool("tank_en", false);
+    tankCapacityMl = preferences.getFloat("tank_cap", 100.0);
+    currentTankLevelMl = preferences.getFloat("tank_lvl", 100.0);
+    dropsPerMl = preferences.getInt("drop_ml", 20);
+    dropsPerPulse = preferences.getInt("drop_pls", 5);
+    tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
 
     validateConfig();
     rebuildLUT(); // Re-calculate LUT after loading config
@@ -286,6 +311,14 @@ void Oiler::saveConfig() {
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
 
+    // Save Tank Monitor
+    preferences.putBool("tank_en", tankMonitorEnabled);
+    preferences.putFloat("tank_cap", tankCapacityMl);
+    preferences.putFloat("tank_lvl", currentTankLevelMl);
+    preferences.putInt("drop_ml", dropsPerMl);
+    preferences.putInt("drop_pls", dropsPerPulse);
+    preferences.putInt("tank_warn", tankWarningThresholdPercent);
+
     // Save Stats
     preferences.putDouble("totalDist", totalDistance);
     preferences.putUInt("pumpCount", pumpCycles);
@@ -300,6 +333,9 @@ void Oiler::saveProgress() {
         preferences.putDouble("totalDist", totalDistance);
         preferences.putUInt("pumpCount", pumpCycles);
         
+        // Save Tank Level
+        preferences.putFloat("tank_lvl", currentTankLevelMl);
+
         progressChanged = false;
         Serial.println("Progress & Stats saved.");
     }
@@ -475,6 +511,15 @@ void Oiler::triggerOil(int pulses) {
     pumpCycles++; // Stats
     progressChanged = true; // Mark for saving
 
+    // Tank Monitor Logic
+    if (tankMonitorEnabled) {
+        float mlConsumed = (float)(pulses * dropsPerPulse) / (float)dropsPerMl;
+        currentTankLevelMl -= mlConsumed;
+        if (currentTankLevelMl < 0) currentTankLevelMl = 0;
+        
+        Serial.printf("Oil consumed: %.2f ml, Remaining: %.2f ml\n", mlConsumed, currentTankLevelMl);
+    }
+
     // Initialize Non-Blocking Oiling
     isOiling = true;
     oilingPulsesRemaining = pulses;
@@ -581,4 +626,15 @@ void Oiler::rebuildLUT() {
             }
         }
     }
+}
+
+void Oiler::setTankFill(float levelMl) {
+    currentTankLevelMl = levelMl;
+    if (currentTankLevelMl > tankCapacityMl) currentTankLevelMl = tankCapacityMl;
+    saveConfig();
+}
+
+void Oiler::resetTankToFull() {
+    currentTankLevelMl = tankCapacityMl;
+    saveConfig();
 }

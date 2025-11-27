@@ -15,6 +15,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
     *   Automatische Abschaltung bei Fahrtantritt (> 10 km/h) oder Inaktivität (5 Min).
 *   **Nachtmodus:** Automatische Dimmung der Status-LED basierend auf der GPS-Uhrzeit (inkl. Sommerzeit-Korrektur).
 *   **Entlüftungsmodus (Bleeding):** Dauerpumpen zum Füllen der Ölleitung nach Wartungsarbeiten.
+*   **Tank-Monitor:** Berechnet den Ölverbrauch basierend auf Pumpstößen und warnt (blinkende LED), wenn der Vorrat zur Neige geht. Konfigurierbar (Tankgröße, Tropfen/ml).
 *   **Datensicherheit:** Kilometerstand und Einstellungen werden dauerhaft im Flash-Speicher (NVS) gespeichert.
 *   **Sicherheit:** Watchdog-Timer (WDT) und Schutz vor ungewolltem Pumpen beim Booten.
 

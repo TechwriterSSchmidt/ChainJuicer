@@ -111,6 +111,17 @@ private:
     int oilingPulsesRemaining;
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW
+
+    // Tank Monitor
+    bool tankMonitorEnabled;
+    float tankCapacityMl;
+    float currentTankLevelMl;
+    int dropsPerMl;
+    int dropsPerPulse;
+    int tankWarningThresholdPercent;
+
+    void setTankFill(float levelMl); // Manually set level (e.g. refill)
+    void resetTankToFull();
 };
 
 #endif
