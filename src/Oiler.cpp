@@ -73,6 +73,7 @@ void Oiler::begin() {
 
     // Hardware Init
     pinMode(BUTTON_PIN, INPUT_PULLUP);
+    pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP); // Init onboard button
     strip.begin();
     strip.setBrightness(ledBrightnessDim);
     strip.show(); // All pixels off
@@ -104,7 +105,8 @@ void Oiler::loop() {
 
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
-    bool currentReading = !digitalRead(BUTTON_PIN);
+    // Check both external button AND onboard boot button
+    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
     // Debounce (simple)
     if (currentReading != lastButtonState) {
@@ -540,7 +542,7 @@ bool Oiler::isButtonPressed() {
     // Since this is called from main loop for WiFi activation (long hold), 
     // a simple raw read is usually fine. 
     // But to be cleaner and use the class logic:
-    return !digitalRead(BUTTON_PIN); // Active LOW -> returns true if pressed
+    return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
 }
 
 void Oiler::rebuildLUT() {
