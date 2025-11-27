@@ -28,7 +28,7 @@
 #define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
 
 // AP Configuration
-#define AP_SSID "MotoOiler_Config"
+#define AP_SSID "ChainJuicer"
 // No password required
 
 

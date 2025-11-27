@@ -6,6 +6,9 @@
 #include <Adafruit_NeoPixel.h>
 
 #define SPEED_BUFFER_SIZE 5
+#define LUT_STEP 5
+#define LUT_MAX_SPEED 300
+#define LUT_SIZE ((LUT_MAX_SPEED / LUT_STEP) + 1)
 
 class Oiler {
 public:
@@ -53,6 +56,9 @@ private:
     int pumpPin;
     int currentHour;
     SpeedRange ranges[NUM_RANGES];
+    float intervalLUT[LUT_SIZE]; // Lookup Table for smoothed intervals
+    void rebuildLUT(); // Helper to fill LUT
+
     float currentProgress; // 0.0 bis 1.0 (1.0 = Ölen fällig)
     
     double lastLat;
@@ -80,6 +86,7 @@ private:
     bool buttonState;
     bool lastButtonState;
     float currentSpeed; // Added for logic suppression
+    float smoothedInterval; // Low-Pass Filter für Intervall
     
     // LED
     Adafruit_NeoPixel strip;

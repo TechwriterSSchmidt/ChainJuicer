@@ -40,6 +40,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     lastButtonState = false;
     lastLedUpdate = 0;
     currentSpeed = 0.0;
+    smoothedInterval = 0.0; // Init
 
     // Oiling State Init
     isOiling = false;
@@ -61,6 +62,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 
     lastEmergUpdate = 0;
     lastStandstillSaveTime = 0;
+    
+    // Init LUT
+    rebuildLUT();
 }
 
 void Oiler::begin() {
@@ -247,6 +251,7 @@ void Oiler::loadConfig() {
     pumpCycles = preferences.getUInt("pumpCount", 0);
 
     validateConfig();
+    rebuildLUT(); // Re-calculate LUT after loading config
 }
 
 void Oiler::validateConfig() {
@@ -282,6 +287,8 @@ void Oiler::saveConfig() {
     // Save Stats
     preferences.putDouble("totalDist", totalDistance);
     preferences.putUInt("pumpCount", pumpCycles);
+    
+    rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
 void Oiler::saveProgress() {
@@ -420,8 +427,20 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     if (activeRangeIndex != -1) {
         // Virtual distance calculation:
         // We add % progress to next oiling, not km.
-        // This solves the problem when switching speed ranges.
-        float interval = ranges[activeRangeIndex].intervalKm;
+        
+        // 1. Get Target Interval from LUT (Linear Interpolation)
+        int lutIndex = (int)(speedKmh / LUT_STEP);
+        if (lutIndex < 0) lutIndex = 0;
+        if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
+        
+        float targetInterval = intervalLUT[lutIndex];
+        
+        // 2. Low-Pass Filter (Additional Smoothing)
+        if (smoothedInterval == 0.0) smoothedInterval = targetInterval; // Init
+        smoothedInterval = (smoothedInterval * 0.95) + (targetInterval * 0.05);
+
+        float interval = smoothedInterval;
+
         if (interval > 0) {
             float progressDelta = distKm / interval;
             
@@ -522,4 +541,42 @@ bool Oiler::isButtonPressed() {
     // a simple raw read is usually fine. 
     // But to be cleaner and use the class logic:
     return !digitalRead(BUTTON_PIN); // Active LOW -> returns true if pressed
+}
+
+void Oiler::rebuildLUT() {
+    // 1. Define Anchors (Center points of ranges)
+    struct Anchor { float speed; float interval; };
+    Anchor anchors[NUM_RANGES];
+
+    for(int i=0; i<NUM_RANGES; i++) {
+        float center;
+        if (i == NUM_RANGES - 1) {
+            // Last range (e.g. 95-999). Use start + 10km/h as anchor to avoid stretching
+            center = ranges[i].minSpeed + 10.0;
+        } else {
+            center = (ranges[i].minSpeed + ranges[i].maxSpeed) / 2.0;
+        }
+        anchors[i].speed = center;
+        anchors[i].interval = ranges[i].intervalKm;
+    }
+
+    // 2. Fill LUT with linear interpolation
+    for (int i=0; i<LUT_SIZE; i++) {
+        float speed = i * LUT_STEP;
+        
+        if (speed <= anchors[0].speed) {
+            intervalLUT[i] = anchors[0].interval;
+        } else if (speed >= anchors[NUM_RANGES-1].speed) {
+            intervalLUT[i] = anchors[NUM_RANGES-1].interval;
+        } else {
+            // Interpolate between anchors
+            for (int j=0; j<NUM_RANGES-1; j++) {
+                if (speed >= anchors[j].speed && speed < anchors[j+1].speed) {
+                    float slope = (anchors[j+1].interval - anchors[j].interval) / (anchors[j+1].speed - anchors[j].speed);
+                    intervalLUT[i] = anchors[j].interval + slope * (speed - anchors[j].speed);
+                    break;
+                }
+            }
+        }
+    }
 }
