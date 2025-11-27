@@ -8,6 +8,7 @@
 #define GPS_RX_PIN 16      // GPS RX to ESP TX
 #define GPS_TX_PIN 17      // GPS TX to ESP RX
 #define BUTTON_PIN 4       // Handlebar button (connected to GND, INPUT_PULLUP)
+#define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 #define LED_PIN 5          // WS2812B Data Pin
 
 #define GPS_BAUD 38400
@@ -28,7 +29,7 @@
 #define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
 
 // AP Configuration
-#define AP_SSID "MotoOiler_Config"
+#define AP_SSID "ChainJuicer"
 // No password required
 
 

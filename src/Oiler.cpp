@@ -40,6 +40,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     lastButtonState = false;
     lastLedUpdate = 0;
     currentSpeed = 0.0;
+    smoothedInterval = 0.0; // Init
 
     // Oiling State Init
     isOiling = false;
@@ -59,8 +60,19 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     nightBrightness = 15; // Very dim
     currentHour = 12;    // Default noon
 
+    // Tank Monitor Defaults
+    tankMonitorEnabled = false;
+    tankCapacityMl = 100.0;
+    currentTankLevelMl = 100.0;
+    dropsPerMl = 20;
+    dropsPerPulse = 5;
+    tankWarningThresholdPercent = 10;
+    
     lastEmergUpdate = 0;
     lastStandstillSaveTime = 0;
+    
+    // Init LUT
+    rebuildLUT();
 }
 
 void Oiler::begin() {
@@ -69,6 +81,7 @@ void Oiler::begin() {
 
     // Hardware Init
     pinMode(BUTTON_PIN, INPUT_PULLUP);
+    pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP); // Init onboard button
     strip.begin();
     strip.setBrightness(ledBrightnessDim);
     strip.show(); // All pixels off
@@ -100,7 +113,8 @@ void Oiler::loop() {
 
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
-    bool currentReading = !digitalRead(BUTTON_PIN);
+    // Check both external button AND onboard boot button
+    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
     // Debounce (simple)
     if (currentReading != lastButtonState) {
@@ -216,6 +230,15 @@ void Oiler::updateLED() {
         color = strip.Color(0, 255, 0);
     }
 
+    // Tank Warning Overlay (Red Blink if low)
+    // Blink every 2 seconds for 200ms if tank is low
+    if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+        if ((now % 2000) < 200) {
+            strip.setBrightness(ledBrightnessHigh); // Bright warning
+            color = strip.Color(255, 0, 0); // Red
+        }
+    }
+
     strip.setPixelColor(0, color);
     strip.show();
 }
@@ -246,7 +269,16 @@ void Oiler::loadConfig() {
     totalDistance = preferences.getDouble("totalDist", 0.0);
     pumpCycles = preferences.getUInt("pumpCount", 0);
 
+    // Load Tank Monitor
+    tankMonitorEnabled = preferences.getBool("tank_en", false);
+    tankCapacityMl = preferences.getFloat("tank_cap", 100.0);
+    currentTankLevelMl = preferences.getFloat("tank_lvl", 100.0);
+    dropsPerMl = preferences.getInt("drop_ml", 20);
+    dropsPerPulse = preferences.getInt("drop_pls", 5);
+    tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
+
     validateConfig();
+    rebuildLUT(); // Re-calculate LUT after loading config
 }
 
 void Oiler::validateConfig() {
@@ -279,9 +311,19 @@ void Oiler::saveConfig() {
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
 
+    // Save Tank Monitor
+    preferences.putBool("tank_en", tankMonitorEnabled);
+    preferences.putFloat("tank_cap", tankCapacityMl);
+    preferences.putFloat("tank_lvl", currentTankLevelMl);
+    preferences.putInt("drop_ml", dropsPerMl);
+    preferences.putInt("drop_pls", dropsPerPulse);
+    preferences.putInt("tank_warn", tankWarningThresholdPercent);
+
     // Save Stats
     preferences.putDouble("totalDist", totalDistance);
     preferences.putUInt("pumpCount", pumpCycles);
+    
+    rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
 void Oiler::saveProgress() {
@@ -291,6 +333,9 @@ void Oiler::saveProgress() {
         preferences.putDouble("totalDist", totalDistance);
         preferences.putUInt("pumpCount", pumpCycles);
         
+        // Save Tank Level
+        preferences.putFloat("tank_lvl", currentTankLevelMl);
+
         progressChanged = false;
         Serial.println("Progress & Stats saved.");
     }
@@ -420,8 +465,20 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     if (activeRangeIndex != -1) {
         // Virtual distance calculation:
         // We add % progress to next oiling, not km.
-        // This solves the problem when switching speed ranges.
-        float interval = ranges[activeRangeIndex].intervalKm;
+        
+        // 1. Get Target Interval from LUT (Linear Interpolation)
+        int lutIndex = (int)(speedKmh / LUT_STEP);
+        if (lutIndex < 0) lutIndex = 0;
+        if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
+        
+        float targetInterval = intervalLUT[lutIndex];
+        
+        // 2. Low-Pass Filter (Additional Smoothing)
+        if (smoothedInterval == 0.0) smoothedInterval = targetInterval; // Init
+        smoothedInterval = (smoothedInterval * 0.95) + (targetInterval * 0.05);
+
+        float interval = smoothedInterval;
+
         if (interval > 0) {
             float progressDelta = distKm / interval;
             
@@ -453,6 +510,15 @@ void Oiler::triggerOil(int pulses) {
     
     pumpCycles++; // Stats
     progressChanged = true; // Mark for saving
+
+    // Tank Monitor Logic
+    if (tankMonitorEnabled) {
+        float mlConsumed = (float)(pulses * dropsPerPulse) / (float)dropsPerMl;
+        currentTankLevelMl -= mlConsumed;
+        if (currentTankLevelMl < 0) currentTankLevelMl = 0;
+        
+        Serial.printf("Oil consumed: %.2f ml, Remaining: %.2f ml\n", mlConsumed, currentTankLevelMl);
+    }
 
     // Initialize Non-Blocking Oiling
     isOiling = true;
@@ -521,5 +587,54 @@ bool Oiler::isButtonPressed() {
     // Since this is called from main loop for WiFi activation (long hold), 
     // a simple raw read is usually fine. 
     // But to be cleaner and use the class logic:
-    return !digitalRead(BUTTON_PIN); // Active LOW -> returns true if pressed
+    return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
+}
+
+void Oiler::rebuildLUT() {
+    // 1. Define Anchors (Center points of ranges)
+    struct Anchor { float speed; float interval; };
+    Anchor anchors[NUM_RANGES];
+
+    for(int i=0; i<NUM_RANGES; i++) {
+        float center;
+        if (i == NUM_RANGES - 1) {
+            // Last range (e.g. 95-999). Use start + 10km/h as anchor to avoid stretching
+            center = ranges[i].minSpeed + 10.0;
+        } else {
+            center = (ranges[i].minSpeed + ranges[i].maxSpeed) / 2.0;
+        }
+        anchors[i].speed = center;
+        anchors[i].interval = ranges[i].intervalKm;
+    }
+
+    // 2. Fill LUT with linear interpolation
+    for (int i=0; i<LUT_SIZE; i++) {
+        float speed = i * LUT_STEP;
+        
+        if (speed <= anchors[0].speed) {
+            intervalLUT[i] = anchors[0].interval;
+        } else if (speed >= anchors[NUM_RANGES-1].speed) {
+            intervalLUT[i] = anchors[NUM_RANGES-1].interval;
+        } else {
+            // Interpolate between anchors
+            for (int j=0; j<NUM_RANGES-1; j++) {
+                if (speed >= anchors[j].speed && speed < anchors[j+1].speed) {
+                    float slope = (anchors[j+1].interval - anchors[j].interval) / (anchors[j+1].speed - anchors[j].speed);
+                    intervalLUT[i] = anchors[j].interval + slope * (speed - anchors[j].speed);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void Oiler::setTankFill(float levelMl) {
+    currentTankLevelMl = levelMl;
+    if (currentTankLevelMl > tankCapacityMl) currentTankLevelMl = tankCapacityMl;
+    saveConfig();
+}
+
+void Oiler::resetTankToFull() {
+    currentTankLevelMl = tankCapacityMl;
+    saveConfig();
 }

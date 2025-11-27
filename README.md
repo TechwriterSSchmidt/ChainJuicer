@@ -5,6 +5,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 ## 🚀 Features
 
 *   **Geschwindigkeitsabhängige Ölung:** 5 konfigurierbare Geschwindigkeitsbereiche mit individuellen Intervallen (km) und Pump-Impulsen.
+*   **Intelligente Glättung:** Nutzt eine Lookup-Tabelle mit linearer Interpolation und einen Low-Pass Filter, um harte Sprünge bei den Schmierintervallen zu vermeiden. Das System passt sich dynamisch und sanft an Geschwindigkeitsänderungen an.
 *   **GPS-Präzision:** Exakte Distanzmessung via GPS-Modul (TinyGPS++).
 *   **Regenmodus:** Verdoppelt die Ölmenge bei Nässe. Aktivierbar per Taster. Automatische Abschaltung nach 30 Minuten.
 *   **Notlauf-Modus (Emergency Mode):** Aktiviert sich automatisch, wenn länger als 5 Minuten kein GPS-Signal empfangen wird (auch direkt nach dem Start). Simuliert 50 km/h, um die Schmierung sicherzustellen. Deaktiviert sich automatisch bei GPS-Empfang.
@@ -14,6 +15,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
     *   Automatische Abschaltung bei Fahrtantritt (> 10 km/h) oder Inaktivität (5 Min).
 *   **Nachtmodus:** Automatische Dimmung der Status-LED basierend auf der GPS-Uhrzeit (inkl. Sommerzeit-Korrektur).
 *   **Entlüftungsmodus (Bleeding):** Dauerpumpen zum Füllen der Ölleitung nach Wartungsarbeiten.
+*   **Tank-Monitor:** Berechnet den Ölverbrauch basierend auf Pumpstößen und warnt (blinkende LED), wenn der Vorrat zur Neige geht. Konfigurierbar (Tankgröße, Tropfen/ml).
 *   **Datensicherheit:** Kilometerstand und Einstellungen werden dauerhaft im Flash-Speicher (NVS) gespeichert.
 *   **Sicherheit:** Watchdog-Timer (WDT) und Schutz vor ungewolltem Pumpen beim Booten.
 
@@ -70,6 +72,7 @@ Verbinden Sie sich mit dem WiFi-Netzwerk (Standard-SSID: `MotoOiler_Config`, kei
 ## ⚙️ Technische Details
 
 *   **Non-Blocking:** Die Ansteuerung der Pumpe erfolgt asynchron. GPS-Daten werden auch während des Pumpens weiter verarbeitet.
+*   **Adaptive Glättung:** Kombination aus Lookup-Tabelle (lineare Interpolation) und Low-Pass Filter für geschmeidige Intervall-Anpassung ohne Rechenlast.
 *   **Smart Oiling (Hysterese):** Die Ölung wird bereits bei **95% der errechneten Distanz** ausgelöst. Diese Sicherheitsmarge verhindert "Double Oiling" bei Geschwindigkeitswechseln und stellt sicher, dass Intervalle zuverlässig eingehalten werden.
 *   **Speicherschutz:** Der Kilometerstand wird intelligent gespeichert (bei Stillstand, aber max. alle 2 Minuten), um den Flash-Speicher zu schonen.
 *   **Zeitzone:** Automatische Berechnung der Mitteleuropäischen Zeit (MEZ/MESZ) basierend auf dem GPS-Datum.
