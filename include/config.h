@@ -11,7 +11,7 @@
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 #define LED_PIN 5          // WS2812B Data Pin
 
-#define GPS_BAUD 38400
+#define GPS_BAUD 115200
 
 // LED Configuration
 #define NUM_LEDS 1

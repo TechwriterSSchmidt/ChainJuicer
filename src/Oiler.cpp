@@ -5,8 +5,7 @@ Preferences preferences;
 
 Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     pumpPin = PUMP_PIN;
-    pinMode(pumpPin, OUTPUT);
-    digitalWrite(pumpPin, LOW);
+    // Pin initialization moved to begin() to avoid issues during global constructor execution
     
     // Initialize default configuration
     ranges[0] = {10, 35, 15.0, 2};
@@ -76,6 +75,11 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 }
 
 void Oiler::begin() {
+    // Hardware Init
+    // Ensure Pump is OFF immediately
+    digitalWrite(pumpPin, LOW);
+    pinMode(pumpPin, OUTPUT);
+
     preferences.begin("oiler", false);
     loadConfig();
 
@@ -539,8 +543,7 @@ void Oiler::processPump() {
         return;
     }
 
-    // If we are here, we are either bleeding OR isOiling is true (with pulses remaining)
-    
+      
     // Logic for Pulse Generation
     if (!pulseState) {
         // Currently LOW (Pause phase)
