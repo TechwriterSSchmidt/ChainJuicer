@@ -229,6 +229,20 @@ void loop() {
         gps.encode(gpsSerial.read());
     }
 
+    // GPS Debug Output
+    static unsigned long lastGpsDebug = 0;
+    if (millis() - lastGpsDebug > 2000) {
+        lastGpsDebug = millis();
+        Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, Chars=%u\n", 
+            gps.location.isValid() ? "OK" : "NO", 
+            gps.satellites.value(), 
+            gps.speed.isValid() ? gps.speed.kmph() : 0.0,
+            gps.location.isValid() ? gps.location.lat() : 0.0,
+            gps.location.isValid() ? gps.location.lng() : 0.0,
+            gps.charsProcessed()
+        );
+    }
+
     float currentSpeed = gps.speed.isValid() ? gps.speed.kmph() : 0.0;
 
     // Update Oiler Logic
