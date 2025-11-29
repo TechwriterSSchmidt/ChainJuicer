@@ -226,22 +226,28 @@ void loop() {
 
     // Read GPS Data
     while (gpsSerial.available() > 0) {
-        gps.encode(gpsSerial.read());
+        char c = gpsSerial.read();
+        gps.encode(c);
+        // Optional: Uncomment to see raw data if needed
+        // Serial.write(c); 
     }
 
+#ifdef GPS_DEBUG
     // GPS Debug Output
     static unsigned long lastGpsDebug = 0;
     if (millis() - lastGpsDebug > 2000) {
         lastGpsDebug = millis();
-        Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, Chars=%u\n", 
+        Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, Chars=%u, Fail=%u\n", 
             gps.location.isValid() ? "OK" : "NO", 
             gps.satellites.value(), 
             gps.speed.isValid() ? gps.speed.kmph() : 0.0,
             gps.location.isValid() ? gps.location.lat() : 0.0,
             gps.location.isValid() ? gps.location.lng() : 0.0,
-            gps.charsProcessed()
+            gps.charsProcessed(),
+            gps.failedChecksum()
         );
     }
+#endif
 
     float currentSpeed = gps.speed.isValid() ? gps.speed.kmph() : 0.0;
 

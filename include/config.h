@@ -13,6 +13,9 @@
 
 #define GPS_BAUD 115200
 
+// Debug Configuration
+#define GPS_DEBUG          // Uncomment to enable GPS debug output on Serial
+
 // LED Configuration
 #define NUM_LEDS 1
 #define LED_BRIGHTNESS_DIM 20   // Brightness for status (0-255) - not too bright
