@@ -122,6 +122,10 @@ private:
     int oilingPulsesRemaining;
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW
+
+    // Safety & UX
+    unsigned long startupTime;
+    unsigned long ledOilingEndTimestamp;
 };
 
 #endif

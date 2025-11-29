@@ -80,11 +80,15 @@ void Oiler::begin() {
     digitalWrite(pumpPin, LOW);
     pinMode(pumpPin, OUTPUT);
 
+    startupTime = millis(); // Record startup time
+    ledOilingEndTimestamp = 0;
+
     preferences.begin("oiler", false);
     loadConfig();
 
     // Hardware Init
     pinMode(BUTTON_PIN, INPUT_PULLUP);
+    pinMode(CASE_BUTTON_PIN, INPUT_PULLUP);
     pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP); // Init onboard button
     strip.begin();
     strip.setBrightness(ledBrightnessDim);
@@ -107,8 +111,8 @@ void Oiler::loop() {
 
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
-    // Check both external button AND onboard boot button
-    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
+    // Check external button, case button AND onboard boot button
+    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(CASE_BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
     // Debounce (simple)
     if (currentReading != lastButtonState) {
@@ -196,18 +200,19 @@ void Oiler::updateLED() {
         } else {
             color = 0; // Off
         }
-    } else if (isOiling) {
+    } else if (isOiling || millis() < ledOilingEndTimestamp) {
         // Oiling: Yellow
         strip.setBrightness(ledBrightnessHigh);
         color = strip.Color(255, 200, 0);
     } else if (wifiActive) {
-        // WiFi Active: White blinking (1Hz)
-        strip.setBrightness(ledBrightnessHigh);
-        if ((now / 500) % 2 == 0) {
-            color = strip.Color(255, 255, 255); // White
-        } else {
-            color = 0; // Off
-        }
+        // WiFi Active: White pulsing (Breathing effect)
+        // Use sine wave for smooth pulsing
+        float pulse = (sin(now / 500.0) + 1.0) / 2.0; // 0.0 to 1.0
+        uint8_t brightness = (uint8_t)(pulse * ledBrightnessHigh);
+        if (brightness < 10) brightness = 10; // Minimum brightness
+        
+        strip.setBrightness(brightness);
+        color = strip.Color(255, 255, 255); // White
     } else if (!hasFix) {
         // No GPS: Magenta Dim
         // If Emergency Mode active: Cyan
@@ -228,16 +233,34 @@ void Oiler::updateLED() {
         color = strip.Color(0, 255, 0);
     }
 
-    // Tank Warning Overlay (Red Blink if low)
-    // Blink every 2 seconds for 200ms if tank is low
+    // Tank Warning Overlay (Red Pulse 2x then 5s pause)
     if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-        if ((now % 2000) < 200) {
-            strip.setBrightness(ledBrightnessHigh); // Bright warning
+        unsigned long cycle = now % 7500; // 7.5s cycle (2x 1s pulse + 0.5s gap + 5s pause)
+        float val = 0.0;
+        bool active = false;
+        
+        // Pulse 1: 0-1000ms
+        if (cycle < 1000) { 
+            val = sin((cycle / 1000.0) * PI);
+            active = true;
+        } 
+        // Pulse 2: 1500-2500ms (500ms gap)
+        else if (cycle > 1500 && cycle < 2500) { 
+            val = sin(((cycle - 1500) / 1000.0) * PI);
+            active = true;
+        }
+        
+        if (active) {
+            uint8_t bri = (uint8_t)(val * ledBrightnessHigh);
+            if (bri < 5) bri = 5; // Minimum visibility
+            strip.setBrightness(bri);
             color = strip.Color(255, 0, 0); // Red
         }
     }
 
-    strip.setPixelColor(0, color);
+    for(int i=0; i<NUM_LEDS; i++) {
+        strip.setPixelColor(i, color);
+    }
     strip.show();
 }
 
@@ -523,10 +546,18 @@ void Oiler::triggerOil(int pulses) {
     oilingPulsesRemaining = pulses;
     pulseState = false; // Will start with HIGH in handleOiling
     lastPulseTime = millis() - 1000; // Force immediate start
+    
+    // LED Indication for 3 seconds
+    ledOilingEndTimestamp = millis() + 3000;
 }
 
 void Oiler::processPump() {
     unsigned long now = millis();
+
+    // Safety: Startup Delay
+    if (now - startupTime < STARTUP_DELAY_MS) {
+        return;
+    }
 
     // Check if we should stop bleeding
     if (bleedingMode) {
@@ -598,7 +629,7 @@ bool Oiler::isButtonPressed() {
     // Since this is called from main loop for WiFi activation (long hold), 
     // a simple raw read is usually fine. 
     // But to be cleaner and use the class logic:
-    return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
+    return !digitalRead(BUTTON_PIN) || !digitalRead(CASE_BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
 }
 
 void Oiler::rebuildLUT() {
