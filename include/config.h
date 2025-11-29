@@ -19,7 +19,8 @@
 #define LED_BRIGHTNESS_HIGH 150 // Brightness for events
 
 // Default Values
-#define PULSE_DURATION_MS 50
+#define PULSE_DURATION_MS 50      // Duration of the pump impulse (HIGH)
+#define PAUSE_DURATION_MS 300     // Pause between impulses (LOW)
 #define MIN_SPEED_KMH 10.0
 #define BLEEDING_DURATION_MS 5000 // 5 seconds pumping for bleeding
 

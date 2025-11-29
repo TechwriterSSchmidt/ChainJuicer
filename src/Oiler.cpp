@@ -544,9 +544,8 @@ void Oiler::processPump() {
     // Logic for Pulse Generation
     if (!pulseState) {
         // Currently LOW (Pause phase)
-        // Wait for PAUSE_DURATION (333ms total cycle - PULSE_DURATION)
-        // 3 Hz = 333ms period. If Pulse is 50ms, Pause is ~283ms.
-        if (now - lastPulseTime >= (333 - PULSE_DURATION_MS)) {
+        // Wait for PAUSE_DURATION_MS
+        if (now - lastPulseTime >= PAUSE_DURATION_MS) {
             digitalWrite(pumpPin, HIGH);
             pulseState = true;
             lastPulseTime = now;
