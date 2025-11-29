@@ -237,19 +237,30 @@ void loop() {
     static unsigned long lastGpsDebug = 0;
     if (millis() - lastGpsDebug > 2000) {
         lastGpsDebug = millis();
-        Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, Chars=%u, Fail=%u\n", 
+        Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, Chars=%u, Fail=%u, HDOP=%.1f\n", 
             gps.location.isValid() ? "OK" : "NO", 
             gps.satellites.value(), 
             gps.speed.isValid() ? gps.speed.kmph() : 0.0,
             gps.location.isValid() ? gps.location.lat() : 0.0,
             gps.location.isValid() ? gps.location.lng() : 0.0,
             gps.charsProcessed(),
-            gps.failedChecksum()
+            gps.failedChecksum(),
+            gps.hdop.hdop()
         );
     }
 #endif
 
     float currentSpeed = gps.speed.isValid() ? gps.speed.kmph() : 0.0;
+
+    // GPS Filter: Ignore data if signal is poor (Multipath/Indoor protection)
+    // 1. Minimum 5 Satellites
+    // 2. HDOP must be good (< 5.0). Outdoors it is usually < 1.5.
+    if (gps.location.isValid()) {
+        if (gps.satellites.value() < 5 || gps.hdop.hdop() > 5.0) {
+            // Signal too poor -> Ignore speed to prevent ghost oiling
+            currentSpeed = 0.0; 
+        }
+    }
 
     // Update Oiler Logic
     // Pass current time to Oiler (for Night Mode)
