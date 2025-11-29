@@ -89,23 +89,13 @@ void Oiler::begin() {
 
 void Oiler::loop() {
     handleButton();
-    handleOiling(); // Non-blocking oiling logic
+    processPump(); // Unified pump logic
     
     // Rain Mode Auto-Off (30 Minutes)
     if (rainMode && (millis() - rainModeStartTime > 30 * 60 * 1000)) {
         rainMode = false;
         Serial.println("Rain Mode Auto-Off");
         saveConfig();
-    }
-
-    // Bleeding Logic
-    if (bleedingMode) {
-        if (millis() - bleedingStartTime < BLEEDING_DURATION_MS) {
-            digitalWrite(pumpPin, HIGH);
-        } else {
-            digitalWrite(pumpPin, LOW);
-            bleedingMode = false;
-        }
     }
 
     updateLED();
@@ -149,6 +139,10 @@ void Oiler::handleButton() {
                 bleedingStartTime = millis();
                 Serial.println("Bleeding Mode STARTED");
                 
+                // Init Pump State for immediate start
+                pulseState = false; 
+                lastPulseTime = millis() - 1000; // Force start
+
                 pumpCycles++; // Bleeding counts as 1 cycle
                 saveConfig(); // Save immediately
             } else {
@@ -527,38 +521,53 @@ void Oiler::triggerOil(int pulses) {
     lastPulseTime = millis() - 1000; // Force immediate start
 }
 
-void Oiler::handleOiling() {
-    if (!isOiling) return;
-
+void Oiler::processPump() {
     unsigned long now = millis();
+
+    // Check if we should stop bleeding
+    if (bleedingMode) {
+        if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
+            bleedingMode = false;
+            digitalWrite(pumpPin, LOW);
+            pulseState = false; // Reset state
+            Serial.println("Bleeding Finished");
+            return; // Done
+        }
+        // If bleeding, we treat it as "always have pulses remaining"
+    } else if (!isOiling) {
+        // Not bleeding and not oiling -> Idle
+        return;
+    }
+
+    // If we are here, we are either bleeding OR isOiling is true (with pulses remaining)
     
-    if (oilingPulsesRemaining > 0) {
-        if (!pulseState) {
-            // Currently LOW (Pause), waiting to go HIGH
-            // Initial start or after pause
-            // Pause duration is 200ms, but for first pulse it doesn't matter
-            if (now - lastPulseTime >= 200) {
-                digitalWrite(pumpPin, HIGH);
-                pulseState = true;
-                lastPulseTime = now;
-            }
-        } else {
-            // Currently HIGH (Pumping), waiting to go LOW
-            if (now - lastPulseTime >= PULSE_DURATION_MS) {
-                digitalWrite(pumpPin, LOW);
-                pulseState = false;
-                lastPulseTime = now;
+    // Logic for Pulse Generation
+    if (!pulseState) {
+        // Currently LOW (Pause phase)
+        // Wait for PAUSE_DURATION (333ms total cycle - PULSE_DURATION)
+        // 3 Hz = 333ms period. If Pulse is 50ms, Pause is ~283ms.
+        if (now - lastPulseTime >= (333 - PULSE_DURATION_MS)) {
+            digitalWrite(pumpPin, HIGH);
+            pulseState = true;
+            lastPulseTime = now;
+        }
+    } else {
+        // Currently HIGH (Pulse phase)
+        // Wait for PULSE_DURATION
+        if (now - lastPulseTime >= PULSE_DURATION_MS) {
+            digitalWrite(pumpPin, LOW);
+            pulseState = false;
+            lastPulseTime = now;
+            
+            // Only decrement in normal oiling mode
+            if (!bleedingMode) {
                 oilingPulsesRemaining--;
-                
                 if (oilingPulsesRemaining == 0) {
                     isOiling = false;
                     Serial.println("OILING DONE");
                 }
             }
         }
-    } else {
-        isOiling = false;
-        digitalWrite(pumpPin, LOW);
     }
 }
 

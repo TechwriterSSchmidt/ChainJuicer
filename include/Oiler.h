@@ -104,7 +104,7 @@ private:
     unsigned long lastLedUpdate;
     void updateLED();
     void handleButton();
-    void handleOiling();
+    void processPump(); // Unified pump logic
 
     void loadConfig();
     void validateConfig();
