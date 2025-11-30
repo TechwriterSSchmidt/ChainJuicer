@@ -1,4 +1,6 @@
 
+#include "Oiler.h"
+
 double Oiler::getRecentTimeSeconds(int rangeIndex) {
     double sum = 0.0;
     // Sum from history
