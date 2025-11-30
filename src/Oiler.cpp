@@ -12,7 +12,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     ranges[1] = {35, 55, 15.0, 2};
     ranges[2] = {55, 75, 15.0, 2};
     ranges[3] = {75, 95, 15.0, 2};
-    ranges[4] = {95, 999, 15.0, 2};
+    ranges[4] = {95, MAX_SPEED_KMH, 15.0, 2};
     
     currentProgress = 0.0;
     lastLat = 0.0;
@@ -537,8 +537,8 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     double distKm = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon) / 1000.0;
     
     // Only if moving and GPS not jumping (small filter)
-    // Plausibility check: < 300 km/h
-    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < 300.0) { 
+    // Plausibility check: < MAX_SPEED_KMH + Buffer
+    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < (MAX_SPEED_KMH + 50.0)) { 
         lastLat = lat;
         lastLon = lon;
         

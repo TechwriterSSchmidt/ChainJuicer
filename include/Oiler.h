@@ -7,7 +7,7 @@
 
 #define SPEED_BUFFER_SIZE 5
 #define LUT_STEP 5
-#define LUT_MAX_SPEED 300
+#define LUT_MAX_SPEED ((int)MAX_SPEED_KMH)
 #define LUT_SIZE ((LUT_MAX_SPEED / LUT_STEP) + 1)
 
 class Oiler {

@@ -25,8 +25,9 @@
 // Default Values
 #define PULSE_DURATION_MS 250      // Duration of the pump impulse (HIGH)
 #define PAUSE_DURATION_MS 750     // Pause between impulses (LOW)
-#define MIN_SPEED_KMH 7.0         // Minimum speed for oiling (Standstill < 7 km/h)
+#define MIN_SPEED_KMH 15.0         // Minimum speed for oiling (Standstill < 7 km/h)
 #define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer
+#define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
 #define BLEEDING_DURATION_MS 10000 // 10 seconds pumping for bleeding
 
 // Button Timings
