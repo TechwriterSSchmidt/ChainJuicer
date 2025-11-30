@@ -35,10 +35,22 @@ public:
     unsigned long getPumpCycles() { return pumpCycles; }
     void resetStats();
     
-    // Time Stats
-    double rangeTimeSeconds[NUM_RANGES];
-    unsigned long rangeOilingCounts[NUM_RANGES]; // New: Count oilings per range
-    double totalTimeSeconds;
+    // Time Stats (History for last 20 oilings)
+    struct StatsHistory {
+        uint8_t head;
+        uint8_t count;
+        int8_t oilingRange[20];
+        double timeInRanges[20][NUM_RANGES];
+    };
+    
+    StatsHistory history;
+    double currentIntervalTime[NUM_RANGES]; // Time accumulated in current interval (not yet oiled)
+    
+    // Helper to get summed stats for UI
+    double getRecentTimeSeconds(int rangeIndex);
+    int getRecentOilingCount(int rangeIndex);
+    double getRecentTotalTime();
+
     void resetTimeStats();
 
     // LED Settings

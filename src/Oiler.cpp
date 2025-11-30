@@ -28,10 +28,17 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     speedBufferIndex = 0;
     
     // Time Stats Init
-    totalTimeSeconds = 0.0;
     for(int i=0; i<NUM_RANGES; i++) {
-        rangeTimeSeconds[i] = 0.0;
-        rangeOilingCounts[i] = 0;
+        currentIntervalTime[i] = 0.0;
+    }
+    // Init History
+    history.head = 0;
+    history.count = 0;
+    for(int i=0; i<20; i++) {
+        history.oilingRange[i] = -1;
+        for(int j=0; j<NUM_RANGES; j++) {
+            history.timeInRanges[i][j] = 0.0;
+        }
     }
     lastTimeUpdate = 0;
 
@@ -302,11 +309,14 @@ void Oiler::loadConfig() {
     totalDistance = preferences.getDouble("totalDist", 0.0);
     pumpCycles = preferences.getUInt("pumpCount", 0);
     
-    // Load Time Stats
-    totalTimeSeconds = preferences.getDouble("totalTime", 0.0);
+    // Load Time Stats History
+    size_t len = preferences.getBytesLength("statsHist");
+    if (len == sizeof(StatsHistory)) {
+        preferences.getBytes("statsHist", &history, sizeof(StatsHistory));
+    }
+    // Load current interval time
     for(int i=0; i<NUM_RANGES; i++) {
-        rangeTimeSeconds[i] = preferences.getDouble(("rt" + String(i)).c_str(), 0.0);
-        rangeOilingCounts[i] = preferences.getUInt(("ro" + String(i)).c_str(), 0);
+        currentIntervalTime[i] = preferences.getDouble(("cit" + String(i)).c_str(), 0.0);
     }
 
     // Load Tank Monitor
@@ -373,11 +383,11 @@ void Oiler::saveConfig() {
     preferences.putDouble("totalDist", totalDistance);
     preferences.putUInt("pumpCount", pumpCycles);
     
-    // Save Time Stats
-    preferences.putDouble("totalTime", totalTimeSeconds);
+    // Save Time Stats History
+    preferences.putBytes("statsHist", &history, sizeof(StatsHistory));
+    // Save current interval time
     for(int i=0; i<NUM_RANGES; i++) {
-        preferences.putDouble(("rt" + String(i)).c_str(), rangeTimeSeconds[i]);
-        preferences.putUInt(("ro" + String(i)).c_str(), rangeOilingCounts[i]);
+        preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
@@ -386,15 +396,14 @@ void Oiler::saveConfig() {
 void Oiler::saveProgress() {
     if (progressChanged) {
         preferences.putFloat("progress", currentProgress);
-        // Save stats here too
+        // Save Stats
         preferences.putDouble("totalDist", totalDistance);
         preferences.putUInt("pumpCount", pumpCycles);
         
-        // Save Time Stats
-        preferences.putDouble("totalTime", totalTimeSeconds);
+        // Save Time Stats History
+        preferences.putBytes("statsHist", &history, sizeof(StatsHistory));
         for(int i=0; i<NUM_RANGES; i++) {
-            preferences.putDouble(("rt" + String(i)).c_str(), rangeTimeSeconds[i]);
-            preferences.putUInt(("ro" + String(i)).c_str(), rangeOilingCounts[i]);
+            preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
         }
         
         // Save Tank Level
@@ -413,10 +422,16 @@ void Oiler::resetStats() {
 }
 
 void Oiler::resetTimeStats() {
-    totalTimeSeconds = 0.0;
     for(int i=0; i<NUM_RANGES; i++) {
-        rangeTimeSeconds[i] = 0.0;
-        rangeOilingCounts[i] = 0;
+        currentIntervalTime[i] = 0.0;
+    }
+    history.head = 0;
+    history.count = 0;
+    for(int i=0; i<20; i++) {
+        history.oilingRange[i] = -1;
+        for(int j=0; j<NUM_RANGES; j++) {
+            history.timeInRanges[i][j] = 0.0;
+        }
     }
     saveConfig();
 }
@@ -458,8 +473,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         }
         
         if (activeRangeIndex != -1) {
-            rangeTimeSeconds[activeRangeIndex] += dtSeconds;
-            totalTimeSeconds += dtSeconds;
+            currentIntervalTime[activeRangeIndex] += dtSeconds;
             progressChanged = true; // Mark for saving
         }
     }
@@ -597,8 +611,18 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             // Prevents edge cases during mode switches
             // 5% safety margin eliminates double oilings
             if (currentProgress >= 0.95) {
+                // Update History BEFORE resetting currentIntervalTime
+                int head = history.head;
+                history.oilingRange[head] = activeRangeIndex;
+                for(int i=0; i<NUM_RANGES; i++) {
+                    history.timeInRanges[head][i] = currentIntervalTime[i];
+                    currentIntervalTime[i] = 0.0; // Reset for next interval
+                }
+                history.head = (head + 1) % 20;
+                if (history.count < 20) history.count++;
+
                 triggerOil(ranges[activeRangeIndex].pulses);
-                rangeOilingCounts[activeRangeIndex]++; // Count oiling for this range
+                // rangeOilingCounts[activeRangeIndex]++; // REMOVED
                 currentProgress = 0.0; // Reset
                 saveProgress(); // Save progress
             }
