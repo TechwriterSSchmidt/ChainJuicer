@@ -313,11 +313,18 @@ void Oiler::validateConfig() {
         if(ranges[i].pulses < 1) ranges[i].pulses = 1;             // Minimum 1 pulse
     }
     
-    // Brightness limits
-    if(ledBrightnessDim > 255) ledBrightnessDim = 255;
-    if(ledBrightnessHigh > 255) ledBrightnessHigh = 255;
-    if(nightBrightness > 255) nightBrightness = 255;
-    if(nightBrightnessHigh > 255) nightBrightnessHigh = 255;
+    // Brightness limits (2-202)
+    if(ledBrightnessDim < 2) ledBrightnessDim = 2;
+    if(ledBrightnessDim > 202) ledBrightnessDim = 202;
+    
+    if(ledBrightnessHigh < 2) ledBrightnessHigh = 2;
+    if(ledBrightnessHigh > 202) ledBrightnessHigh = 202;
+    
+    if(nightBrightness < 2) nightBrightness = 2;
+    if(nightBrightness > 202) nightBrightness = 202;
+    
+    if(nightBrightnessHigh < 2) nightBrightnessHigh = 2;
+    if(nightBrightnessHigh > 202) nightBrightnessHigh = 202;
 }
 
 void Oiler::saveConfig() {
