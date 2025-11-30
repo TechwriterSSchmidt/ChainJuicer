@@ -26,6 +26,14 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     pumpCycles = 0;
     for(int i=0; i<SPEED_BUFFER_SIZE; i++) speedBuffer[i] = 0.0;
     speedBufferIndex = 0;
+    
+    // Time Stats Init
+    totalTimeSeconds = 0.0;
+    for(int i=0; i<NUM_RANGES; i++) {
+        rangeTimeSeconds[i] = 0.0;
+        rangeOilingCounts[i] = 0;
+    }
+    lastTimeUpdate = 0;
 
     // Button & Modes Init
     rainMode = false;
@@ -293,6 +301,13 @@ void Oiler::loadConfig() {
     // Load Stats
     totalDistance = preferences.getDouble("totalDist", 0.0);
     pumpCycles = preferences.getUInt("pumpCount", 0);
+    
+    // Load Time Stats
+    totalTimeSeconds = preferences.getDouble("totalTime", 0.0);
+    for(int i=0; i<NUM_RANGES; i++) {
+        rangeTimeSeconds[i] = preferences.getDouble(("rt" + String(i)).c_str(), 0.0);
+        rangeOilingCounts[i] = preferences.getUInt(("ro" + String(i)).c_str(), 0);
+    }
 
     // Load Tank Monitor
     tankMonitorEnabled = preferences.getBool("tank_en", false);
@@ -358,6 +373,13 @@ void Oiler::saveConfig() {
     preferences.putDouble("totalDist", totalDistance);
     preferences.putUInt("pumpCount", pumpCycles);
     
+    // Save Time Stats
+    preferences.putDouble("totalTime", totalTimeSeconds);
+    for(int i=0; i<NUM_RANGES; i++) {
+        preferences.putDouble(("rt" + String(i)).c_str(), rangeTimeSeconds[i]);
+        preferences.putUInt(("ro" + String(i)).c_str(), rangeOilingCounts[i]);
+    }
+    
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
@@ -367,6 +389,13 @@ void Oiler::saveProgress() {
         // Save stats here too
         preferences.putDouble("totalDist", totalDistance);
         preferences.putUInt("pumpCount", pumpCycles);
+        
+        // Save Time Stats
+        preferences.putDouble("totalTime", totalTimeSeconds);
+        for(int i=0; i<NUM_RANGES; i++) {
+            preferences.putDouble(("rt" + String(i)).c_str(), rangeTimeSeconds[i]);
+            preferences.putUInt(("ro" + String(i)).c_str(), rangeOilingCounts[i]);
+        }
         
         // Save Tank Level
         preferences.putFloat("tank_lvl", currentTankLevelMl);
@@ -379,6 +408,16 @@ void Oiler::saveProgress() {
 void Oiler::resetStats() {
     totalDistance = 0.0;
     pumpCycles = 0;
+    resetTimeStats(); // Also reset time stats
+    saveConfig();
+}
+
+void Oiler::resetTimeStats() {
+    totalTimeSeconds = 0.0;
+    for(int i=0; i<NUM_RANGES; i++) {
+        rangeTimeSeconds[i] = 0.0;
+        rangeOilingCounts[i] = 0;
+    }
     saveConfig();
 }
 
@@ -398,6 +437,32 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     // Use smoothedSpeed for logic
     float speedKmh = smoothedSpeed;
     currentSpeed = speedKmh; // Update member variable for handleButton logic
+    
+    // Update Time Stats
+    if (lastTimeUpdate == 0) lastTimeUpdate = now;
+    unsigned long dt = now - lastTimeUpdate;
+    lastTimeUpdate = now;
+    
+    // Only count if moving fast enough to be in a range (or at least > MIN_SPEED)
+    // And avoid huge jumps (e.g. after sleep)
+    if (speedKmh >= MIN_SPEED_KMH && dt < 2000) {
+        double dtSeconds = (double)dt / 1000.0;
+        
+        // Find matching range
+        int activeRangeIndex = -1;
+        for(int i=0; i<NUM_RANGES; i++) {
+            if (speedKmh >= ranges[i].minSpeed && speedKmh < ranges[i].maxSpeed) {
+                activeRangeIndex = i;
+                break;
+            }
+        }
+        
+        if (activeRangeIndex != -1) {
+            rangeTimeSeconds[activeRangeIndex] += dtSeconds;
+            totalTimeSeconds += dtSeconds;
+            progressChanged = true; // Mark for saving
+        }
+    }
 
     // Regular saving (every 5 minutes or at standstill)
     if (now - lastSaveTime > 300000) { // 5 Min
@@ -405,7 +470,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastSaveTime = now;
     }
     // Save immediately at standstill (if we were moving before), but limit frequency (min 2 min)
-    if (speedKmh < 5.0 && progressChanged && (now - lastStandstillSaveTime > 120000)) {
+    if (speedKmh < 7.0 && progressChanged && (now - lastStandstillSaveTime > 120000)) {
         saveProgress();
         lastStandstillSaveTime = now;
     }
@@ -533,6 +598,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             // 5% safety margin eliminates double oilings
             if (currentProgress >= 0.95) {
                 triggerOil(ranges[activeRangeIndex].pulses);
+                rangeOilingCounts[activeRangeIndex]++; // Count oiling for this range
                 currentProgress = 0.0; // Reset
                 saveProgress(); // Save progress
             }

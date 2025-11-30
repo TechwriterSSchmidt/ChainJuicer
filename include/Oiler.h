@@ -34,6 +34,12 @@ public:
     double getTotalDistance() { return totalDistance; }
     unsigned long getPumpCycles() { return pumpCycles; }
     void resetStats();
+    
+    // Time Stats
+    double rangeTimeSeconds[NUM_RANGES];
+    unsigned long rangeOilingCounts[NUM_RANGES]; // New: Count oilings per range
+    double totalTimeSeconds;
+    void resetTimeStats();
 
     // LED Settings
     uint8_t ledBrightnessDim;
@@ -116,6 +122,7 @@ private:
     // Emergency update and standstill save time
     unsigned long lastEmergUpdate;
     unsigned long lastStandstillSaveTime;
+    unsigned long lastTimeUpdate; // For time stats calculation
 
     // Non-blocking oiling state
     bool isOiling;

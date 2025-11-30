@@ -19,6 +19,10 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 *   **Nachtmodus:** Automatische Dimmung der Status-LED basierend auf der GPS-Uhrzeit. Separate Helligkeit für Events (Ölen, WiFi) einstellbar.
 *   **Entlüftungsmodus (Bleeding):** Dauerpumpen zum Füllen der Ölleitung nach Wartungsarbeiten.
 *   **Tank-Monitor:** Berechnet den Ölverbrauch und warnt (pulsierende LED), wenn der Vorrat zur Neige geht.
+*   **Erweiterte Statistik:**
+    *   **Fahrprofil (Time %):** Zeigt an, wie viel Prozent der Fahrzeit in welchem Geschwindigkeitsbereich verbracht wurde.
+    *   **Ölungs-Zähler:** Zählt die Anzahl der ausgelösten Ölungen pro Geschwindigkeitsbereich.
+    *   **Odometer:** Gesamtkilometerzähler.
 *   **Datensicherheit:** Kilometerstand und Einstellungen werden dauerhaft im Flash-Speicher (NVS) gespeichert.
 
 ## 🛠 Hardware
@@ -71,14 +75,17 @@ Verbinden Sie sich mit dem WiFi-Netzwerk (Standard-SSID: `ChainJuicer`, kein Pas
 *   **Intervalle:** Distanz und Pumpstöße für 5 Geschwindigkeitsbereiche.
 *   **Modi:** Regenmodus, Emergency Mode, Nachtmodus (Zeiten & Helligkeit).
 *   **LED:** Helligkeit für Tag und Nacht (in %).
-*   **Statistik:** Gesamtkilometerzähler und Pump-Zyklen (Reset möglich).
+*   **Statistik:**
+    *   **Time %:** Fahrprofil-Analyse zur Optimierung der Intervalle.
+    *   **Oilings:** Zähler für Ölungen pro Bereich.
+    *   Gesamtkilometerzähler und Pump-Zyklen (Reset möglich).
 
 ## ⚙️ Technische Details
 
 *   **Non-Blocking:** Die Ansteuerung der Pumpe erfolgt asynchron.
 *   **Adaptive Glättung:** Kombination aus Lookup-Tabelle und Low-Pass Filter.
 *   **Smart Oiling (Hysterese):** Die Ölung wird bereits bei **95% der errechneten Distanz** ausgelöst.
-*   **Speicherschutz:** Der Kilometerstand wird intelligent gespeichert (bei Stillstand, aber max. alle 2 Minuten).
+*   **Speicherschutz:** Der Kilometerstand wird intelligent gespeichert (bei Stillstand < 7 km/h, aber max. alle 2 Minuten).
 *   **Zeitzone:** Automatische Berechnung der Mitteleuropäischen Zeit (MEZ/MESZ).
 
 ## 💻 Installation (PlatformIO)
