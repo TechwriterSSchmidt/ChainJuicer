@@ -57,6 +57,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     nightStartHour = 20; // 20:00
     nightEndHour = 6;    // 06:00
     nightBrightness = 15; // Very dim
+    nightBrightnessHigh = 100; // Default for night events
     currentHour = 12;    // Default noon
 
     // Tank Monitor Defaults
@@ -176,6 +177,7 @@ void Oiler::updateLED() {
 
     // Determine Brightness
     uint8_t currentDimBrightness = ledBrightnessDim;
+    uint8_t currentHighBrightness = ledBrightnessHigh;
     
     if (nightModeEnabled) {
         bool isNight = false;
@@ -189,12 +191,13 @@ void Oiler::updateLED() {
         
         if (isNight) {
             currentDimBrightness = nightBrightness;
+            currentHighBrightness = nightBrightnessHigh;
         }
     }
 
     if (bleedingMode) {
         // Bleeding: Red blinking 2Hz (250ms on, 250ms off)
-        strip.setBrightness(ledBrightnessHigh);
+        strip.setBrightness(currentHighBrightness);
         if ((now / 250) % 2 == 0) {
             color = strip.Color(255, 0, 0);
         } else {
@@ -202,13 +205,13 @@ void Oiler::updateLED() {
         }
     } else if (isOiling || millis() < ledOilingEndTimestamp) {
         // Oiling: Yellow
-        strip.setBrightness(ledBrightnessHigh);
+        strip.setBrightness(currentHighBrightness);
         color = strip.Color(255, 200, 0);
     } else if (wifiActive) {
         // WiFi Active: White pulsing (Breathing effect)
         // Use sine wave for smooth pulsing
         float pulse = (sin(now / 500.0) + 1.0) / 2.0; // 0.0 to 1.0
-        uint8_t brightness = (uint8_t)(pulse * ledBrightnessHigh);
+        uint8_t brightness = (uint8_t)(pulse * currentHighBrightness);
         if (brightness < 10) brightness = 10; // Minimum brightness
         
         strip.setBrightness(brightness);
@@ -251,7 +254,7 @@ void Oiler::updateLED() {
         }
         
         if (active) {
-            uint8_t bri = (uint8_t)(val * ledBrightnessHigh);
+            uint8_t bri = (uint8_t)(val * currentHighBrightness);
             if (bri < 5) bri = 5; // Minimum visibility
             strip.setBrightness(bri);
             color = strip.Color(255, 0, 0); // Red
@@ -280,6 +283,7 @@ void Oiler::loadConfig() {
     nightStartHour = preferences.getInt("night_start", 20);
     nightEndHour = preferences.getInt("night_end", 6);
     nightBrightness = preferences.getUChar("night_bri", 5);
+    nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
     
     // Restore Rain Mode
     rainMode = preferences.getBool("rain_mode", false);
@@ -312,6 +316,8 @@ void Oiler::validateConfig() {
     // Brightness limits
     if(ledBrightnessDim > 255) ledBrightnessDim = 255;
     if(ledBrightnessHigh > 255) ledBrightnessHigh = 255;
+    if(nightBrightness > 255) nightBrightness = 255;
+    if(nightBrightnessHigh > 255) nightBrightnessHigh = 255;
 }
 
 void Oiler::saveConfig() {
@@ -327,6 +333,7 @@ void Oiler::saveConfig() {
     preferences.putInt("night_start", nightStartHour);
     preferences.putInt("night_end", nightEndHour);
     preferences.putUChar("night_bri", nightBrightness);
+    preferences.putUChar("night_bri_h", nightBrightnessHigh);
     
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);

@@ -16,7 +16,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
     *   LED-Helligkeit in Prozent (0-100%) einstellbar.
     *   Aktivierung nur im Stand (< 7 km/h) durch langen Tastendruck (> 3s).
     *   Automatische Abschaltung bei Fahrtantritt (> 10 km/h) oder Inaktivität (5 Min).
-*   **Nachtmodus:** Automatische Dimmung der Status-LED basierend auf der GPS-Uhrzeit.
+*   **Nachtmodus:** Automatische Dimmung der Status-LED basierend auf der GPS-Uhrzeit. Separate Helligkeit für Events (Ölen, WiFi) einstellbar.
 *   **Entlüftungsmodus (Bleeding):** Dauerpumpen zum Füllen der Ölleitung nach Wartungsarbeiten.
 *   **Tank-Monitor:** Berechnet den Ölverbrauch und warnt (pulsierende LED), wenn der Vorrat zur Neige geht.
 *   **Datensicherheit:** Kilometerstand und Einstellungen werden dauerhaft im Flash-Speicher (NVS) gespeichert.

@@ -44,6 +44,7 @@ public:
     int nightStartHour;
     int nightEndHour;
     uint8_t nightBrightness;
+    uint8_t nightBrightnessHigh;
 
     void setCurrentHour(int hour);
 
