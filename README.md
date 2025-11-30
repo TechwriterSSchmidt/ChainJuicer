@@ -54,7 +54,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 | :--- | :--- | :--- | :--- |
 | **Kurz drücken** | < 1.5s | Immer | **Regenmodus** Ein/Aus (LED: Blau) |
 | **Halten** | > 3s | Im Stand (< 7 km/h) | **WiFi & Webinterface** aktivieren (LED: Weiß pulsierend) |
-| **Lang halten** | > 10s | Im Stand (< 7 km/h) | **Entlüftungsmodus** (Bleeding) starten (LED: Rot blinkend) |
+| **Lang halten** | > 10s | Im Stand (< 7 km/h) | **Entlüftungsmodus** (Bleeding) starten (LED: Rot blinkend, Pumpe läuft 10s) |
 
 ### LED Status-Codes
 

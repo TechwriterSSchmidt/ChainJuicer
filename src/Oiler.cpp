@@ -151,7 +151,7 @@ void Oiler::handleButton() {
         // > 10s: Bleeding Mode
         if (duration > BLEEDING_PRESS_MS) {
             // SAFETY: Only allow in standstill (< 7 km/h)
-            if (currentSpeed < 7.0) {
+            if (currentSpeed < MIN_SPEED_KMH) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
                 Serial.println("Bleeding Mode STARTED");
@@ -163,7 +163,7 @@ void Oiler::handleButton() {
                 pumpCycles++; // Bleeding counts as 1 cycle
                 saveConfig(); // Save immediately
             } else {
-                Serial.println("Bleeding blocked: Speed > 7 km/h");
+                Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
             }
 
             // Reset button start time to avoid re-triggering immediately
@@ -470,7 +470,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastSaveTime = now;
     }
     // Save immediately at standstill (if we were moving before), but limit frequency (min 2 min)
-    if (speedKmh < 7.0 && progressChanged && (now - lastStandstillSaveTime > 120000)) {
+    if (speedKmh < MIN_SPEED_KMH && progressChanged && (now - lastStandstillSaveTime > 120000)) {
         saveProgress();
         lastStandstillSaveTime = now;
     }
