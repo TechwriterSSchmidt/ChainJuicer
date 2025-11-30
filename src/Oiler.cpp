@@ -160,7 +160,7 @@ void Oiler::handleButton() {
                 pulseState = false; 
                 lastPulseTime = millis() - 1000; // Force start
 
-                pumpCycles++; // Bleeding counts as 1 cycle
+                // pumpCycles++; // Removed: Bleeding counts per pulse in processPump now
                 saveConfig(); // Save immediately
             } else {
                 Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
@@ -538,7 +538,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     
     // Only if moving and GPS not jumping (small filter)
     // Plausibility check: < 300 km/h
-    if (distKm > 0.005 && speedKmh > 2.0 && speedKmh < 300.0) { 
+    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < 300.0) { 
         lastLat = lat;
         lastLon = lon;
         
@@ -678,6 +678,17 @@ void Oiler::processPump() {
                 if (oilingPulsesRemaining == 0) {
                     isOiling = false;
                     Serial.println("OILING DONE");
+                }
+            } else {
+                // Bleeding Mode: Count every pulse as stats & consumption
+                pumpCycles++;
+                progressChanged = true;
+                
+                if (tankMonitorEnabled) {
+                    float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
+                    currentTankLevelMl -= mlConsumed;
+                    if (currentTankLevelMl < 0) currentTankLevelMl = 0;
+                    // Serial.printf("Bleeding Pulse: %.2f ml consumed\n", mlConsumed);
                 }
             }
         }
