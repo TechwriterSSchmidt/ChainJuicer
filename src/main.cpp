@@ -130,15 +130,8 @@ void handleRoot() {
     html += "</table><div style='text-align:left;margin-top:10px;margin-bottom:10px'><a href='/reset_time_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>";
     
     String footer = htmlFooter;
-    // Remove the closing table tag from footer since we closed it manually above?
-    // Wait, htmlFooter starts with </table>.
-    // So if I append htmlFooter, I will have double </table> or malformed HTML if I closed it above.
     
-    // Let's look at htmlFooter again: "</table><h3>General</h3>..."
-    // So I should NOT close the table in my loop block if I use htmlFooter as is.
-    // BUT I want to insert something BETWEEN the table end and the next section.
-    
-    // Strategy: Remove "</table>" from the start of htmlFooter string in memory
+    // Remove "</table>" from the start of htmlFooter since we already closed the table above
     if (footer.startsWith("</table>")) {
         footer = footer.substring(8); // Remove </table>
     }
