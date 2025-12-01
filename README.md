@@ -68,7 +68,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   🟣 **Magenta:** No GPS Signal (Searching...)
 *   🔵 **Cyan:** Emergency Mode (No GPS, Simulation active)
 *   🔴 **Red (Bright):** Emergency Timeout (> 31 Min without GPS)
-*   � **Yellow:** Oiling in progress (lit for 3s)
+*   🟡 **Yellow:** Oiling in progress (lit for 3s)
 *   ⚪ **White (pulsing):** WiFi Configuration Mode active
 *   🔴 **Red (pulsing 2x):** Tank Warning (Reserve reached)
 *   🔴 **Red (blinking):** Bleeding Mode active
@@ -101,6 +101,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 3.  Adjust Upload Port in `platformio.ini` if necessary.
 4.  Compile and upload project (`Upload`).
 5.  File system is not necessary (Data is saved in NVS/Preferences).
+
 
 
 
