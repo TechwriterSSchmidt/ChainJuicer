@@ -104,7 +104,6 @@ void Oiler::begin() {
 
     // Hardware Init
     pinMode(BUTTON_PIN, INPUT_PULLUP);
-    pinMode(CASE_BUTTON_PIN, INPUT_PULLUP);
     pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP); // Init onboard button
     strip.begin();
     strip.setBrightness(ledBrightnessDim);
@@ -301,8 +300,10 @@ void Oiler::loadConfig() {
     nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
     
     // Restore Rain Mode
-    rainMode = preferences.getBool("rain_mode", false);
-    if (rainMode) rainModeStartTime = millis();
+    // rainMode = preferences.getBool("rain_mode", false);
+    // if (rainMode) rainModeStartTime = millis();
+    rainMode = false; // Always start with Rain Mode OFF
+    
     emergencyMode = preferences.getBool("emerg_mode", false);
 
     // Load Stats

@@ -8,7 +8,6 @@
 #define GPS_RX_PIN 32      // GPS RX to ESP TX
 #define GPS_TX_PIN 33      // GPS TX to ESP RX
 #define BUTTON_PIN 4       // Handlebar button (connected to GND, INPUT_PULLUP)
-#define CASE_BUTTON_PIN 14 // Case button (connected to GND, INPUT_PULLUP)
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 #define LED_PIN 5          // WS2812B Data Pin
 

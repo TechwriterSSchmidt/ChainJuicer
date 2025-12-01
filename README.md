@@ -9,7 +9,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 *   **Smart GPS Filter:** Erkennt und ignoriert "Geister-Geschwindigkeiten" (Multipath-Reflexionen) in Innenräumen oder Tunneln (HDOP > 5.0 oder < 5 Satelliten).
 *   **Startup Delay:** 10 Sekunden Sicherheitsverzögerung nach dem Booten, um Pumpen-Fehlfunktionen während der Initialisierung zu verhindern.
 *   **GPS-Präzision:** Exakte Distanzmessung via GPS-Modul (TinyGPS++).
-*   **Regenmodus:** Verdoppelt die Ölmenge bei Nässe. Aktivierbar per Taster. Automatische Abschaltung nach 30 Minuten.
+*   **Regenmodus:** Verdoppelt die Ölmenge bei Nässe. Aktivierbar per Taster. Automatische Abschaltung nach 30 Minuten oder bei Neustart (Zündung aus).
 *   **Notlauf-Modus (Emergency Mode):** Aktiviert sich automatisch, wenn länger als 5 Minuten kein GPS-Signal empfangen wird. Simuliert 50 km/h.
 *   **Smart WiFi & Webinterface:**
     *   Konfiguration aller Parameter bequem per Smartphone.
@@ -41,7 +41,7 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 | **GPS RX** | GPIO 32 | Verbunden mit GPS TX |
 | **GPS TX** | GPIO 33 | Verbunden mit GPS RX |
 | **Taster (Lenker)** | GPIO 4 | Gegen GND geschaltet |
-| **Taster (Gehäuse)** | GPIO 14 | Gegen GND geschaltet (Optional) |
+| **Boot Button** | GPIO 0 | Onboard Taster (Parallelfunktion) |
 | **LED** | GPIO 5 | WS2812B Data In |
 
 *(Konfigurierbar in `include/config.h`)*
