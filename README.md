@@ -10,7 +10,12 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 *   **Startup Delay:** 10 Sekunden Sicherheitsverzögerung nach dem Booten, um Pumpen-Fehlfunktionen während der Initialisierung zu verhindern.
 *   **GPS-Präzision:** Exakte Distanzmessung via GPS-Modul (TinyGPS++).
 *   **Regenmodus:** Verdoppelt die Ölmenge bei Nässe. Aktivierbar per Taster. Automatische Abschaltung nach 30 Minuten oder bei Neustart (Zündung aus).
-*   **Notlauf-Modus (Emergency Mode):** Aktiviert sich automatisch, wenn länger als 5 Minuten kein GPS-Signal empfangen wird. Simuliert 50 km/h.
+*   **Notlauf-Modus (Emergency Mode):**
+    *   **Automatisch:** Aktiviert sich, wenn länger als 5 Minuten kein GPS-Signal empfangen wird.
+        *   Nach 15 Min: 1. Ölung.
+        *   Nach 30 Min: 2. Ölung.
+        *   Nach 31 Min: Timeout (Rote LED, keine weiteren Ölungen).
+    *   **Manuell (Forced):** Dauerhafte Simulation von 50 km/h (ignoriert Timeout).
 *   **Smart WiFi & Webinterface:**
     *   Konfiguration aller Parameter bequem per Smartphone.
     *   LED-Helligkeit in Prozent (0-100%) einstellbar.
@@ -62,7 +67,8 @@ Ein fortschrittlicher, GPS-gesteuerter Kettenöler für Motorräder auf Basis de
 *   🔵 **Blau:** Regenmodus Aktiv
 *   🟣 **Magenta:** Kein GPS Signal (Suche...)
 *   🔵 **Cyan:** Emergency Mode (Kein GPS, Simulation aktiv)
-*   🟡 **Gelb:** Ölung läuft (leuchtet für 3s)
+*   � **Rot (hell):** Emergency Timeout (> 31 Min ohne GPS)
+*   �🟡 **Gelb:** Ölung läuft (leuchtet für 3s)
 *   ⚪ **Weiß (pulsierend):** WiFi Konfigurations-Modus aktiv
 *   🔴 **Rot (pulsierend 2x):** Tankwarnung (Reserve erreicht)
 *   🔴 **Rot (blinkend):** Entlüftungsmodus (Bleeding) aktiv

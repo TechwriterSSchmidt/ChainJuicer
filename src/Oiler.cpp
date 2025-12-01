@@ -88,6 +88,12 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     
     // Init LUT
     rebuildLUT();
+
+    // Emergency Mode Init
+    emergencyModeForced = false;
+    emergencyModeStartTime = 0;
+    lastEmergencyOilTime = 0;
+    emergencyOilCount = 0;
 }
 
 void Oiler::begin() {
@@ -126,8 +132,8 @@ void Oiler::loop() {
 
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
-    // Check external button, case button AND onboard boot button
-    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(CASE_BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
+    // Check both external button AND onboard boot button
+    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
     // Debounce (simple)
     if (currentReading != lastButtonState) {
@@ -231,14 +237,25 @@ void Oiler::updateLED() {
         strip.setBrightness(brightness);
         color = strip.Color(255, 255, 255); // White
     } else if (!hasFix) {
-        // No GPS: Magenta Dim
-        // If Emergency Mode active: Cyan
-        if (emergencyMode) {
+        // No GPS
+        unsigned long timeSinceLoss = (lastEmergUpdate > 0) ? (now - lastEmergUpdate) : 0;
+        
+        if (emergencyModeForced) {
+             // Forced Emergency: Cyan
              strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255); // Cyan
+             color = strip.Color(0, 255, 255); 
+        } else if (timeSinceLoss > 31 * 60 * 1000) {
+             // Timeout (>31min): Red Bright
+             strip.setBrightness(currentHighBrightness);
+             color = strip.Color(255, 0, 0); 
+        } else if (emergencyMode || timeSinceLoss > 5 * 60 * 1000) {
+             // Auto Emergency Active/Waiting: Cyan Dim
+             strip.setBrightness(currentDimBrightness);
+             color = strip.Color(0, 255, 255);
         } else {
+             // No GPS (Short term): Magenta Dim
              strip.setBrightness(currentDimBrightness);
-             color = strip.Color(255, 0, 255); // Magenta
+             color = strip.Color(255, 0, 255);
         }
     } else if (rainMode) {
         // Rain Mode: Blue Dim
@@ -328,6 +345,14 @@ void Oiler::loadConfig() {
     dropsPerPulse = preferences.getInt("drop_pls", 5);
     tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
 
+    // Load Emergency Mode forced setting
+    emergencyModeForced = preferences.getBool("emerg_force", false);
+    // If forced, activate immediately
+    if (emergencyModeForced) {
+        emergencyMode = true;
+        emergencyModeStartTime = millis();
+    }
+
     validateConfig();
     rebuildLUT(); // Re-calculate LUT after loading config
 }
@@ -391,6 +416,8 @@ void Oiler::saveConfig() {
         preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
+    preferences.putBool("emerg_force", emergencyModeForced);
+
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
@@ -439,6 +466,11 @@ void Oiler::resetTimeStats() {
 
 void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     unsigned long now = millis();
+
+    // Force GPS invalid if Emergency Mode is manually forced
+    if (emergencyModeForced) {
+        gpsValid = false;
+    }
 
     // GPS Smoothing (Moving Average)
     speedBuffer[speedBufferIndex] = rawSpeedKmh;
@@ -493,44 +525,64 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     if (!gpsValid) {
         hasFix = false;
         
-        // Auto-Emergency Mode Logic
-        // If no GPS for > 5 Minutes, activate Emergency Mode automatically
         if (lastEmergUpdate == 0) {
-            lastEmergUpdate = now; // Start timer
-        } else {
-            // Check if 5 minutes passed without GPS
-            if (now - lastEmergUpdate > 300000) { // 5 Min = 300000 ms
-                emergencyMode = true;
-                // Note: We don't save this to flash, so it resets on reboot if GPS is back
-            }
+            lastEmergUpdate = now;
+            emergencyOilCount = 0;
         }
 
-        // Emergency Mode: If active and no GPS, simulate 50 km/h
-        if (emergencyMode) {
-            // 50 km/h
-            float simSpeed = 50.0;
-            // Distance in km = (Speed km/h * Time h)
-            // We use the difference to the last execution.
-            
-            // Use a separate timer for distance calculation to not mess up the 5min timer
-            static unsigned long lastSimStep = 0;
-            if (lastSimStep == 0) lastSimStep = now;
+        unsigned long timeSinceLoss = now - lastEmergUpdate;
 
+        // Static variable for simulation step (shared across calls)
+        static unsigned long lastSimStep = 0;
+
+        if (emergencyModeForced) {
+            // Forced Mode: Simulate 50 km/h continuously
+            emergencyMode = true;
+            
+            if (lastSimStep == 0) lastSimStep = now;
             unsigned long dt = now - lastSimStep;
             lastSimStep = now;
-            
-            // Avoid huge jumps if loop was blocked
-            if (dt > 1000) dt = 1000; // Cap at 1 second max per iteration
+            if (dt > 1000) dt = 1000; 
 
+            float simSpeed = 50.0;
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
-            
             processDistance(distKm, simSpeed);
+            
         } else {
-            // Reset sim timer if not in emergency mode
-            static unsigned long lastSimStep = 0;
-            lastSimStep = 0; 
+            // Auto Mode: Time-based Logic
+            lastSimStep = 0; // Reset sim timer
+
+            // 1. Wait 15 Minutes -> Oil once
+            if (timeSinceLoss > 15 * 60 * 1000 && emergencyOilCount == 0) {
+                int pulses = ranges[1].pulses;
+                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
+                triggerOil(pulses); 
+                emergencyOilCount++;
+                emergencyMode = true; 
+                Serial.println("Emergency Mode: 1st Oiling (15min)");
+            }
+            
+            // 2. Wait 30 Minutes -> Oil once
+            if (timeSinceLoss > 30 * 60 * 1000 && emergencyOilCount == 1) {
+                int pulses = ranges[1].pulses;
+                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
+                triggerOil(pulses);
+                emergencyOilCount++;
+                Serial.println("Emergency Mode: 2nd Oiling (30min)");
+            }
+            
+            // 3. Timeout > 31 Minutes
+            if (timeSinceLoss > 31 * 60 * 1000) {
+                // Timeout State (Red LED handled in updateLED)
+                emergencyMode = true; 
+            } else if (timeSinceLoss > 5 * 60 * 1000) {
+                // Active Waiting State (> 5 min)
+                emergencyMode = true;
+            } else {
+                // < 5 min: Just waiting, not yet Emergency Mode
+                emergencyMode = false;
+            }
         }
-        
         return;
     }
 
@@ -539,8 +591,9 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastLat = lat;
         lastLon = lon;
         hasFix = true;
-        lastEmergUpdate = 0; // Reset Emergency Timer when GPS is back
-        emergencyMode = false; // Disable Emergency Mode automatically
+        lastEmergUpdate = 0; 
+        emergencyOilCount = 0;
+        emergencyMode = false; 
         return;
     }
     
@@ -745,7 +798,7 @@ bool Oiler::isButtonPressed() {
     // Since this is called from main loop for WiFi activation (long hold), 
     // a simple raw read is usually fine. 
     // But to be cleaner and use the class logic:
-    return !digitalRead(BUTTON_PIN) || !digitalRead(CASE_BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
+    return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
 }
 
 void Oiler::rebuildLUT() {

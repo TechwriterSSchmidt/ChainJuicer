@@ -27,6 +27,10 @@ public:
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
 
+    // Emergency Mode Forced
+    void setEmergencyModeForced(bool forced) { emergencyModeForced = forced; }
+    bool isEmergencyModeForced() { return emergencyModeForced; }
+
     // WiFi Status
     void setWifiActive(bool active) { wifiActive = active; }
 
@@ -146,6 +150,12 @@ private:
     // Safety & UX
     unsigned long startupTime;
     unsigned long ledOilingEndTimestamp;
+
+    // Emergency Mode Settings
+    bool emergencyModeForced; // Manually enabled via WebUI
+    unsigned long emergencyModeStartTime;
+    unsigned long lastEmergencyOilTime;
+    int emergencyOilCount;
 };
 
 #endif
