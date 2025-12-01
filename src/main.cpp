@@ -246,13 +246,7 @@ void setup() {
     oiler.begin();
 
     // WiFi Start Logic: Default OFF
-    // WiFi.softAP(AP_SSID); <-- Removed
-    // IPAddress IP = WiFi.softAPIP();
-    // Serial.print("AP IP address: ");
-    // Serial.println(IP);
-
     // Start DNS Server only when needed
-    // dnsServer.start(53, "*", IP);
 
     // Webserver Routes
     server.on("/", handleRoot);
@@ -348,7 +342,7 @@ void loop() {
     // --- WiFi Management ---
     unsigned long currentMillis = millis();
 
-    // 1. Activation: Standstill (< 5kmh) + Button pressed > 3s
+    // 1. Activation: Standstill + Button pressed
     static unsigned long wifiButtonPressStart = 0;
     static bool wifiButtonHeld = false;
 
@@ -360,14 +354,14 @@ void loop() {
             } else {
                 // Check duration
                 if (currentMillis - wifiButtonPressStart > WIFI_PRESS_MS) {
-                    // > 3s held
+                    // Button held
                     wifiStartTime = currentMillis; // Reset timeout timer
                     
                     if (!wifiActive) {
                         WiFi.softAP(AP_SSID);
                         IPAddress IP = WiFi.softAPIP();
 #ifdef GPS_DEBUG
-                        Serial.print("WiFi activated via Button (>3s). IP: ");
+                        Serial.print("WiFi activated via Button. IP: ");
                         Serial.println(IP);
 #endif
                         dnsServer.start(53, "*", IP);
@@ -381,7 +375,7 @@ void loop() {
         wifiButtonHeld = false;
     }
 
-    // 2. Deactivation: Driving (> 10kmh) or Timeout
+    // 2. Deactivation: Driving or Timeout
     if (wifiActive) {
         bool shouldStop = false;
         

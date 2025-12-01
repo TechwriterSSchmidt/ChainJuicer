@@ -120,7 +120,7 @@ void Oiler::loop() {
     handleButton();
     processPump(); // Unified pump logic
     
-    // Rain Mode Auto-Off (30 Minutes)
+    // Rain Mode Auto-Off
     if (rainMode && (millis() - rainModeStartTime > RAIN_MODE_AUTO_OFF_MS)) {
         rainMode = false;
 #ifdef GPS_DEBUG
@@ -147,7 +147,7 @@ void Oiler::handleButton() {
             // Released
             unsigned long pressDuration = millis() - buttonPressStartTime;
             
-            // Short Press (< 1.5s): Rain Mode Toggle
+            // Short Press: Rain Mode Toggle
             if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
                 rainMode = !rainMode;
                 if (rainMode) rainModeStartTime = millis();
@@ -164,9 +164,9 @@ void Oiler::handleButton() {
     if (currentReading && !bleedingMode) {
         unsigned long duration = millis() - buttonPressStartTime;
         
-        // > 10s: Bleeding Mode
+        // Long Press: Bleeding Mode
         if (duration > BLEEDING_PRESS_MS) {
-            // SAFETY: Only allow in standstill (< 7 km/h)
+            // SAFETY: Only allow in standstill
             if (currentSpeed < MIN_SPEED_KMH) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
@@ -178,7 +178,6 @@ void Oiler::handleButton() {
                 pulseState = false; 
                 lastPulseTime = millis() - 1000; // Force start
 
-                // pumpCycles++; // Removed: Bleeding counts per pulse in processPump now
                 saveConfig(); // Save immediately
             } else {
 #ifdef GPS_DEBUG
@@ -224,7 +223,7 @@ void Oiler::updateLED() {
     }
 
     if (bleedingMode) {
-        // Bleeding: Red blinking 2Hz (250ms on, 250ms off)
+        // Bleeding: Red blinking
         strip.setBrightness(currentHighBrightness);
         if ((now / 250) % 2 == 0) {
             color = strip.Color(255, 0, 0);
@@ -236,7 +235,7 @@ void Oiler::updateLED() {
         strip.setBrightness(currentHighBrightness);
         color = strip.Color(255, 200, 0);
     } else if (wifiActive) {
-        // WiFi Active: White pulsing (Breathing effect)
+        // WiFi Active: White pulsing
         // Use sine wave for smooth pulsing
         float pulse = (sin(now / 500.0) + 1.0) / 2.0; // 0.0 to 1.0
         uint8_t brightness = (uint8_t)(pulse * currentHighBrightness);
@@ -252,11 +251,11 @@ void Oiler::updateLED() {
              // Forced Emergency: Cyan
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255); 
-        } else if (timeSinceLoss > 31 * 60 * 1000) {
-             // Timeout (>31min): Red Bright
+        } else if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
+             // Timeout: Red Bright
              strip.setBrightness(currentHighBrightness);
              color = strip.Color(255, 0, 0); 
-        } else if (emergencyMode || timeSinceLoss > 5 * 60 * 1000) {
+        } else if (emergencyMode || timeSinceLoss > EMERGENCY_WAIT_MS) {
              // Auto Emergency Active/Waiting: Cyan Dim
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255);
@@ -275,7 +274,7 @@ void Oiler::updateLED() {
         color = strip.Color(0, 255, 0);
     }
 
-    // Tank Warning Overlay (Red Pulse 2x then 5s pause)
+    // Tank Warning Overlay (Red Pulse 2x then pause)
     if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
         unsigned long cycle = now % 7500; // 7.5s cycle (2x 1s pulse + 0.5s gap + 5s pause)
         float val = 0.0;
@@ -325,8 +324,6 @@ void Oiler::loadConfig() {
     nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
     
     // Restore Rain Mode
-    // rainMode = preferences.getBool("rain_mode", false);
-    // if (rainMode) rainModeStartTime = millis();
     rainMode = false; // Always start with Rain Mode OFF
     
     emergencyMode = preferences.getBool("emerg_mode", false);
@@ -521,12 +518,12 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         }
     }
 
-    // Regular saving (every 5 minutes or at standstill)
-    if (now - lastSaveTime > SAVE_INTERVAL_MS) { // 5 Min
+    // Regular saving
+    if (now - lastSaveTime > SAVE_INTERVAL_MS) { 
         saveProgress();
         lastSaveTime = now;
     }
-    // Save immediately at standstill (if we were moving before), but limit frequency (min 2 min)
+    // Save immediately at standstill (if we were moving before), but limit frequency
     if (speedKmh < MIN_SPEED_KMH && progressChanged && (now - lastStandstillSaveTime > STANDSTILL_SAVE_MS)) {
         saveProgress();
         lastStandstillSaveTime = now;
@@ -562,7 +559,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             // Auto Mode: Time-based Logic
             lastSimStep = 0; // Reset sim timer
 
-            // 1. Wait 15 Minutes -> Oil once
+            // 1. Wait -> Oil once
             if (timeSinceLoss > EMERGENCY_OIL_1_MS && emergencyOilCount == 0) {
                 int pulses = ranges[1].pulses;
                 if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
@@ -570,30 +567,30 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                 emergencyOilCount++;
                 emergencyMode = true; 
 #ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 1st Oiling (15min)");
+                Serial.println("Emergency Mode: 1st Oiling");
 #endif
             }
             
-            // 2. Wait 30 Minutes -> Oil once
+            // 2. Wait -> Oil once
             if (timeSinceLoss > EMERGENCY_OIL_2_MS && emergencyOilCount == 1) {
                 int pulses = ranges[1].pulses;
                 if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
                 triggerOil(pulses);
                 emergencyOilCount++;
 #ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 2nd Oiling (30min)");
+                Serial.println("Emergency Mode: 2nd Oiling");
 #endif
             }
             
-            // 3. Timeout > 31 Minutes
+            // 3. Timeout
             if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
                 // Timeout State (Red LED handled in updateLED)
                 emergencyMode = true; 
             } else if (timeSinceLoss > EMERGENCY_WAIT_MS) {
-                // Active Waiting State (> 5 min)
+                // Active Waiting State
                 emergencyMode = true;
             } else {
-                // < 5 min: Just waiting, not yet Emergency Mode
+                // Just waiting, not yet Emergency Mode
                 emergencyMode = false;
             }
         }
@@ -690,7 +687,6 @@ void Oiler::processDistance(double distKm, float speedKmh) {
                 if (history.count < 20) history.count++;
 
                 triggerOil(ranges[activeRangeIndex].pulses);
-                // rangeOilingCounts[activeRangeIndex]++; // REMOVED
                 currentProgress = 0.0; // Reset
                 saveProgress(); // Save progress
             }
@@ -723,7 +719,7 @@ void Oiler::triggerOil(int pulses) {
     pulseState = false; // Will start with HIGH in handleOiling
     lastPulseTime = millis() - 1000; // Force immediate start
     
-    // LED Indication for 3 seconds
+    // LED Indication
     ledOilingEndTimestamp = millis() + 3000;
 }
 
@@ -809,17 +805,6 @@ SpeedRange* Oiler::getRangeConfig(int index) {
 
 bool Oiler::isButtonPressed() {
     // Return the debounced state of the button
-    // handleButton() updates 'buttonState' (which tracks press start) and 'lastButtonState' (raw reading)
-    // But for a stable "is pressed" check, we can use the raw reading if we trust the user holds it,
-    // OR we can implement a dedicated debounced state variable.
-    // Given handleButton logic:
-    // if (currentReading != lastButtonState) -> debounce logic
-    // So 'lastButtonState' is actually the raw reading from the PREVIOUS loop.
-    
-    // Better approach: Read pin, but require it to be stable?
-    // Since this is called from main loop for WiFi activation (long hold), 
-    // a simple raw read is usually fine. 
-    // But to be cleaner and use the class logic:
     return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
 }
 
