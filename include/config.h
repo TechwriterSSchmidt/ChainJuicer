@@ -37,6 +37,16 @@
 // Safety
 #define STARTUP_DELAY_MS 10000    // 10s delay after boot before pump is allowed to run
 
+// Timeouts & Intervals
+#define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)
+#define RAIN_MODE_AUTO_OFF_MS 1800000 // 30 Minutes (30 * 60 * 1000)
+#define SAVE_INTERVAL_MS 300000   // 5 Minutes (Regular Save)
+#define STANDSTILL_SAVE_MS 120000 // 2 Minutes (Min interval for standstill save)
+#define EMERGENCY_WAIT_MS 300000  // 5 Minutes (Wait before Auto-Emergency)
+#define EMERGENCY_OIL_1_MS 900000 // 15 Minutes (1st Oil)
+#define EMERGENCY_OIL_2_MS 1800000 // 30 Minutes (2nd Oil)
+#define EMERGENCY_TIMEOUT_MS 1860000 // 31 Minutes (Timeout)
+
 // AP Configuration
 #define AP_SSID "ChainJuicer"
 // No password required

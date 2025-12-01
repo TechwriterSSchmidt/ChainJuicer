@@ -121,9 +121,11 @@ void Oiler::loop() {
     processPump(); // Unified pump logic
     
     // Rain Mode Auto-Off (30 Minutes)
-    if (rainMode && (millis() - rainModeStartTime > 30 * 60 * 1000)) {
+    if (rainMode && (millis() - rainModeStartTime > RAIN_MODE_AUTO_OFF_MS)) {
         rainMode = false;
+#ifdef GPS_DEBUG
         Serial.println("Rain Mode Auto-Off");
+#endif
         saveConfig();
     }
 
@@ -149,8 +151,10 @@ void Oiler::handleButton() {
             if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
                 rainMode = !rainMode;
                 if (rainMode) rainModeStartTime = millis();
+#ifdef GPS_DEBUG
                 Serial.print("Rain Mode: ");
                 Serial.println(rainMode ? "ON" : "OFF");
+#endif
                 saveConfig(); // Save setting
             }
         }
@@ -166,7 +170,9 @@ void Oiler::handleButton() {
             if (currentSpeed < MIN_SPEED_KMH) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
+#ifdef GPS_DEBUG
                 Serial.println("Bleeding Mode STARTED");
+#endif
                 
                 // Init Pump State for immediate start
                 pulseState = false; 
@@ -175,7 +181,9 @@ void Oiler::handleButton() {
                 // pumpCycles++; // Removed: Bleeding counts per pulse in processPump now
                 saveConfig(); // Save immediately
             } else {
+#ifdef GPS_DEBUG
                 Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
+#endif
             }
 
             // Reset button start time to avoid re-triggering immediately
@@ -438,7 +446,9 @@ void Oiler::saveProgress() {
         preferences.putFloat("tank_lvl", currentTankLevelMl);
 
         progressChanged = false;
+#ifdef GPS_DEBUG
         Serial.println("Progress & Stats saved.");
+#endif
     }
 }
 
@@ -512,12 +522,12 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     }
 
     // Regular saving (every 5 minutes or at standstill)
-    if (now - lastSaveTime > 300000) { // 5 Min
+    if (now - lastSaveTime > SAVE_INTERVAL_MS) { // 5 Min
         saveProgress();
         lastSaveTime = now;
     }
     // Save immediately at standstill (if we were moving before), but limit frequency (min 2 min)
-    if (speedKmh < MIN_SPEED_KMH && progressChanged && (now - lastStandstillSaveTime > 120000)) {
+    if (speedKmh < MIN_SPEED_KMH && progressChanged && (now - lastStandstillSaveTime > STANDSTILL_SAVE_MS)) {
         saveProgress();
         lastStandstillSaveTime = now;
     }
@@ -553,29 +563,33 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             lastSimStep = 0; // Reset sim timer
 
             // 1. Wait 15 Minutes -> Oil once
-            if (timeSinceLoss > 15 * 60 * 1000 && emergencyOilCount == 0) {
+            if (timeSinceLoss > EMERGENCY_OIL_1_MS && emergencyOilCount == 0) {
                 int pulses = ranges[1].pulses;
                 if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
                 triggerOil(pulses); 
                 emergencyOilCount++;
                 emergencyMode = true; 
+#ifdef GPS_DEBUG
                 Serial.println("Emergency Mode: 1st Oiling (15min)");
+#endif
             }
             
             // 2. Wait 30 Minutes -> Oil once
-            if (timeSinceLoss > 30 * 60 * 1000 && emergencyOilCount == 1) {
+            if (timeSinceLoss > EMERGENCY_OIL_2_MS && emergencyOilCount == 1) {
                 int pulses = ranges[1].pulses;
                 if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
                 triggerOil(pulses);
                 emergencyOilCount++;
+#ifdef GPS_DEBUG
                 Serial.println("Emergency Mode: 2nd Oiling (30min)");
+#endif
             }
             
             // 3. Timeout > 31 Minutes
-            if (timeSinceLoss > 31 * 60 * 1000) {
+            if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
                 // Timeout State (Red LED handled in updateLED)
                 emergencyMode = true; 
-            } else if (timeSinceLoss > 5 * 60 * 1000) {
+            } else if (timeSinceLoss > EMERGENCY_WAIT_MS) {
                 // Active Waiting State (> 5 min)
                 emergencyMode = true;
             } else {
@@ -685,7 +699,9 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 }
 
 void Oiler::triggerOil(int pulses) {
+#ifdef GPS_DEBUG
     Serial.println("OILING START (Non-Blocking)");
+#endif
     
     pumpCycles++; // Stats
     progressChanged = true; // Mark for saving
@@ -696,7 +712,9 @@ void Oiler::triggerOil(int pulses) {
         currentTankLevelMl -= mlConsumed;
         if (currentTankLevelMl < 0) currentTankLevelMl = 0;
         
+#ifdef GPS_DEBUG
         Serial.printf("Oil consumed: %.2f ml, Remaining: %.2f ml\n", mlConsumed, currentTankLevelMl);
+#endif
     }
 
     // Initialize Non-Blocking Oiling
@@ -723,7 +741,9 @@ void Oiler::processPump() {
             bleedingMode = false;
             digitalWrite(pumpPin, LOW);
             pulseState = false; // Reset state
+#ifdef GPS_DEBUG
             Serial.println("Bleeding Finished");
+#endif
             return; // Done
         }
         // If bleeding, we treat it as "always have pulses remaining"
@@ -755,7 +775,9 @@ void Oiler::processPump() {
                 oilingPulsesRemaining--;
                 if (oilingPulsesRemaining == 0) {
                     isOiling = false;
+#ifdef GPS_DEBUG
                     Serial.println("OILING DONE");
+#endif
                 }
             } else {
                 // Bleeding Mode: Count every pulse as stats & consumption

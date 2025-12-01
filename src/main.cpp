@@ -20,7 +20,7 @@ Oiler oiler;
 // WiFi Timer Variables
 unsigned long wifiStartTime = 0;
 bool wifiActive = false; // Default OFF
-const unsigned long WIFI_TIMEOUT = 5 * 60 * 1000; // 5 Minutes
+const unsigned long WIFI_TIMEOUT = WIFI_TIMEOUT_MS;
 
 // HTML Page for Configuration
 const char* htmlHeader = "<html><head><meta name='viewport' content='width=device-width, initial-scale=1'><title>Chain Oiler</title><style>body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9} h2{text-align:center;color:#333} h3{color:#555;margin-top:20px} form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)} table{width:100%;border-collapse:collapse} th{text-align:left;color:#666;font-size:0.9em} td{padding:10px 5px;border-bottom:1px solid #eee} input{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box} input[type=checkbox]{width:20px;height:20px} .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer} .progress{text-align:center;margin-top:15px;color:#555} .time{text-align:center;color:#888;font-size:0.9em;margin-bottom:10px} .help-link{text-align:center;margin-bottom:15px} .help-link a{color:#007bff;text-decoration:none}</style></head><body><h2>Chain Oiler Config</h2><div class='help-link'><a href='/help'>Help & Manual</a></div><div class='time'>Time (GPS): %TIME%</div><form action='/save' method='POST'><h3>Recent Driving Profile</h3><table><tr><th rowspan='2'>Range</th><th rowspan='2'>Km</th><th colspan='2' style='text-align:center'>(Last 20 Lubes)</th><th rowspan='2'>Pulses</th></tr><tr><th style='text-align:center'>Distrib.</th><th style='text-align:center'>Lubes</th></tr>";
@@ -73,21 +73,27 @@ void handleHelp() {
 }
 
 void handleResetStats() {
+#ifdef GPS_DEBUG
     Serial.println("CMD: Reset Stats");
+#endif
     oiler.resetStats();
     server.sendHeader("Location", "/");
     server.send(303);
 }
 
 void handleResetTimeStats() {
+#ifdef GPS_DEBUG
     Serial.println("CMD: Reset Time Stats");
+#endif
     oiler.resetTimeStats();
     server.sendHeader("Location", "/");
     server.send(303);
 }
 
 void handleRefill() {
+#ifdef GPS_DEBUG
     Serial.println("CMD: Refill Tank");
+#endif
     oiler.resetTankToFull();
     server.sendHeader("Location", "/");
     server.send(303);
@@ -95,7 +101,9 @@ void handleRefill() {
 
 void handleRoot() {
     resetWifiTimer();
+#ifdef GPS_DEBUG
     Serial.println("Serving Root Page"); 
+#endif
     String html = htmlHeader;
     html.replace("%TIME%", getZurichTime());
 
@@ -268,7 +276,9 @@ void setup() {
         if (uri.indexOf("googleapis") != -1 || uri.indexOf("gstatic") != -1) {
             server.send(404); // Silent 404
         } else {
+#ifdef GPS_DEBUG
             Serial.printf("404 Not Found: %s\n", uri.c_str());
+#endif
             handleRoot(); // Redirect others to root
         }
     });
@@ -356,8 +366,10 @@ void loop() {
                     if (!wifiActive) {
                         WiFi.softAP(AP_SSID);
                         IPAddress IP = WiFi.softAPIP();
+#ifdef GPS_DEBUG
                         Serial.print("WiFi activated via Button (>3s). IP: ");
                         Serial.println(IP);
+#endif
                         dnsServer.start(53, "*", IP);
                         server.begin();
                         wifiActive = true;
@@ -375,13 +387,17 @@ void loop() {
         
         // Timeout Check
         if (currentMillis - wifiStartTime > WIFI_TIMEOUT) {
+#ifdef GPS_DEBUG
             Serial.println("WiFi Timeout.");
+#endif
             shouldStop = true;
         }
         
         // Speed Check (Auto-Off when driving)
         if (currentSpeed > MIN_SPEED_KMH) {
+#ifdef GPS_DEBUG
             Serial.println("Driving detected -> WiFi off.");
+#endif
             shouldStop = true;
         }
 
