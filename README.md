@@ -33,45 +33,45 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 ## 🛠 Hardware
 
 *   **MCU:** ESP32 Development Board
-*   **GPS:** NEO-6M oder kompatibles Modul (UART)
-*   **Pumpe:** Dosierpumpe (angesteuert über MOSFET/Transistor)
-*   **LED:** WS2812B (NeoPixel) für Statusanzeige (Unterstützt mehrere LEDs, z.B. Status + Gehäusebeleuchtung)
-*   **Taster:** Schließer gegen GND (Input Pullup)
+*   **GPS:** NEO-6M or compatible module (UART)
+*   **Pump:** Dosing pump (controlled via MOSFET/Transistor)
+*   **LED:** WS2812B (NeoPixel) for status indication (Supports multiple LEDs, e.g., status + case lighting)
+*   **Button:** Normally Open against GND (Input Pullup)
 
-### Pinbelegung (Standard)
+### Pin Assignment (Default)
 
-| Komponente | ESP32 Pin | Beschreibung |
+| Component | ESP32 Pin | Description |
 | :--- | :--- | :--- |
-| **Pumpe** | GPIO 27 | MOSFET Gate |
-| **GPS RX** | GPIO 32 | Verbunden mit GPS TX |
-| **GPS TX** | GPIO 33 | Verbunden mit GPS RX |
-| **Taster (Lenker)** | GPIO 4 | Gegen GND geschaltet |
-| **Boot Button** | GPIO 0 | Onboard Taster (Parallelfunktion) |
+| **Pump** | GPIO 27 | MOSFET Gate |
+| **GPS RX** | GPIO 32 | Connected to GPS TX |
+| **GPS TX** | GPIO 33 | Connected to GPS RX |
+| **Button (Handlebar)** | GPIO 4 | Switched against GND |
+| **Boot Button** | GPIO 0 | Onboard Button (Parallel function) |
 | **LED** | GPIO 5 | WS2812B Data In |
 
-*(Konfigurierbar in `include/config.h`)*
+*(Configurable in `include/config.h`)*
 
-## 📖 Bedienung
+## 📖 Operation
 
-### Taster-Funktionen
+### Button Functions
 
-| Aktion | Dauer | Bedingung | Funktion |
+| Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
-| **Kurz drücken** | < 1.5s | Immer | **Regenmodus** Ein/Aus (LED: Blau) |
-| **Halten** | > 3s | Im Stand (< 7 km/h) | **WiFi & Webinterface** aktivieren (LED: Weiß pulsierend) |
-| **Lang halten** | > 10s | Im Stand (< 7 km/h) | **Entlüftungsmodus** (Bleeding) starten (LED: Rot blinkend, Pumpe läuft 10s) |
+| **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue) |
+| **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
+| **Long Hold** | > 10s | At Standstill (< 7 km/h) | Start **Bleeding Mode** (LED: Red blinking, pump runs 10s) |
 
-### LED Status-Codes
+### LED Status Codes
 
-*   🟢 **Grün:** Normalbetrieb (GPS Fix vorhanden)
-*   🔵 **Blau:** Regenmodus Aktiv
-*   🟣 **Magenta:** Kein GPS Signal (Suche...)
-*   🔵 **Cyan:** Emergency Mode (Kein GPS, Simulation aktiv)
-*   � **Rot (hell):** Emergency Timeout (> 31 Min ohne GPS)
-*   �🟡 **Gelb:** Ölung läuft (leuchtet für 3s)
-*   ⚪ **Weiß (pulsierend):** WiFi Konfigurations-Modus aktiv
-*   🔴 **Rot (pulsierend 2x):** Tankwarnung (Reserve erreicht)
-*   🔴 **Rot (blinkend):** Entlüftungsmodus (Bleeding) aktiv
+*   🟢 **Green:** Normal Operation (GPS Fix available)
+*   🔵 **Blue:** Rain Mode Active
+*   🟣 **Magenta:** No GPS Signal (Searching...)
+*   🔵 **Cyan:** Emergency Mode (No GPS, Simulation active)
+*   🔴 **Red (Bright):** Emergency Timeout (> 31 Min without GPS)
+*   � **Yellow:** Oiling in progress (lit for 3s)
+*   ⚪ **White (pulsing):** WiFi Configuration Mode active
+*   🔴 **Red (pulsing 2x):** Tank Warning (Reserve reached)
+*   🔴 **Red (blinking):** Bleeding Mode active
 
 ## 📱 Web Interface
 
