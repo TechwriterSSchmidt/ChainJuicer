@@ -5,15 +5,14 @@ Preferences preferences;
 
 Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     pumpPin = PUMP_PIN;
-    pinMode(pumpPin, OUTPUT);
-    digitalWrite(pumpPin, LOW);
+    // Pin initialization moved to begin() to avoid issues during global constructor execution
     
     // Initialize default configuration
     ranges[0] = {10, 35, 15.0, 2};
     ranges[1] = {35, 55, 15.0, 2};
     ranges[2] = {55, 75, 15.0, 2};
     ranges[3] = {75, 95, 15.0, 2};
-    ranges[4] = {95, 999, 15.0, 2};
+    ranges[4] = {95, MAX_SPEED_KMH, 15.0, 2};
     
     currentProgress = 0.0;
     lastLat = 0.0;
@@ -27,6 +26,21 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     pumpCycles = 0;
     for(int i=0; i<SPEED_BUFFER_SIZE; i++) speedBuffer[i] = 0.0;
     speedBufferIndex = 0;
+    
+    // Time Stats Init
+    for(int i=0; i<NUM_RANGES; i++) {
+        currentIntervalTime[i] = 0.0;
+    }
+    // Init History
+    history.head = 0;
+    history.count = 0;
+    for(int i=0; i<20; i++) {
+        history.oilingRange[i] = -1;
+        for(int j=0; j<NUM_RANGES; j++) {
+            history.timeInRanges[i][j] = 0.0;
+        }
+    }
+    lastTimeUpdate = 0;
 
     // Button & Modes Init
     rainMode = false;
@@ -58,6 +72,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     nightStartHour = 20; // 20:00
     nightEndHour = 6;    // 06:00
     nightBrightness = 15; // Very dim
+    nightBrightnessHigh = 100; // Default for night events
     currentHour = 12;    // Default noon
 
     // Tank Monitor Defaults
@@ -76,11 +91,20 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 }
 
 void Oiler::begin() {
+    // Hardware Init
+    // Ensure Pump is OFF immediately
+    digitalWrite(pumpPin, LOW);
+    pinMode(pumpPin, OUTPUT);
+
+    startupTime = millis(); // Record startup time
+    ledOilingEndTimestamp = 0;
+
     preferences.begin("oiler", false);
     loadConfig();
 
     // Hardware Init
     pinMode(BUTTON_PIN, INPUT_PULLUP);
+    pinMode(CASE_BUTTON_PIN, INPUT_PULLUP);
     pinMode(BOOT_BUTTON_PIN, INPUT_PULLUP); // Init onboard button
     strip.begin();
     strip.setBrightness(ledBrightnessDim);
@@ -89,7 +113,7 @@ void Oiler::begin() {
 
 void Oiler::loop() {
     handleButton();
-    handleOiling(); // Non-blocking oiling logic
+    processPump(); // Unified pump logic
     
     // Rain Mode Auto-Off (30 Minutes)
     if (rainMode && (millis() - rainModeStartTime > 30 * 60 * 1000)) {
@@ -98,23 +122,13 @@ void Oiler::loop() {
         saveConfig();
     }
 
-    // Bleeding Logic
-    if (bleedingMode) {
-        if (millis() - bleedingStartTime < BLEEDING_DURATION_MS) {
-            digitalWrite(pumpPin, HIGH);
-        } else {
-            digitalWrite(pumpPin, LOW);
-            bleedingMode = false;
-        }
-    }
-
     updateLED();
 }
 
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
-    // Check both external button AND onboard boot button
-    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
+    // Check external button, case button AND onboard boot button
+    bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(CASE_BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
     // Debounce (simple)
     if (currentReading != lastButtonState) {
@@ -144,15 +158,19 @@ void Oiler::handleButton() {
         // > 10s: Bleeding Mode
         if (duration > BLEEDING_PRESS_MS) {
             // SAFETY: Only allow in standstill (< 7 km/h)
-            if (currentSpeed < 7.0) {
+            if (currentSpeed < MIN_SPEED_KMH) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
                 Serial.println("Bleeding Mode STARTED");
                 
-                pumpCycles++; // Bleeding counts as 1 cycle
+                // Init Pump State for immediate start
+                pulseState = false; 
+                lastPulseTime = millis() - 1000; // Force start
+
+                // pumpCycles++; // Removed: Bleeding counts per pulse in processPump now
                 saveConfig(); // Save immediately
             } else {
-                Serial.println("Bleeding blocked: Speed > 7 km/h");
+                Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
             }
 
             // Reset button start time to avoid re-triggering immediately
@@ -174,6 +192,7 @@ void Oiler::updateLED() {
 
     // Determine Brightness
     uint8_t currentDimBrightness = ledBrightnessDim;
+    uint8_t currentHighBrightness = ledBrightnessHigh;
     
     if (nightModeEnabled) {
         bool isNight = false;
@@ -187,29 +206,31 @@ void Oiler::updateLED() {
         
         if (isNight) {
             currentDimBrightness = nightBrightness;
+            currentHighBrightness = nightBrightnessHigh;
         }
     }
 
     if (bleedingMode) {
         // Bleeding: Red blinking 2Hz (250ms on, 250ms off)
-        strip.setBrightness(ledBrightnessHigh);
+        strip.setBrightness(currentHighBrightness);
         if ((now / 250) % 2 == 0) {
             color = strip.Color(255, 0, 0);
         } else {
             color = 0; // Off
         }
-    } else if (isOiling) {
+    } else if (isOiling || millis() < ledOilingEndTimestamp) {
         // Oiling: Yellow
-        strip.setBrightness(ledBrightnessHigh);
+        strip.setBrightness(currentHighBrightness);
         color = strip.Color(255, 200, 0);
     } else if (wifiActive) {
-        // WiFi Active: White blinking (1Hz)
-        strip.setBrightness(ledBrightnessHigh);
-        if ((now / 500) % 2 == 0) {
-            color = strip.Color(255, 255, 255); // White
-        } else {
-            color = 0; // Off
-        }
+        // WiFi Active: White pulsing (Breathing effect)
+        // Use sine wave for smooth pulsing
+        float pulse = (sin(now / 500.0) + 1.0) / 2.0; // 0.0 to 1.0
+        uint8_t brightness = (uint8_t)(pulse * currentHighBrightness);
+        if (brightness < 10) brightness = 10; // Minimum brightness
+        
+        strip.setBrightness(brightness);
+        color = strip.Color(255, 255, 255); // White
     } else if (!hasFix) {
         // No GPS: Magenta Dim
         // If Emergency Mode active: Cyan
@@ -230,16 +251,34 @@ void Oiler::updateLED() {
         color = strip.Color(0, 255, 0);
     }
 
-    // Tank Warning Overlay (Red Blink if low)
-    // Blink every 2 seconds for 200ms if tank is low
+    // Tank Warning Overlay (Red Pulse 2x then 5s pause)
     if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-        if ((now % 2000) < 200) {
-            strip.setBrightness(ledBrightnessHigh); // Bright warning
+        unsigned long cycle = now % 7500; // 7.5s cycle (2x 1s pulse + 0.5s gap + 5s pause)
+        float val = 0.0;
+        bool active = false;
+        
+        // Pulse 1: 0-1000ms
+        if (cycle < 1000) { 
+            val = sin((cycle / 1000.0) * PI);
+            active = true;
+        } 
+        // Pulse 2: 1500-2500ms (500ms gap)
+        else if (cycle > 1500 && cycle < 2500) { 
+            val = sin(((cycle - 1500) / 1000.0) * PI);
+            active = true;
+        }
+        
+        if (active) {
+            uint8_t bri = (uint8_t)(val * currentHighBrightness);
+            if (bri < 5) bri = 5; // Minimum visibility
+            strip.setBrightness(bri);
             color = strip.Color(255, 0, 0); // Red
         }
     }
 
-    strip.setPixelColor(0, color);
+    for(int i=0; i<NUM_LEDS; i++) {
+        strip.setPixelColor(i, color);
+    }
     strip.show();
 }
 
@@ -259,6 +298,7 @@ void Oiler::loadConfig() {
     nightStartHour = preferences.getInt("night_start", 20);
     nightEndHour = preferences.getInt("night_end", 6);
     nightBrightness = preferences.getUChar("night_bri", 5);
+    nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
     
     // Restore Rain Mode
     rainMode = preferences.getBool("rain_mode", false);
@@ -268,6 +308,16 @@ void Oiler::loadConfig() {
     // Load Stats
     totalDistance = preferences.getDouble("totalDist", 0.0);
     pumpCycles = preferences.getUInt("pumpCount", 0);
+    
+    // Load Time Stats History
+    size_t len = preferences.getBytesLength("statsHist");
+    if (len == sizeof(StatsHistory)) {
+        preferences.getBytes("statsHist", &history, sizeof(StatsHistory));
+    }
+    // Load current interval time
+    for(int i=0; i<NUM_RANGES; i++) {
+        currentIntervalTime[i] = preferences.getDouble(("cit" + String(i)).c_str(), 0.0);
+    }
 
     // Load Tank Monitor
     tankMonitorEnabled = preferences.getBool("tank_en", false);
@@ -288,9 +338,18 @@ void Oiler::validateConfig() {
         if(ranges[i].pulses < 1) ranges[i].pulses = 1;             // Minimum 1 pulse
     }
     
-    // Brightness limits
-    if(ledBrightnessDim > 255) ledBrightnessDim = 255;
-    if(ledBrightnessHigh > 255) ledBrightnessHigh = 255;
+    // Brightness limits (2-202)
+    if(ledBrightnessDim < 2) ledBrightnessDim = 2;
+    if(ledBrightnessDim > 202) ledBrightnessDim = 202;
+    
+    if(ledBrightnessHigh < 2) ledBrightnessHigh = 2;
+    if(ledBrightnessHigh > 202) ledBrightnessHigh = 202;
+    
+    if(nightBrightness < 2) nightBrightness = 2;
+    if(nightBrightness > 202) nightBrightness = 202;
+    
+    if(nightBrightnessHigh < 2) nightBrightnessHigh = 2;
+    if(nightBrightnessHigh > 202) nightBrightnessHigh = 202;
 }
 
 void Oiler::saveConfig() {
@@ -306,6 +365,7 @@ void Oiler::saveConfig() {
     preferences.putInt("night_start", nightStartHour);
     preferences.putInt("night_end", nightEndHour);
     preferences.putUChar("night_bri", nightBrightness);
+    preferences.putUChar("night_bri_h", nightBrightnessHigh);
     
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
@@ -323,15 +383,28 @@ void Oiler::saveConfig() {
     preferences.putDouble("totalDist", totalDistance);
     preferences.putUInt("pumpCount", pumpCycles);
     
+    // Save Time Stats History
+    preferences.putBytes("statsHist", &history, sizeof(StatsHistory));
+    // Save current interval time
+    for(int i=0; i<NUM_RANGES; i++) {
+        preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
+    }
+    
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
 void Oiler::saveProgress() {
     if (progressChanged) {
         preferences.putFloat("progress", currentProgress);
-        // Save stats here too
+        // Save Stats
         preferences.putDouble("totalDist", totalDistance);
         preferences.putUInt("pumpCount", pumpCycles);
+        
+        // Save Time Stats History
+        preferences.putBytes("statsHist", &history, sizeof(StatsHistory));
+        for(int i=0; i<NUM_RANGES; i++) {
+            preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
+        }
         
         // Save Tank Level
         preferences.putFloat("tank_lvl", currentTankLevelMl);
@@ -344,6 +417,22 @@ void Oiler::saveProgress() {
 void Oiler::resetStats() {
     totalDistance = 0.0;
     pumpCycles = 0;
+    resetTimeStats(); // Also reset time stats
+    saveConfig();
+}
+
+void Oiler::resetTimeStats() {
+    for(int i=0; i<NUM_RANGES; i++) {
+        currentIntervalTime[i] = 0.0;
+    }
+    history.head = 0;
+    history.count = 0;
+    for(int i=0; i<20; i++) {
+        history.oilingRange[i] = -1;
+        for(int j=0; j<NUM_RANGES; j++) {
+            history.timeInRanges[i][j] = 0.0;
+        }
+    }
     saveConfig();
 }
 
@@ -363,6 +452,31 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     // Use smoothedSpeed for logic
     float speedKmh = smoothedSpeed;
     currentSpeed = speedKmh; // Update member variable for handleButton logic
+    
+    // Update Time Stats
+    if (lastTimeUpdate == 0) lastTimeUpdate = now;
+    unsigned long dt = now - lastTimeUpdate;
+    lastTimeUpdate = now;
+    
+    // Only count if moving fast enough to be in a range (or at least > MIN_SPEED)
+    // And avoid huge jumps (e.g. after sleep)
+    if (speedKmh >= MIN_SPEED_KMH && dt < 2000) {
+        double dtSeconds = (double)dt / 1000.0;
+        
+        // Find matching range
+        int activeRangeIndex = -1;
+        for(int i=0; i<NUM_RANGES; i++) {
+            if (speedKmh >= ranges[i].minSpeed && speedKmh < ranges[i].maxSpeed) {
+                activeRangeIndex = i;
+                break;
+            }
+        }
+        
+        if (activeRangeIndex != -1) {
+            currentIntervalTime[activeRangeIndex] += dtSeconds;
+            progressChanged = true; // Mark for saving
+        }
+    }
 
     // Regular saving (every 5 minutes or at standstill)
     if (now - lastSaveTime > 300000) { // 5 Min
@@ -370,7 +484,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastSaveTime = now;
     }
     // Save immediately at standstill (if we were moving before), but limit frequency (min 2 min)
-    if (speedKmh < 5.0 && progressChanged && (now - lastStandstillSaveTime > 120000)) {
+    if (speedKmh < MIN_SPEED_KMH && progressChanged && (now - lastStandstillSaveTime > 120000)) {
         saveProgress();
         lastStandstillSaveTime = now;
     }
@@ -437,8 +551,8 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     double distKm = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon) / 1000.0;
     
     // Only if moving and GPS not jumping (small filter)
-    // Plausibility check: < 300 km/h
-    if (distKm > 0.005 && speedKmh > 2.0 && speedKmh < 300.0) { 
+    // Plausibility check: < MAX_SPEED_KMH + Buffer
+    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < (MAX_SPEED_KMH + 50.0)) { 
         lastLat = lat;
         lastLon = lon;
         
@@ -497,7 +611,18 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             // Prevents edge cases during mode switches
             // 5% safety margin eliminates double oilings
             if (currentProgress >= 0.95) {
+                // Update History BEFORE resetting currentIntervalTime
+                int head = history.head;
+                history.oilingRange[head] = activeRangeIndex;
+                for(int i=0; i<NUM_RANGES; i++) {
+                    history.timeInRanges[head][i] = currentIntervalTime[i];
+                    currentIntervalTime[i] = 0.0; // Reset for next interval
+                }
+                history.head = (head + 1) % 20;
+                if (history.count < 20) history.count++;
+
                 triggerOil(ranges[activeRangeIndex].pulses);
+                // rangeOilingCounts[activeRangeIndex]++; // REMOVED
                 currentProgress = 0.0; // Reset
                 saveProgress(); // Save progress
             }
@@ -525,40 +650,72 @@ void Oiler::triggerOil(int pulses) {
     oilingPulsesRemaining = pulses;
     pulseState = false; // Will start with HIGH in handleOiling
     lastPulseTime = millis() - 1000; // Force immediate start
+    
+    // LED Indication for 3 seconds
+    ledOilingEndTimestamp = millis() + 3000;
 }
 
-void Oiler::handleOiling() {
-    if (!isOiling) return;
-
+void Oiler::processPump() {
     unsigned long now = millis();
-    
-    if (oilingPulsesRemaining > 0) {
-        if (!pulseState) {
-            // Currently LOW (Pause), waiting to go HIGH
-            // Initial start or after pause
-            // Pause duration is 200ms, but for first pulse it doesn't matter
-            if (now - lastPulseTime >= 200) {
-                digitalWrite(pumpPin, HIGH);
-                pulseState = true;
-                lastPulseTime = now;
-            }
-        } else {
-            // Currently HIGH (Pumping), waiting to go LOW
-            if (now - lastPulseTime >= PULSE_DURATION_MS) {
-                digitalWrite(pumpPin, LOW);
-                pulseState = false;
-                lastPulseTime = now;
+
+    // Safety: Startup Delay
+    if (now - startupTime < STARTUP_DELAY_MS) {
+        return;
+    }
+
+    // Check if we should stop bleeding
+    if (bleedingMode) {
+        if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
+            bleedingMode = false;
+            digitalWrite(pumpPin, LOW);
+            pulseState = false; // Reset state
+            Serial.println("Bleeding Finished");
+            return; // Done
+        }
+        // If bleeding, we treat it as "always have pulses remaining"
+    } else if (!isOiling) {
+        // Not bleeding and not oiling -> Idle
+        return;
+    }
+
+      
+    // Logic for Pulse Generation
+    if (!pulseState) {
+        // Currently LOW (Pause phase)
+        // Wait for PAUSE_DURATION_MS
+        if (now - lastPulseTime >= PAUSE_DURATION_MS) {
+            digitalWrite(pumpPin, HIGH);
+            pulseState = true;
+            lastPulseTime = now;
+        }
+    } else {
+        // Currently HIGH (Pulse phase)
+        // Wait for PULSE_DURATION
+        if (now - lastPulseTime >= PULSE_DURATION_MS) {
+            digitalWrite(pumpPin, LOW);
+            pulseState = false;
+            lastPulseTime = now;
+            
+            // Only decrement in normal oiling mode
+            if (!bleedingMode) {
                 oilingPulsesRemaining--;
-                
                 if (oilingPulsesRemaining == 0) {
                     isOiling = false;
                     Serial.println("OILING DONE");
                 }
+            } else {
+                // Bleeding Mode: Count every pulse as stats & consumption
+                pumpCycles++;
+                progressChanged = true;
+                
+                if (tankMonitorEnabled) {
+                    float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
+                    currentTankLevelMl -= mlConsumed;
+                    if (currentTankLevelMl < 0) currentTankLevelMl = 0;
+                    // Serial.printf("Bleeding Pulse: %.2f ml consumed\n", mlConsumed);
+                }
             }
         }
-    } else {
-        isOiling = false;
-        digitalWrite(pumpPin, LOW);
     }
 }
 
@@ -587,7 +744,7 @@ bool Oiler::isButtonPressed() {
     // Since this is called from main loop for WiFi activation (long hold), 
     // a simple raw read is usually fine. 
     // But to be cleaner and use the class logic:
-    return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
+    return !digitalRead(BUTTON_PIN) || !digitalRead(CASE_BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
 }
 
 void Oiler::rebuildLUT() {

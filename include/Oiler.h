@@ -7,7 +7,7 @@
 
 #define SPEED_BUFFER_SIZE 5
 #define LUT_STEP 5
-#define LUT_MAX_SPEED 300
+#define LUT_MAX_SPEED ((int)MAX_SPEED_KMH)
 #define LUT_SIZE ((LUT_MAX_SPEED / LUT_STEP) + 1)
 
 class Oiler {
@@ -34,6 +34,24 @@ public:
     double getTotalDistance() { return totalDistance; }
     unsigned long getPumpCycles() { return pumpCycles; }
     void resetStats();
+    
+    // Time Stats (History for last 20 oilings)
+    struct StatsHistory {
+        uint8_t head;
+        uint8_t count;
+        int8_t oilingRange[20];
+        double timeInRanges[20][NUM_RANGES];
+    };
+    
+    StatsHistory history;
+    double currentIntervalTime[NUM_RANGES]; // Time accumulated in current interval (not yet oiled)
+    
+    // Helper to get summed stats for UI
+    double getRecentTimeSeconds(int rangeIndex);
+    int getRecentOilingCount(int rangeIndex);
+    double getRecentTotalTime();
+
+    void resetTimeStats();
 
     // LED Settings
     uint8_t ledBrightnessDim;
@@ -44,6 +62,7 @@ public:
     int nightStartHour;
     int nightEndHour;
     uint8_t nightBrightness;
+    uint8_t nightBrightnessHigh;
 
     void setCurrentHour(int hour);
 
@@ -51,6 +70,17 @@ public:
     unsigned long getOilDistance();
     
     bool isButtonPressed(); // Expose button state for main.cpp
+
+    // Tank Monitor
+    bool tankMonitorEnabled;
+    float tankCapacityMl;
+    float currentTankLevelMl;
+    int dropsPerMl;
+    int dropsPerPulse;
+    int tankWarningThresholdPercent;
+
+    void setTankFill(float levelMl); // Manually set level (e.g. refill)
+    void resetTankToFull();
 
 private:
     int pumpPin;
@@ -93,7 +123,7 @@ private:
     unsigned long lastLedUpdate;
     void updateLED();
     void handleButton();
-    void handleOiling();
+    void processPump(); // Unified pump logic
 
     void loadConfig();
     void validateConfig();
@@ -104,6 +134,7 @@ private:
     // Emergency update and standstill save time
     unsigned long lastEmergUpdate;
     unsigned long lastStandstillSaveTime;
+    unsigned long lastTimeUpdate; // For time stats calculation
 
     // Non-blocking oiling state
     bool isOiling;
@@ -112,16 +143,9 @@ private:
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW
 
-    // Tank Monitor
-    bool tankMonitorEnabled;
-    float tankCapacityMl;
-    float currentTankLevelMl;
-    int dropsPerMl;
-    int dropsPerPulse;
-    int tankWarningThresholdPercent;
-
-    void setTankFill(float levelMl); // Manually set level (e.g. refill)
-    void resetTankToFull();
+    // Safety & UX
+    unsigned long startupTime;
+    unsigned long ledOilingEndTimestamp;
 };
 
 #endif
