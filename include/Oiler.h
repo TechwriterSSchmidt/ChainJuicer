@@ -27,6 +27,10 @@ public:
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
 
+    // Emergency Mode Forced
+    void setEmergencyModeForced(bool forced) { emergencyModeForced = forced; }
+    bool isEmergencyModeForced() { return emergencyModeForced; }
+
     // WiFi Status
     void setWifiActive(bool active) { wifiActive = active; }
 
@@ -89,7 +93,7 @@ private:
     float intervalLUT[LUT_SIZE]; // Lookup Table for smoothed intervals
     void rebuildLUT(); // Helper to fill LUT
 
-    float currentProgress; // 0.0 bis 1.0 (1.0 = Ölen fällig)
+    float currentProgress; // 0.0 to 1.0 (1.0 = Oiling due)
     
     double lastLat;
     double lastLon;
@@ -105,7 +109,7 @@ private:
     float speedBuffer[SPEED_BUFFER_SIZE];
     int speedBufferIndex;
 
-    // Taster & Modi
+    // Button & Modes
     bool rainMode;
     unsigned long rainModeStartTime;
     bool emergencyMode;
@@ -116,7 +120,7 @@ private:
     bool buttonState;
     bool lastButtonState;
     float currentSpeed; // Added for logic suppression
-    float smoothedInterval; // Low-Pass Filter für Intervall
+    float smoothedInterval; // Low-Pass Filter for Interval
     
     // LED
     Adafruit_NeoPixel strip;
@@ -127,7 +131,7 @@ private:
 
     void loadConfig();
     void validateConfig();
-    // saveProgress ist jetzt public
+    // saveProgress is public
     void processDistance(double distKm, float speedKmh);
     void triggerOil(int pulses);
 
@@ -146,6 +150,12 @@ private:
     // Safety & UX
     unsigned long startupTime;
     unsigned long ledOilingEndTimestamp;
+
+    // Emergency Mode Settings
+    bool emergencyModeForced; // Manually enabled via WebUI
+    unsigned long emergencyModeStartTime;
+    unsigned long lastEmergencyOilTime;
+    int emergencyOilCount;
 };
 
 #endif

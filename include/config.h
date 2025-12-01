@@ -8,7 +8,6 @@
 #define GPS_RX_PIN 32      // GPS RX to ESP TX
 #define GPS_TX_PIN 33      // GPS TX to ESP RX
 #define BUTTON_PIN 4       // Handlebar button (connected to GND, INPUT_PULLUP)
-#define CASE_BUTTON_PIN 14 // Case button (connected to GND, INPUT_PULLUP)
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 #define LED_PIN 5          // WS2812B Data Pin
 
@@ -37,6 +36,16 @@
 
 // Safety
 #define STARTUP_DELAY_MS 10000    // 10s delay after boot before pump is allowed to run
+
+// Timeouts & Intervals
+#define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)
+#define RAIN_MODE_AUTO_OFF_MS 1800000 // 30 Minutes (30 * 60 * 1000)
+#define SAVE_INTERVAL_MS 300000   // 5 Minutes (Regular Save)
+#define STANDSTILL_SAVE_MS 120000 // 2 Minutes (Min interval for standstill save)
+#define EMERGENCY_WAIT_MS 300000  // 5 Minutes (Wait before Auto-Emergency)
+#define EMERGENCY_OIL_1_MS 900000 // 15 Minutes (1st Oil)
+#define EMERGENCY_OIL_2_MS 1800000 // 30 Minutes (2nd Oil)
+#define EMERGENCY_TIMEOUT_MS 1860000 // 31 Minutes (Timeout)
 
 // AP Configuration
 #define AP_SSID "ChainJuicer"
