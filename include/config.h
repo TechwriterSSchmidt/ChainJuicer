@@ -35,7 +35,7 @@
 #define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
 
 // Safety
-#define STARTUP_DELAY_MS 10000    // Safety-delay in ms after boot before pump is allowed to run
+// STARTUP_DELAY_MS removed as hardware pull-down handles boot glitches
 
 // Timeouts & Intervals
 #define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)

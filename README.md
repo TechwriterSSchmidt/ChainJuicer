@@ -7,7 +7,6 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
 *   **Smart GPS Filter:** Detects and ignores "ghost speeds" (multipath reflections) indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
-*   **Startup Delay:** 10-second safety delay after boot to prevent pump malfunctions during initialization.
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
 *   **Emergency Mode:**
