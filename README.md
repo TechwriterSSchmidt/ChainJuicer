@@ -102,6 +102,10 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 4.  Compile and upload project (`Upload`).
 5.  File system is not necessary (Data is saved in NVS/Preferences).
 
+## 🛒 BOM
+
+1. ESP32 WROOM 32e (4Mb) on integrated board [with MOS switch and DCDC converter onboard} (https://de.aliexpress.com/item/1005009961593556.html?spm=a2g0o.productlist.main.1.1be318e2kM4llb&algo_pvid=393c14d2-c859-4a65-8a5e-38971a6ab199&algo_exp_id=393c14d2-c859-4a65-8a5e-38971a6ab199-0&pdp_ext_f=%7B%22order%22%3A%2269%22%2C%22eval%22%3A%221%22%2C%22fromPage%22%3A%22search%22%7D&pdp_npi=6%40dis%21CHF%216.08%215.15%21%21%2152.44%2144.47%21%402103891017646694198033132e1b79%2112000050699369038%21sea%21CH%211702792198%21X%211%210%21n_tag%3A-29919%3Bd%3A2dfc4adf%3Bm03_new_user%3A-29895%3BpisId%3A5000000194137783&curPageLogUid=AVpS4uQRXAAa&utparam-url=scene%3Asearch%7Cquery_from%3A%7Cx_object_id%3A1005009961593556%7C_p_origin_prod%3A) or a similar solution
+
 
 
 
