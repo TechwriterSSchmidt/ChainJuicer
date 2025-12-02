@@ -51,6 +51,21 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 
 *(Configurable in `include/config.h`)*
 
+### MOSFET Wiring example (check actual GPIO settings)
+
+To prevent the pump from triggering briefly during boot (floating pin), desolder the J3Y transistor that triggers the MOSFET gate on powerup. Add pull-down resistors instead to directly connect the GPIO pin to the MOSFET gate:
+
+```ascii
+ESP32 GPIO 27  ----[ 220R ]----+-----> MOSFET Gate
+                               |
+                              [10k]
+                               |
+                              GND
+```
+
+*   **220R (Series):** Protects the ESP32 pin from current spikes (Gate capacitance).
+*   **10k (Pull-Down):** Keeps the Gate at GND (0V) while the ESP32 is booting.
+
 ## 📖 Operation
 
 ### Button Functions
@@ -104,7 +119,20 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 
 ## 🛒 BOM
 
-1. ESP32 WROOM 32e (4Mb) on integrated board [with MOS switch and DCDC converter onboard](https://de.aliexpress.com/item/1005009961593556.html?spm=a2g0o.productlist.main.1.1be318e2kM4llb&algo_pvid=393c14d2-c859-4a65-8a5e-38971a6ab199&algo_exp_id=393c14d2-c859-4a65-8a5e-38971a6ab199-0&pdp_ext_f=%7B%22order%22%3A%2269%22%2C%22eval%22%3A%221%22%2C%22fromPage%22%3A%22search%22%7D&pdp_npi=6%40dis%21CHF%216.08%215.15%21%21%2152.44%2144.47%21%402103891017646694198033132e1b79%2112000050699369038%21sea%21CH%211702792198%21X%211%210%21n_tag%3A-29919%3Bd%3A2dfc4adf%3Bm03_new_user%3A-29895%3BpisId%3A5000000194137783&curPageLogUid=AVpS4uQRXAAa&utparam-url=scene%3Asearch%7Cquery_from%3A%7Cx_object_id%3A1005009961593556%7C_p_origin_prod%3A) or a similar solution
+1.  **ESP32 Board:** ESP32 WROOM 32e (4Mb) or better. I used this [board with integrated MOS switch and DCDC converter](https://de.aliexpress.com/item/1005009961593556.html) or similar.
+2.  **GPS Module:** UBLOX M10 or compatible (UART).
+3.  **Dosing Pump:** 12V Pulse Dosing Pump.
+4.  **LED:** WS2812B (NeoPixel).
+5.  **Button:** Momentary push button (normally open).
+6.  **Resistors:**
+    *   1x 220R - 470R (Series resistor).
+    *   1x 10k (Pull-down resistor).
+    *   *Note: Required to suppress the initial pump trigger during powerup with the above board.*
+7.  **Wires & Connectors:** Various lengths and types.
+8.  **Housing:** 3D printed housing. *[Link to MakerWorld or Thingiverse to be added]*
+9.  **Screws:** 8x M3x8 screws for housing and board.
+10. **Fuse:** 5A fuse and fuse holder.
+11. **Misc:** Bits and pieces (Heat shrink, cable ties, etc.).
 
 
 
