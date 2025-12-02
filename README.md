@@ -132,7 +132,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 8.  **Housing:** 3D printed housing. *[Link to MakerWorld or Thingiverse to be added]*
 9.  **Screws:** 8x M3x8 screws for housing and board.
 10. **Fuse:** 5A fuse and fuse holder.
-11. **Misc:** Bits and pieces (Heat shrink, cable ties, etc.).
+11. **Misc:** Bits and pieces (heat shrink, cable ties, etc.).
 
 
 
