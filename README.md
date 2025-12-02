@@ -1,4 +1,4 @@
-# GPS Chain Oiler (ESP32)
+# GPS Chain Oiler (ESP32-based)
 
 An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The system dynamically adjusts oiling intervals based on the driven speed and offers extensive configuration options via a web interface.
 
