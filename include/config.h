@@ -5,10 +5,11 @@
 
 // Hardware Pins
 #define PUMP_PIN 16        // Pin for MOSFET (Pump) - RIGHT SIDE
-#define LED_PIN 13         // WS2812B Data Pin - LEFT SIDE (Top)
+#define LED_PIN 32
+         // WS2812B Data Pin - LEFT SIDE (Bottom)
 #define GPS_RX_PIN 26      // GPS RX to ESP TX - LEFT SIDE (Middle)
 #define GPS_TX_PIN 27      // GPS TX to ESP RX - LEFT SIDE (Middle)
-#define BUTTON_PIN 33      // Handlebar button - LEFT SIDE (Bottom)
+#define BUTTON_PIN 25      // Handlebar button - LEFT SIDE (Middle)
 
 // Pump Logic Configuration
 // Set to true if using an NPN transistor (J3Y) to drive the MOSFET (Inverted Logic)
