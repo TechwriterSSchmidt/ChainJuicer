@@ -220,7 +220,7 @@ void handleSave() {
 void setup() {
     // Safety: Ensure Pump is OFF immediately
     // Set level LOW before switching to OUTPUT to prevent glitches
-    digitalWrite(PUMP_PIN, LOW);
+    digitalWrite(PUMP_PIN, PUMP_OFF);
     pinMode(PUMP_PIN, OUTPUT);
 
     Serial.begin(115200);

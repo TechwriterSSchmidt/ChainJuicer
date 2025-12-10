@@ -99,7 +99,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 void Oiler::begin() {
     // Hardware Init
     // Ensure Pump is OFF immediately
-    digitalWrite(pumpPin, LOW);
+    digitalWrite(pumpPin, PUMP_OFF);
     pinMode(pumpPin, OUTPUT);
 
     startupTime = millis(); // Record startup time
@@ -735,7 +735,7 @@ void Oiler::processPump() {
     if (bleedingMode) {
         if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
             bleedingMode = false;
-            digitalWrite(pumpPin, LOW);
+            digitalWrite(pumpPin, PUMP_OFF);
             pulseState = false; // Reset state
 #ifdef GPS_DEBUG
             Serial.println("Bleeding Finished");
@@ -754,7 +754,7 @@ void Oiler::processPump() {
         // Currently LOW (Pause phase)
         // Wait for PAUSE_DURATION_MS
         if (now - lastPulseTime >= PAUSE_DURATION_MS) {
-            digitalWrite(pumpPin, HIGH);
+            digitalWrite(pumpPin, PUMP_ON);
             pulseState = true;
             lastPulseTime = now;
         }
@@ -762,7 +762,7 @@ void Oiler::processPump() {
         // Currently HIGH (Pulse phase)
         // Wait for PULSE_DURATION
         if (now - lastPulseTime >= PULSE_DURATION_MS) {
-            digitalWrite(pumpPin, LOW);
+            digitalWrite(pumpPin, PUMP_OFF);
             pulseState = false;
             lastPulseTime = now;
             

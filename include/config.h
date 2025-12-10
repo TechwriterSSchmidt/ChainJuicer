@@ -6,6 +6,20 @@
 // Hardware Pins
 #define PUMP_PIN 27        // Pin for MOSFET (Pump)
 #define GPS_RX_PIN 32      // GPS RX to ESP TX
+
+// Pump Logic Configuration
+// Set to true if using an NPN transistor (J3Y) to drive the MOSFET (Inverted Logic)
+// IMPORTANT: If PUMP_INVERTED is false (Normal), use a Pull-DOWN Resistor (10k to GND) to prevent boot glitches.
+// If PUMP_INVERTED is true, use a Pull-UP Resistor.
+#define PUMP_INVERTED false
+
+#if PUMP_INVERTED
+  #define PUMP_ON LOW
+  #define PUMP_OFF HIGH
+#else
+  #define PUMP_ON HIGH
+  #define PUMP_OFF LOW
+#endif
 #define GPS_TX_PIN 33      // GPS TX to ESP RX
 #define BUTTON_PIN 4       // Handlebar button (connected to GND, INPUT_PULLUP)
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
