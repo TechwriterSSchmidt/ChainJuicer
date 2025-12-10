@@ -102,7 +102,6 @@ void Oiler::begin() {
     digitalWrite(pumpPin, PUMP_OFF);
     pinMode(pumpPin, OUTPUT);
 
-    startupTime = millis(); // Record startup time
     ledOilingEndTimestamp = 0;
 
     preferences.begin("oiler", false);
@@ -725,11 +724,6 @@ void Oiler::triggerOil(int pulses) {
 
 void Oiler::processPump() {
     unsigned long now = millis();
-
-    // Safety: Startup Delay
-    if (now - startupTime < STARTUP_DELAY_MS) {
-        return;
-    }
 
     // Check if we should stop bleeding
     if (bleedingMode) {

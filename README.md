@@ -1,4 +1,4 @@
-# GPS Chain Oiler (ESP32)
+# GPS Chain Oiler (ESP32-based)
 
 An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The system dynamically adjusts oiling intervals based on the driven speed and offers extensive configuration options via a web interface.
 
@@ -7,7 +7,6 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
 *   **Smart GPS Filter:** Detects and ignores "ghost speeds" (multipath reflections) indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
-*   **Startup Delay:** 10-second safety delay after boot to prevent pump malfunctions during initialization.
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
 *   **Emergency Mode:**
@@ -50,6 +49,21 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 | **LED** | GPIO 5 | WS2812B Data In |
 
 *(Configurable in `include/config.h`)*
+
+### MOSFET Wiring example (check actual GPIO settings)
+
+To prevent the pump from triggering briefly during boot (floating pin), desolder the J3Y transistor that triggers the MOSFET gate on powerup. Add pull-down resistors instead to directly connect the GPIO pin to the MOSFET gate:
+
+```ascii
+ESP32 GPIO 27  ----[ 220R ]----+-----> MOSFET Gate
+                               |
+                              [10k]
+                               |
+                              GND
+```
+
+*   **220R (Series):** Protects the ESP32 pin from current spikes (Gate capacitance).
+*   **10k (Pull-Down):** Keeps the Gate at GND (0V) while the ESP32 is booting.
 
 ## 📖 Operation
 
@@ -101,6 +115,23 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 3.  Adjust Upload Port in `platformio.ini` if necessary.
 4.  Compile and upload project (`Upload`).
 5.  File system is not necessary (Data is saved in NVS/Preferences).
+
+## 🛒 BOM
+
+1.  **ESP32 Board:** ESP32 WROOM 32e (4Mb) or better. I used this [board with integrated MOS switch and DCDC converter](https://de.aliexpress.com/item/1005009961593556.html) or similar.
+2.  **GPS Module:** UBLOX M10 or compatible (UART).
+3.  **Dosing Pump:** 12V Pulse Dosing Pump.
+4.  **LED:** WS2812B (NeoPixel).
+5.  **Button:** Momentary push button (normally open).
+6.  **Resistors:**
+    *   1x 220R - 470R (Series resistor).
+    *   1x 10k (Pull-down resistor).
+    *   *Note: Required to suppress the initial pump trigger during powerup with the above board.*
+7.  **Wires & Connectors:** Various lengths and types.
+8.  **Housing:** 3D printed housing. *[Link to MakerWorld or Thingiverse to be added]*
+9.  **Screws:** 8x M3x8 screws for housing and board.
+10. **Fuse:** 5A fuse and fuse holder.
+11. **Misc:** Bits and pieces (heat shrink, cable ties, etc.).
 
 
 

@@ -33,15 +33,15 @@
 // LED Configuration
 #define NUM_LEDS 2
 #define LED_BRIGHTNESS_DIM 20   // Brightness for status LED during normal operation (0-255)
-#define LED_BRIGHTNESS_HIGH 150 // Brightness for events
+#define LED_BRIGHTNESS_HIGH 150 // Brightness for events (0-255)
 
 // Default Values
-#define PULSE_DURATION_MS 250      // Duration of the pump impulse (HIGH)
-#define PAUSE_DURATION_MS 750     // Pause between impulses (LOW)
+#define PULSE_DURATION_MS 150      // Duration in ms of the pump impulse (HIGH)
+#define PAUSE_DURATION_MS 850     // Pause in ms between impulses (LOW)
 #define MIN_SPEED_KMH 7.0         // Minimum speed for oiling (Standstill threshold)
-#define MIN_ODOMETER_SPEED_KMH 5.0 // Minimum speed to count distance for odometer
+#define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
-#define BLEEDING_DURATION_MS 10000 // 10 seconds pumping for bleeding
+#define BLEEDING_DURATION_MS 10000 // Pumping time in ms for bleeding
 
 // Button Timings
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode
@@ -49,7 +49,7 @@
 #define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
 
 // Safety
-#define STARTUP_DELAY_MS 10000    // 10s delay after boot before pump is allowed to run
+// STARTUP_DELAY_MS removed as hardware pull-down handles boot glitches
 
 // Timeouts & Intervals
 #define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)
@@ -78,3 +78,4 @@ struct SpeedRange {
 const int NUM_RANGES = 5;
 
 #endif
+

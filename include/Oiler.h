@@ -148,7 +148,6 @@ private:
     bool pulseState; // true = HIGH, false = LOW
 
     // Safety & UX
-    unsigned long startupTime;
     unsigned long ledOilingEndTimestamp;
 
     // Emergency Mode Settings
