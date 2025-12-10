@@ -4,8 +4,11 @@
 #include <Arduino.h>
 
 // Hardware Pins
-#define PUMP_PIN 27        // Pin for MOSFET (Pump)
-#define GPS_RX_PIN 32      // GPS RX to ESP TX
+#define PUMP_PIN 16        // Pin for MOSFET (Pump) - RIGHT SIDE
+#define LED_PIN 13         // WS2812B Data Pin - LEFT SIDE (Top)
+#define GPS_RX_PIN 26      // GPS RX to ESP TX - LEFT SIDE (Middle)
+#define GPS_TX_PIN 27      // GPS TX to ESP RX - LEFT SIDE (Middle)
+#define BUTTON_PIN 33      // Handlebar button - LEFT SIDE (Bottom)
 
 // Pump Logic Configuration
 // Set to true if using an NPN transistor (J3Y) to drive the MOSFET (Inverted Logic)
@@ -20,10 +23,8 @@
   #define PUMP_ON HIGH
   #define PUMP_OFF LOW
 #endif
-#define GPS_TX_PIN 33      // GPS TX to ESP RX
-#define BUTTON_PIN 4       // Handlebar button (connected to GND, INPUT_PULLUP)
+
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
-#define LED_PIN 5          // WS2812B Data Pin
 
 #define GPS_BAUD 115200
 
