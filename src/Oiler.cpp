@@ -537,14 +537,34 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         }
 
         unsigned long timeSinceLoss = now - lastEmergUpdate;
+        bool autoEmergencyActive = (timeSinceLoss > EMERGENCY_TIMEOUT_MS);
 
         // Static variable for simulation step (shared across calls)
         static unsigned long lastSimStep = 0;
 
-        if (emergencyModeForced) {
-            // Forced Mode: Simulate 50 km/h continuously
-            emergencyMode = true;
+        if (emergencyModeForced || autoEmergencyActive) {
+            // We are in Emergency Mode (either Forced or Auto Timeout)
             
+            if (!emergencyMode) {
+                // Just entered Emergency Mode
+                emergencyMode = true;
+                lastSimStep = now; // Initialize timer
+                
+                // Auto-Disable Rain Mode
+                if (rainMode) {
+                    setRainMode(false);
+                    saveConfig();
+                }
+#ifdef GPS_DEBUG
+                Serial.println("Emergency Mode ACTIVATED (50km/h Sim)");
+#endif
+            } else {
+                // Already in Emergency Mode
+                // Ensure Rain Mode stays OFF
+                if (rainMode) setRainMode(false);
+            }
+            
+            // Simulation Logic (50 km/h)
             if (lastSimStep == 0) lastSimStep = now;
             unsigned long dt = now - lastSimStep;
             lastSimStep = now;
@@ -559,64 +579,9 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             processDistance(distKm, simSpeed);
             
         } else {
-            // Auto Mode: Time-based Logic
-            
-            // If Emergency Mode is active (Auto), we also simulate distance for the Odometer
-            if (emergencyMode) {
-                if (lastSimStep == 0) lastSimStep = now;
-                unsigned long dt = now - lastSimStep;
-                lastSimStep = now;
-                if (dt > 1000) dt = 1000; 
-
-                float simSpeed = 50.0;
-                double distKm = (double)simSpeed * ((double)dt / 3600000.0);
-                
-                totalDistance += distKm; // Update Odometer
-                progressChanged = true;
-            } else {
-                lastSimStep = 0; // Reset sim timer
-            }
-
-            // 1. Wait -> Oil once
-            if (timeSinceLoss > EMERGENCY_OIL_1_MS && emergencyOilCount == 0) {
-                int pulses = ranges[1].pulses;
-                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
-                triggerOil(pulses); 
-                emergencyOilCount++;
-                emergencyMode = true; 
-#ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 1st Oiling");
-#endif
-            }
-            
-            // 2. Wait -> Oil once
-            if (timeSinceLoss > EMERGENCY_OIL_2_MS && emergencyOilCount == 1) {
-                int pulses = ranges[1].pulses;
-                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
-                triggerOil(pulses);
-                emergencyOilCount++;
-#ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 2nd Oiling");
-#endif
-            }
-            
-            // 3. Timeout
-            if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
-                // Timeout State (Red LED handled in updateLED)
-                emergencyMode = true; 
-            } else if (timeSinceLoss > EMERGENCY_WAIT_MS) {
-                // Active Waiting State
-                emergencyMode = true;
-            } else {
-                // Just waiting, not yet Emergency Mode
-                emergencyMode = false;
-            }
-
-            // Automatically disable Rain Mode if Auto Emergency Mode becomes active
-            if (emergencyMode && rainMode) {
-                setRainMode(false);
-                saveConfig();
-            }
+            // Waiting for timeout...
+            emergencyMode = false;
+            lastSimStep = 0; // Reset sim timer
         }
         return;
     }

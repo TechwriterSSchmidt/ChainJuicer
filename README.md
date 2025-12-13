@@ -9,61 +9,63 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Smart GPS Filter:** Detects and ignores "ghost speeds" (multipath reflections) indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
+    *   *Note:* Automatically disabled if Emergency Mode is active (forced or auto).
 *   **Emergency Mode:**
-    *   **Automatic:** Activates if no GPS signal is received for more than 5 minutes.
-        *   After 15 min: 1st oiling.
-        *   After 30 min: 2nd oiling.
-        *   After 31 min: Timeout (Red LED, no further oiling).
-    *   **Manual (Forced):** Continuous simulation of 50 km/h (ignores timeout).
+    *   **Automatic:** Activates if no GPS signal is received for more than 3 minutes.
+        *   Simulates driving at 50 km/h.
+        *   Automatically disables Rain Mode.
+    *   **Manual (Forced):** Continuous simulation of 50 km/h. Forces Rain Mode OFF.
 *   **Smart WiFi & Web Interface:**
     *   Configure all parameters conveniently via smartphone.
     *   LED brightness adjustable in percent (0-100%).
     *   Activation only at standstill (< 7 km/h) via long button press (> 3s).
     *   Automatic shut-off when driving (> 10 km/h) or after inactivity (5 min).
+    *   **New:** Displays current Satellite count in the header.
 *   **Night Mode:** Automatic dimming of the status LED based on GPS time. Separate brightness adjustable for events (oiling, WiFi).
 *   **Bleeding Mode:** Continuous pumping to fill the oil line after maintenance.
 *   **Tank Monitor:** Calculates oil consumption and warns (pulsing LED) when the supply runs low.
 *   **Advanced Statistics:**
     *   **Driving Profile (Time %):** Shows the percentage of driving time spent in each speed range.
     *   **Oiling Counter:** Counts the number of triggered oilings per speed range.
-    *   **Odometer:** Total distance counter.
+    *   **Odometer:** Total distance counter (includes simulated distance in Emergency Mode).
 *   **Data Security:** Odometer and settings are permanently saved in flash memory (NVS).
 
 ## 🛠 Hardware
 
-*   **MCU:** ESP32 Development Board
-*   **GPS:** NEO-6M or compatible module (UART)
-*   **Pump:** Dosing pump (controlled via MOSFET/Transistor)
-*   **LED:** WS2812B (NeoPixel) for status indication (Supports multiple LEDs, e.g., status + case lighting)
+*   **MCU:** ESP32-S3-TINY (or compatible ESP32 board)
+*   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
+*   **Pump:** Dosing pump (controlled via Logic Level MOSFET, e.g., NCE6020AK)
+*   **LED:** WS2812B (NeoPixel) for status indication
 *   **Button:** Normally Open against GND (Input Pullup)
 
-### Pin Assignment (Default)
+### Pin Assignment (Current Config)
 
 | Component | ESP32 Pin | Description |
 | :--- | :--- | :--- |
-| **Pump** | GPIO 27 | MOSFET Gate |
-| **GPS RX** | GPIO 32 | Connected to GPS TX |
-| **GPS TX** | GPIO 33 | Connected to GPS RX |
-| **Button (Handlebar)** | GPIO 4 | Switched against GND |
+| **Pump** | GPIO 16 | MOSFET Gate (Direct Drive) |
+| **GPS RX** | GPIO 27 | Connected to GPS TX |
+| **GPS TX** | GPIO 26 | Connected to GPS RX |
+| **Button** | GPIO 4 | Switched against GND |
 | **Boot Button** | GPIO 0 | Onboard Button (Parallel function) |
-| **LED** | GPIO 5 | WS2812B Data In |
+| **LED** | GPIO 32 | WS2812B Data In |
 
 *(Configurable in `include/config.h`)*
 
-### MOSFET Wiring example (check actual GPIO settings)
+### MOSFET Wiring (Direct Drive)
 
-To prevent the pump from triggering briefly during boot (floating pin), desolder the J3Y transistor that triggers the MOSFET gate on powerup. Add pull-down resistors instead to directly connect the GPIO pin to the MOSFET gate:
+To prevent the pump from triggering briefly during boot (floating pin), use a Logic Level MOSFET (e.g., NCE6020AK) and a Pull-Down resistor. Do **not** use an NPN driver stage (Emitter Follower) as it may cause threshold voltage issues with 3.3V logic.
 
 ```ascii
-ESP32 GPIO 27  ----[ 220R ]----+-----> MOSFET Gate
+ESP32 GPIO 16  ----[ 200R ]----+-----> MOSFET Gate
                                |
                               [10k]
                                |
                               GND
 ```
 
-*   **220R (Series):** Protects the ESP32 pin from current spikes (Gate capacitance).
+*   **200R (Series):** Protects the ESP32 pin from current spikes (Gate capacitance).
 *   **10k (Pull-Down):** Keeps the Gate at GND (0V) while the ESP32 is booting.
+*   **Software:** Ensure `PUMP_INVERTED` is set to `false` in `config.h`.
 
 ## 📖 Operation
 
@@ -71,7 +73,7 @@ ESP32 GPIO 27  ----[ 220R ]----+-----> MOSFET Gate
 
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
-| **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue) |
+| **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue). *Disabled in Emergency Mode.* |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Long Hold** | > 10s | At Standstill (< 7 km/h) | Start **Bleeding Mode** (LED: Red blinking, pump runs 10s) |
 
@@ -93,11 +95,42 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 
 **Adjustable Parameters:**
 *   **Intervals:** Distance and pump pulses for 5 speed ranges.
-*   **Modes:** Rain Mode, Emergency Mode, Night Mode (Times & Brightness).
+*   **Modes:** Rain Mode, Emergency Mode (Force), Night Mode (Times & Brightness).
 *   **LED:** Brightness for Day and Night (in %).
 *   **Statistics:**
     *   **Time %:** Driving profile analysis to optimize intervals.
     *   **Oilings:** Counter for oilings per range.
+    *   **Reset:** Reset stats or refill tank.
+
+## 💡 Usage Scenarios
+
+### Scenario 1: Tunnel / Signal Loss
+You enter a long tunnel. The GPS signal is lost.
+1.  **0-3 Min:** LED turns Magenta (Searching). No oiling occurs yet.
+2.  **> 3 Min:** System enters **Auto Emergency Mode**. LED turns Cyan.
+    *   The system assumes a speed of 50 km/h for the Odometer and Oiling.
+    *   Rain Mode is automatically disabled if it was on.
+3.  **Exit Tunnel:** GPS signal returns. System switches back to Green (Normal). Odometer continues with real data.
+
+### Scenario 2: Rain Ride
+It starts raining.
+1.  **Action:** Short press the button.
+2.  **Feedback:** LED turns Blue.
+3.  **Effect:** Oiling amount is doubled (or interval halved) for the current speed.
+4.  **End:** Press button again, or wait 30 minutes (Auto-Off), or turn off ignition (Reset).
+
+### Scenario 3: Maintenance (Bleeding)
+You installed a new oil line and need to fill it.
+1.  **Condition:** Bike must be standing still (< 7 km/h).
+2.  **Action:** Hold button for > 10 seconds.
+3.  **Feedback:** LED blinks Red. Pump runs continuously for 10 seconds.
+4.  **Repeat:** If line is not full, repeat the process.
+
+### Scenario 4: Hardware Debugging (Pump runs at boot)
+If your pump runs immediately when powering on the ESP32:
+1.  Check wiring: Ensure the 10k Pull-Down resistor is present between Gate and GND.
+2.  Check Config: Ensure `PUMP_INVERTED` is `false` in `config.h`.
+3.  Check MOSFET: Ensure you are using a Logic Level MOSFET (Vgs(th) < 2.5V) and not a standard MOSFET or BJT Darlington without proper bias.
     *   Total odometer and pump cycles (Reset possible).
 
 ## ⚙️ Technical Details
