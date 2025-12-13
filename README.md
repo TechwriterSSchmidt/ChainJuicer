@@ -56,7 +56,8 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 To prevent the pump from triggering briefly during boot (floating pin), use a Logic Level MOSFET (e.g., NCE6020AK) and a Pull-Down resistor. Do **not** use an NPN driver stage (Emitter Follower) as it may cause threshold voltage issues with 3.3V logic.
 
 ```ascii
-ESP32 GPIO 16  ----[ 200R ]----+-----> MOSFET Gate
+ESP32 GPIO (the one that switches the MOSFET
+)  ----[ 200R ]----+-----> MOSFET Gate
                                |
                               [10k]
                                |
