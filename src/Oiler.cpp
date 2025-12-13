@@ -52,6 +52,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     buttonPressStartTime = 0;
     buttonState = false;
     lastButtonState = false;
+    lastDebounceTime = 0; // Init
     lastLedUpdate = 0;
     currentSpeed = 0.0;
     smoothedInterval = 0.0; // Init
@@ -136,31 +137,43 @@ void Oiler::handleButton() {
     // Check both external button AND onboard boot button
     bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
-    // Debounce (simple)
+    // Debounce Logic
     if (currentReading != lastButtonState) {
-        // State changed
-        if (currentReading) {
-            // Pressed
-            buttonPressStartTime = millis();
-        } else {
-            // Released
-            unsigned long pressDuration = millis() - buttonPressStartTime;
-            
-            // Short Press: Rain Mode Toggle
-            if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
-                rainMode = !rainMode;
-                if (rainMode) rainModeStartTime = millis();
+        lastDebounceTime = millis();
+    }
+
+    if ((millis() - lastDebounceTime) > 50) { // 50ms Debounce Delay
+        // If the state has been stable for > 50ms, we accept it
+        if (currentReading != buttonState) {
+            buttonState = currentReading;
+
+            // State changed (Stable)
+            if (buttonState) {
+                // Pressed
+                buttonPressStartTime = millis();
+            } else {
+                // Released
+                unsigned long pressDuration = millis() - buttonPressStartTime;
+                
+                // Short Press: Rain Mode Toggle
+                if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
+                    // Only toggle if NOT in Emergency Mode (Forced or Auto)
+                    if (!emergencyMode && !emergencyModeForced) {
+                        rainMode = !rainMode;
+                        if (rainMode) rainModeStartTime = millis();
 #ifdef GPS_DEBUG
-                Serial.print("Rain Mode: ");
-                Serial.println(rainMode ? "ON" : "OFF");
+                        Serial.print("Rain Mode: ");
+                        Serial.println(rainMode ? "ON" : "OFF");
 #endif
-                saveConfig(); // Save setting
+                        saveConfig(); // Save setting
+                    }
+                }
             }
         }
     }
 
-    // Check Long Press while holding
-    if (currentReading && !bleedingMode) {
+    // Check Long Press while holding (using stable buttonState)
+    if (buttonState && !bleedingMode) {
         unsigned long duration = millis() - buttonPressStartTime;
         
         // Long Press: Bleeding Mode

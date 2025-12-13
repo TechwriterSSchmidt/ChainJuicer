@@ -119,6 +119,7 @@ private:
     unsigned long buttonPressStartTime;
     bool buttonState;
     bool lastButtonState;
+    unsigned long lastDebounceTime; // Added for Debouncing
     float currentSpeed; // Added for logic suppression
     float smoothedInterval; // Low-Pass Filter for Interval
     
