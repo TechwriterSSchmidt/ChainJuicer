@@ -52,6 +52,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     buttonPressStartTime = 0;
     buttonState = false;
     lastButtonState = false;
+    lastDebounceTime = 0; // Init
     lastLedUpdate = 0;
     currentSpeed = 0.0;
     smoothedInterval = 0.0; // Init
@@ -99,10 +100,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 void Oiler::begin() {
     // Hardware Init
     // Ensure Pump is OFF immediately
-    digitalWrite(pumpPin, LOW);
+    digitalWrite(pumpPin, PUMP_OFF);
     pinMode(pumpPin, OUTPUT);
 
-    startupTime = millis(); // Record startup time
     ledOilingEndTimestamp = 0;
 
     preferences.begin("oiler", false);
@@ -137,31 +137,43 @@ void Oiler::handleButton() {
     // Check both external button AND onboard boot button
     bool currentReading = !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN);
 
-    // Debounce (simple)
+    // Debounce Logic
     if (currentReading != lastButtonState) {
-        // State changed
-        if (currentReading) {
-            // Pressed
-            buttonPressStartTime = millis();
-        } else {
-            // Released
-            unsigned long pressDuration = millis() - buttonPressStartTime;
-            
-            // Short Press: Rain Mode Toggle
-            if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
-                rainMode = !rainMode;
-                if (rainMode) rainModeStartTime = millis();
+        lastDebounceTime = millis();
+    }
+
+    if ((millis() - lastDebounceTime) > 50) { // 50ms Debounce Delay
+        // If the state has been stable for > 50ms, we accept it
+        if (currentReading != buttonState) {
+            buttonState = currentReading;
+
+            // State changed (Stable)
+            if (buttonState) {
+                // Pressed
+                buttonPressStartTime = millis();
+            } else {
+                // Released
+                unsigned long pressDuration = millis() - buttonPressStartTime;
+                
+                // Short Press: Rain Mode Toggle
+                if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
+                    // Only toggle if NOT in Emergency Mode (Forced or Auto)
+                    if (!emergencyMode && !emergencyModeForced) {
+                        rainMode = !rainMode;
+                        if (rainMode) rainModeStartTime = millis();
 #ifdef GPS_DEBUG
-                Serial.print("Rain Mode: ");
-                Serial.println(rainMode ? "ON" : "OFF");
+                        Serial.print("Rain Mode: ");
+                        Serial.println(rainMode ? "ON" : "OFF");
 #endif
-                saveConfig(); // Save setting
+                        saveConfig(); // Save setting
+                    }
+                }
             }
         }
     }
 
-    // Check Long Press while holding
-    if (currentReading && !bleedingMode) {
+    // Check Long Press while holding (using stable buttonState)
+    if (buttonState && !bleedingMode) {
         unsigned long duration = millis() - buttonPressStartTime;
         
         // Long Press: Bleeding Mode
@@ -538,14 +550,34 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         }
 
         unsigned long timeSinceLoss = now - lastEmergUpdate;
+        bool autoEmergencyActive = (timeSinceLoss > EMERGENCY_TIMEOUT_MS);
 
         // Static variable for simulation step (shared across calls)
         static unsigned long lastSimStep = 0;
 
-        if (emergencyModeForced) {
-            // Forced Mode: Simulate 50 km/h continuously
-            emergencyMode = true;
+        if (emergencyModeForced || autoEmergencyActive) {
+            // We are in Emergency Mode (either Forced or Auto Timeout)
             
+            if (!emergencyMode) {
+                // Just entered Emergency Mode
+                emergencyMode = true;
+                lastSimStep = now; // Initialize timer
+                
+                // Auto-Disable Rain Mode
+                if (rainMode) {
+                    setRainMode(false);
+                    saveConfig();
+                }
+#ifdef GPS_DEBUG
+                Serial.println("Emergency Mode ACTIVATED (50km/h Sim)");
+#endif
+            } else {
+                // Already in Emergency Mode
+                // Ensure Rain Mode stays OFF
+                if (rainMode) setRainMode(false);
+            }
+            
+            // Simulation Logic (50 km/h)
             if (lastSimStep == 0) lastSimStep = now;
             unsigned long dt = now - lastSimStep;
             lastSimStep = now;
@@ -553,46 +585,16 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
             float simSpeed = 50.0;
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
+            
+            totalDistance += distKm; // Update Odometer
+            progressChanged = true;
+
             processDistance(distKm, simSpeed);
             
         } else {
-            // Auto Mode: Time-based Logic
+            // Waiting for timeout...
+            emergencyMode = false;
             lastSimStep = 0; // Reset sim timer
-
-            // 1. Wait -> Oil once
-            if (timeSinceLoss > EMERGENCY_OIL_1_MS && emergencyOilCount == 0) {
-                int pulses = ranges[1].pulses;
-                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
-                triggerOil(pulses); 
-                emergencyOilCount++;
-                emergencyMode = true; 
-#ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 1st Oiling");
-#endif
-            }
-            
-            // 2. Wait -> Oil once
-            if (timeSinceLoss > EMERGENCY_OIL_2_MS && emergencyOilCount == 1) {
-                int pulses = ranges[1].pulses;
-                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
-                triggerOil(pulses);
-                emergencyOilCount++;
-#ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 2nd Oiling");
-#endif
-            }
-            
-            // 3. Timeout
-            if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
-                // Timeout State (Red LED handled in updateLED)
-                emergencyMode = true; 
-            } else if (timeSinceLoss > EMERGENCY_WAIT_MS) {
-                // Active Waiting State
-                emergencyMode = true;
-            } else {
-                // Just waiting, not yet Emergency Mode
-                emergencyMode = false;
-            }
         }
         return;
     }
@@ -726,16 +728,11 @@ void Oiler::triggerOil(int pulses) {
 void Oiler::processPump() {
     unsigned long now = millis();
 
-    // Safety: Startup Delay
-    if (now - startupTime < STARTUP_DELAY_MS) {
-        return;
-    }
-
     // Check if we should stop bleeding
     if (bleedingMode) {
         if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
             bleedingMode = false;
-            digitalWrite(pumpPin, LOW);
+            digitalWrite(pumpPin, PUMP_OFF);
             pulseState = false; // Reset state
 #ifdef GPS_DEBUG
             Serial.println("Bleeding Finished");
@@ -754,7 +751,7 @@ void Oiler::processPump() {
         // Currently LOW (Pause phase)
         // Wait for PAUSE_DURATION_MS
         if (now - lastPulseTime >= PAUSE_DURATION_MS) {
-            digitalWrite(pumpPin, HIGH);
+            digitalWrite(pumpPin, PUMP_ON);
             pulseState = true;
             lastPulseTime = now;
         }
@@ -762,7 +759,7 @@ void Oiler::processPump() {
         // Currently HIGH (Pulse phase)
         // Wait for PULSE_DURATION
         if (now - lastPulseTime >= PULSE_DURATION_MS) {
-            digitalWrite(pumpPin, LOW);
+            digitalWrite(pumpPin, PUMP_OFF);
             pulseState = false;
             lastPulseTime = now;
             
@@ -791,7 +788,24 @@ void Oiler::processPump() {
     }
 }
 
+void Oiler::setEmergencyModeForced(bool forced) {
+    emergencyModeForced = forced;
+    if (emergencyModeForced) {
+        // Automatically disable Rain Mode if Emergency Mode is forced
+        setRainMode(false);
+        
+        // Also activate standard emergency mode flag immediately
+        emergencyMode = true;
+        emergencyModeStartTime = millis();
+    }
+}
+
 void Oiler::setRainMode(bool mode) {
+    // If Emergency Mode is forced, Rain Mode cannot be activated
+    if (emergencyModeForced && mode) {
+        mode = false; 
+    }
+
     if (mode && !rainMode) {
         rainModeStartTime = millis();
     }

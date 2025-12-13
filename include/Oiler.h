@@ -28,7 +28,7 @@ public:
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
 
     // Emergency Mode Forced
-    void setEmergencyModeForced(bool forced) { emergencyModeForced = forced; }
+    void setEmergencyModeForced(bool forced);
     bool isEmergencyModeForced() { return emergencyModeForced; }
 
     // WiFi Status
@@ -119,6 +119,7 @@ private:
     unsigned long buttonPressStartTime;
     bool buttonState;
     bool lastButtonState;
+    unsigned long lastDebounceTime; // Added for Debouncing
     float currentSpeed; // Added for logic suppression
     float smoothedInterval; // Low-Pass Filter for Interval
     
@@ -148,7 +149,6 @@ private:
     bool pulseState; // true = HIGH, false = LOW
 
     // Safety & UX
-    unsigned long startupTime;
     unsigned long ledOilingEndTimestamp;
 
     // Emergency Mode Settings
