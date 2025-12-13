@@ -282,7 +282,7 @@ void loop() {
         char c = gpsSerial.read();
         gps.encode(c);
         // Optional: Uncomment to see raw data if needed
-        // Serial.write(c); 
+        Serial.write(c); 
     }
 
     float currentSpeed = gps.speed.isValid() ? gps.speed.kmph() : 0.0;
