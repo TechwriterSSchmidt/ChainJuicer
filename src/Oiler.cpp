@@ -263,12 +263,8 @@ void Oiler::updateLED() {
              // Forced Emergency: Cyan
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255); 
-        } else if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
-             // Timeout: Red Bright
-             strip.setBrightness(currentHighBrightness);
-             color = strip.Color(255, 0, 0); 
-        } else if (emergencyMode || timeSinceLoss > EMERGENCY_WAIT_MS) {
-             // Auto Emergency Active/Waiting: Cyan Dim
+        } else if (emergencyMode) {
+             // Auto Emergency Active: Cyan Dim
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255);
         } else {
