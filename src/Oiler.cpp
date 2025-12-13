@@ -552,11 +552,30 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
             float simSpeed = 50.0;
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
+            
+            totalDistance += distKm; // Update Odometer
+            progressChanged = true;
+
             processDistance(distKm, simSpeed);
             
         } else {
             // Auto Mode: Time-based Logic
-            lastSimStep = 0; // Reset sim timer
+            
+            // If Emergency Mode is active (Auto), we also simulate distance for the Odometer
+            if (emergencyMode) {
+                if (lastSimStep == 0) lastSimStep = now;
+                unsigned long dt = now - lastSimStep;
+                lastSimStep = now;
+                if (dt > 1000) dt = 1000; 
+
+                float simSpeed = 50.0;
+                double distKm = (double)simSpeed * ((double)dt / 3600000.0);
+                
+                totalDistance += distKm; // Update Odometer
+                progressChanged = true;
+            } else {
+                lastSimStep = 0; // Reset sim timer
+            }
 
             // 1. Wait -> Oil once
             if (timeSinceLoss > EMERGENCY_OIL_1_MS && emergencyOilCount == 0) {
