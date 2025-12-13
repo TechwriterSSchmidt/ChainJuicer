@@ -28,7 +28,7 @@ public:
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
 
     // Emergency Mode Forced
-    void setEmergencyModeForced(bool forced) { emergencyModeForced = forced; }
+    void setEmergencyModeForced(bool forced);
     bool isEmergencyModeForced() { return emergencyModeForced; }
 
     // WiFi Status

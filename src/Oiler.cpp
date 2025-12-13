@@ -611,6 +611,12 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                 // Just waiting, not yet Emergency Mode
                 emergencyMode = false;
             }
+
+            // Automatically disable Rain Mode if Auto Emergency Mode becomes active
+            if (emergencyMode && rainMode) {
+                setRainMode(false);
+                saveConfig();
+            }
         }
         return;
     }
@@ -804,7 +810,24 @@ void Oiler::processPump() {
     }
 }
 
+void Oiler::setEmergencyModeForced(bool forced) {
+    emergencyModeForced = forced;
+    if (emergencyModeForced) {
+        // Automatically disable Rain Mode if Emergency Mode is forced
+        setRainMode(false);
+        
+        // Also activate standard emergency mode flag immediately
+        emergencyMode = true;
+        emergencyModeStartTime = millis();
+    }
+}
+
 void Oiler::setRainMode(bool mode) {
+    // If Emergency Mode is forced, Rain Mode cannot be activated
+    if (emergencyModeForced && mode) {
+        mode = false; 
+    }
+
     if (mode && !rainMode) {
         rainModeStartTime = millis();
     }
