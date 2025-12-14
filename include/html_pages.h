@@ -8,7 +8,7 @@ const char* htmlHeader = R"rawliteral(
 <html>
 <head>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Chain Juicer</title>
+    <title>Chain Juicer v0.9</title>
     <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cpath%20d%3D%27M15%2C50%20Q15%2C15%2050%2C15%20Q85%2C15%2085%2C50%20Q85%2C85%2050%2C85%20Q15%2C85%2015%2C50%27%20fill%3D%27%23FFEB3B%27%20stroke%3D%27%23FBC02D%27%20stroke-width%3D%273%27%20transform%3D%27rotate(-45%2C%2050%2C%2050)%27%2F%3E%3Ccircle%20cx%3D%2735%27%20cy%3D%2740%27%20r%3D%272%27%20fill%3D%27%23F9A825%27%20opacity%3D%270.6%27%2F%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%2760%27%20r%3D%272%27%20fill%3D%27%23F9A825%27%20opacity%3D%270.6%27%2F%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%272%27%20fill%3D%27%23F9A825%27%20opacity%3D%270.6%27%2F%3E%3C%2Fsvg%3E">
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
