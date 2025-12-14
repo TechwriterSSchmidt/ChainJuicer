@@ -384,7 +384,8 @@ void loop() {
     static bool wifiButtonHeld = false;
 
     if (oiler.isButtonPressed()) {
-        if (currentSpeed < MIN_SPEED_KMH) { // threshold to handle GPS drift
+        // Allow WiFi activation if speed is low OR if we have no GPS fix yet (assuming standstill/setup)
+        if (currentSpeed < MIN_SPEED_KMH || !gps.location.isValid()) { 
             if (!wifiButtonHeld) {
                 wifiButtonPressStart = currentMillis;
                 wifiButtonHeld = true;

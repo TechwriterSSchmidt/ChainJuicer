@@ -862,6 +862,18 @@ void Oiler::setRainMode(bool mode) {
         rainModeStartTime = millis();
     }
     rainMode = mode;
+    // If Rain Mode is activated, disable forced Emergency Mode
+    if (rainMode) {
+        emergencyModeForced = false;
+    }
+}
+
+void Oiler::setEmergencyModeForced(bool forced) {
+    emergencyModeForced = forced;
+    // If Emergency Mode is forced, disable Rain Mode
+    if (emergencyModeForced) {
+        rainMode = false;
+    }
 }
 
 SpeedRange* Oiler::getRangeConfig(int index) {

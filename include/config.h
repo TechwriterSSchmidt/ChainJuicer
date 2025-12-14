@@ -5,8 +5,8 @@
 
 // Hardware Pins
 #define PUMP_PIN 16        // Pin for MOSFET (Pump)
-#define GPS_RX_PIN 26      // GPS RX to ESP TX
-#define GPS_TX_PIN 27      // GPS TX to ESP RX
+#define GPS_RX_PIN 27      // GPS RX to ESP TX
+#define GPS_TX_PIN 26      // GPS TX to ESP RX
 #define BUTTON_PIN 4       // Handlebar button (connected to GND, INPUT_PULLUP)
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 #define LED_PIN 32          // WS2812B Data Pin
