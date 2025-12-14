@@ -65,13 +65,12 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 
 *   🟢 **Green:** Normal Operation (GPS Fix available)
 *   🔵 **Blue:** Rain Mode Active
-*   🟣 **Magenta:** No GPS Signal (Searching...)
-*   🔵 **Cyan:** Emergency Mode (No GPS, Simulation active)
-*   🔴 **Red (Bright):** Emergency Timeout (> 31 Min without GPS)
-*   🟡 **Yellow:** Oiling in progress (lit for 3s)
-*   ⚪ **White (pulsing):** WiFi Configuration Mode active
-*   🔴 **Red (pulsing 2x):** Tank Warning (Reserve reached)
-*   🔴 **Red (blinking):** Bleeding Mode active
+*   🟣 **Magenta (pulsing):** No GPS Signal (Searching...)
+*   🟠/🟢 **Orange (2x short) / Green:** Emergency Mode (No GPS > 3 min, Simulation active)
+*   🟡 **Yellow (breathing):** Oiling in progress
+*   ⚪ **White (pulsing):** WiFi Configuration Mode active (only when Idle)
+*   🟠 **Orange (2x blink):** Tank Warning (Reserve reached)
+*   🔴 **Red (fast blink):** Bleeding Mode active
 
 ## 📱 Web Interface
 

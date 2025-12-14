@@ -32,7 +32,7 @@ public:
     bool isEmergencyModeForced() { return emergencyModeForced; }
 
     // WiFi Status
-    void setWifiActive(bool active) { wifiActive = active; }
+    void setWifiActive(bool active);
 
     // Stats
     double getTotalDistance() { return totalDistance; }
@@ -116,6 +116,7 @@ private:
     bool wifiActive; // WiFi Status
     bool bleedingMode;
     unsigned long bleedingStartTime;
+    unsigned long wifiActivationTime;
     unsigned long buttonPressStartTime;
     bool buttonState;
     bool lastButtonState;

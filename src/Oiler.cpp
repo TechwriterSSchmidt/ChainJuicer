@@ -222,81 +222,77 @@ void Oiler::updateLED() {
         }
     }
 
+    // Helper for sine wave pulse (0.0 to 1.0)
+    auto getPulse = [&](int periodMs) -> float {
+        float angle = (now % periodMs) * 2.0 * PI / periodMs;
+        return (sin(angle) + 1.0) / 2.0;
+    };
+
+    // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
     if (bleedingMode) {
-        // Bleeding: Red blinking
         strip.setBrightness(currentHighBrightness);
-        if ((now / 250) % 2 == 0) {
+        if ((now / 100) % 2 == 0) {
             color = strip.Color(255, 0, 0);
         } else {
             color = 0; // Off
         }
-    } else if (isOiling || millis() < ledOilingEndTimestamp) {
-        // Oiling: Yellow
-        strip.setBrightness(currentHighBrightness);
+    } 
+    // 2. Oiling Event -> YELLOW Breathing
+    else if (isOiling || millis() < ledOilingEndTimestamp) {
+        float breath = getPulse(1500); 
+        uint8_t bri = (uint8_t)(breath * currentHighBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
         color = strip.Color(255, 200, 0);
-    } else if (wifiActive) {
-        // WiFi Active: White pulsing
-        // Use sine wave for smooth pulsing
-        float pulse = (sin(now / 500.0) + 1.0) / 2.0; // 0.0 to 1.0
-        uint8_t brightness = (uint8_t)(pulse * currentHighBrightness);
-        if (brightness < 10) brightness = 10; // Minimum brightness
-        
-        strip.setBrightness(brightness);
-        color = strip.Color(255, 255, 255); // White
-    } else if (!hasFix) {
-        // No GPS
-        unsigned long timeSinceLoss = (lastEmergUpdate > 0) ? (now - lastEmergUpdate) : 0;
-        
-        if (emergencyModeForced) {
-             // Forced Emergency: Cyan
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255); 
-        } else if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
-             // Timeout: Red Bright
-             strip.setBrightness(currentHighBrightness);
-             color = strip.Color(255, 0, 0); 
-        } else if (emergencyMode || timeSinceLoss > EMERGENCY_WAIT_MS) {
-             // Auto Emergency Active/Waiting: Cyan Dim
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255);
+    } 
+    // 3. Tank Warning -> ORANGE Blinking (2x fast)
+    else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+        strip.setBrightness(currentHighBrightness);
+        int phase = now % 2000; // 2s cycle
+        // Blink 1: 0-200, Blink 2: 400-600
+        if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
+            color = strip.Color(255, 69, 0); // OrangeRed
         } else {
-             // No GPS (Short term): Magenta Dim
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(255, 0, 255);
+            color = 0; // Off
         }
-    } else if (rainMode) {
-        // Rain Mode: Blue Dim
+    }
+    // 4. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
+    else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
+         int phase = now % 1500; // 1.5s Cycle
+         // Pulse 1: 0-100, Pulse 2: 200-300
+         if ((phase >= 0 && phase < 100) || (phase >= 200 && phase < 300)) {
+             strip.setBrightness(currentHighBrightness);
+             color = strip.Color(255, 140, 0); // Orange
+         } else {
+             strip.setBrightness(currentDimBrightness);
+             color = strip.Color(0, 255, 0); // Green
+         }
+    }
+    // 5. Rain Mode -> BLUE Static
+    else if (rainMode) {
         strip.setBrightness(currentDimBrightness);
         color = strip.Color(0, 0, 255);
-    } else {
-        // Normal: Green Dim (Status OK)
+    }
+    // 6. No GPS (Searching) -> MAGENTA Pulsing
+    else if (!hasFix) {
+        float pulse = getPulse(1000);
+        uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
+        color = strip.Color(255, 0, 255);
+    }
+    // 7. WiFi Active (Idle Override) -> WHITE Pulsing
+    else if (wifiActive && (now - wifiActivationTime < 10000)) {
+        float pulse = getPulse(2000) * 0.8 + 0.2;
+        uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
+        color = strip.Color(255, 255, 255);
+    }
+    // 8. Idle / Ready -> GREEN Static
+    else {
         strip.setBrightness(currentDimBrightness);
         color = strip.Color(0, 255, 0);
-    }
-
-    // Tank Warning Overlay (Red Pulse 2x then pause)
-    if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-        unsigned long cycle = now % 7500; // 7.5s cycle (2x 1s pulse + 0.5s gap + 5s pause)
-        float val = 0.0;
-        bool active = false;
-        
-        // Pulse 1: 0-1000ms
-        if (cycle < 1000) { 
-            val = sin((cycle / 1000.0) * PI);
-            active = true;
-        } 
-        // Pulse 2: 1500-2500ms (500ms gap)
-        else if (cycle > 1500 && cycle < 2500) { 
-            val = sin(((cycle - 1500) / 1000.0) * PI);
-            active = true;
-        }
-        
-        if (active) {
-            uint8_t bri = (uint8_t)(val * currentHighBrightness);
-            if (bri < 5) bri = 5; // Minimum visibility
-            strip.setBrightness(bri);
-            color = strip.Color(255, 0, 0); // Red
-        }
     }
 
     for(int i=0; i<NUM_LEDS; i++) {
@@ -855,4 +851,11 @@ void Oiler::setTankFill(float levelMl) {
 void Oiler::resetTankToFull() {
     currentTankLevelMl = tankCapacityMl;
     saveConfig();
+}
+
+void Oiler::setWifiActive(bool active) {
+    if (active && !wifiActive) {
+        wifiActivationTime = millis();
+    }
+    wifiActive = active;
 }
