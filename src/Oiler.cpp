@@ -118,6 +118,53 @@ void Oiler::begin() {
     strip.show(); // All pixels off
 }
 
+void Oiler::checkFactoryReset() {
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    // Check if button is pressed during boot
+    if (digitalRead(BUTTON_PIN) == LOW) {
+        Serial.println("Button pressed at boot. Checking for Factory Reset...");
+        
+        // Initialize LED for feedback
+        strip.begin(); // Ensure strip is initialized
+        strip.setBrightness(50);
+        
+        unsigned long startPress = millis();
+        bool resetTriggered = false;
+
+        while (digitalRead(BUTTON_PIN) == LOW) {
+            unsigned long duration = millis() - startPress;
+            
+            // Visual Feedback: Yellow while holding
+            for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, strip.Color(255, 255, 0)); // Yellow
+            strip.show();
+
+            if (duration > FACTORY_RESET_PRESS_MS) {
+                resetTriggered = true;
+                // Visual Feedback: Red blinking fast
+                for(int k=0; k<10; k++) {
+                    for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, strip.Color(255, 0, 0)); // Red
+                    strip.show();
+                    delay(100);
+                    for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, 0); // Off
+                    strip.show();
+                    delay(100);
+                }
+                break; // Exit loop to perform reset
+            }
+            delay(10);
+        }
+
+        if (resetTriggered) {
+            Serial.println("PERFORMING FACTORY RESET...");
+            preferences.begin("oiler", false);
+            preferences.clear(); // Nuke everything
+            preferences.end();
+            Serial.println("Done. Restarting...");
+            ESP.restart();
+        }
+    }
+}
+
 void Oiler::loop() {
     handleButton();
     processPump(); // Unified pump logic

@@ -31,6 +31,9 @@ public:
     void setEmergencyModeForced(bool forced) { emergencyModeForced = forced; }
     bool isEmergencyModeForced() { return emergencyModeForced; }
 
+    // Factory Reset
+    void checkFactoryReset();
+
     // WiFi Status
     void setWifiActive(bool active);
 
