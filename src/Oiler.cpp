@@ -263,12 +263,8 @@ void Oiler::updateLED() {
              // Forced Emergency: Cyan
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255); 
-        } else if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
-             // Timeout: Red Bright
-             strip.setBrightness(currentHighBrightness);
-             color = strip.Color(255, 0, 0); 
-        } else if (emergencyMode || timeSinceLoss > EMERGENCY_WAIT_MS) {
-             // Auto Emergency Active/Waiting: Cyan Dim
+        } else if (emergencyMode) {
+             // Auto Emergency Active: Cyan Dim
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255);
         } else {
@@ -363,7 +359,10 @@ void Oiler::loadConfig() {
     tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
 
     // Load Emergency Mode forced setting
-    emergencyModeForced = preferences.getBool("emerg_force", false);
+    // SAFETY: Always start with Forced Emergency Mode OFF to prevent accidental oiling in garage
+    emergencyModeForced = false; 
+    // emergencyModeForced = preferences.getBool("emerg_force", false); // DISABLED FOR SAFETY
+
     // If forced, activate immediately
     if (emergencyModeForced) {
         emergencyMode = true;
@@ -413,6 +412,7 @@ void Oiler::saveConfig() {
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
+    // preferences.putBool("emerg_force", emergencyModeForced); // DISABLED FOR SAFETY
 
     // Save Tank Monitor
     preferences.putBool("tank_en", tankMonitorEnabled);
@@ -433,7 +433,7 @@ void Oiler::saveConfig() {
         preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
-    preferences.putBool("emerg_force", emergencyModeForced);
+    // preferences.putBool("emerg_force", emergencyModeForced); // DISABLED FOR SAFETY
 
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
@@ -588,6 +588,15 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             
             totalDistance += distKm; // Update Odometer
             progressChanged = true;
+
+            // Update Usage Stats for 50km/h
+            double dtSeconds = (double)dt / 1000.0;
+            for(int i=0; i<NUM_RANGES; i++) {
+                if (simSpeed >= ranges[i].minSpeed && simSpeed < ranges[i].maxSpeed) {
+                    currentIntervalTime[i] += dtSeconds;
+                    break;
+                }
+            }
 
             processDistance(distKm, simSpeed);
             
