@@ -118,10 +118,10 @@ void handleRoot() {
 
         html += "<tr><td>";
         html += String((int)r->minSpeed) + "-" + String((int)r->maxSpeed) + " km/h";
-        html += "</td><td><input type='number' step='0.1' name='km" + String(i) + "' value='" + String(r->intervalKm) + "'>";
+        html += "</td><td><input type='number' step='0.1' name='km" + String(i) + "' value='" + String(r->intervalKm) + "' class='km-input'>";
         html += "</td><td style='text-align:center;color:#555'>" + String(pct, 1) + "%";
         html += "</td><td style='text-align:center;color:#555'>" + String(oiler.getRecentOilingCount(i));
-        html += "</td><td><input type='number' name='p" + String(i) + "' value='" + String(r->pulses) + "'></td></tr>";
+        html += "</td><td><input type='number' name='p" + String(i) + "' value='" + String(r->pulses) + "' class='pulse-input'></td></tr>";
     }
     
     // Add Reset Link below the table

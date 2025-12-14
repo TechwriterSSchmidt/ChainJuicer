@@ -17,6 +17,9 @@ const char* htmlHeader = R"rawliteral(
         td{padding:10px 5px;border-bottom:1px solid #eee}
         input{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
         input[type=checkbox]{width:20px;height:20px}
+        .num-input{width:80px;text-align:center}
+        .km-input{width:70px;text-align:center}
+        .pulse-input{width:50px;text-align:center}
         .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
         .progress{text-align:center;margin-top:15px;color:#555}
         .time{text-align:center;color:#888;font-size:0.9em;margin-bottom:10px}
@@ -33,13 +36,13 @@ const char* htmlHeader = R"rawliteral(
         <table>
             <tr>
                 <th rowspan='2'>Speed</th>
-                <th rowspan='2'>Km</th>
-                <th colspan='2' style='text-align:center'>(Last 20 Cycles)</th>
-                <th rowspan='2'>Pulses</th>
+                <th rowspan='2'>km</th>
+                <th colspan='3' style='text-align:left'>(Last 20 juices only)</th>
             </tr>
             <tr>
                 <th style='text-align:center'>Usage %</th>
-                <th style='text-align:center'>Cycles</th>
+                <th style='text-align:center'>Juices</th>
+                <th style='text-align:center'>Pulses</th>
             </tr>
 )rawliteral";
 
@@ -52,31 +55,31 @@ const char* htmlFooter = R"rawliteral(
         </table>
         <h3>LED Settings (Day)</h3>
         <table>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%'></td></tr>
+            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
+            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
         </table>
         <h3>LED Settings (Night)</h3>
         <table>
             <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
-            <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%'></td></tr>
-            <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%'></td></tr>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%'></td></tr>
+            <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
+            <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
+            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
+            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
         </table>
         <h3>Tank Monitor</h3>
         <table>
             <tr><td>Enable</td><td><input type='checkbox' name='tank_en' %TANK_CHECKED%></td></tr>
-            <tr><td>Capacity (ml)</td><td><input type='number' step='1' name='tank_cap' value='%TANK_CAP%'></td></tr>
-            <tr><td>Drops/ml</td><td><input type='number' name='drop_ml' value='%DROP_ML%'></td></tr>
-            <tr><td>Drops/Pulse</td><td><input type='number' name='drop_pls' value='%DROP_PLS%'></td></tr>
-            <tr><td>Warning at (%)</td><td><input type='number' name='tank_warn' value='%TANK_WARN%'></td></tr>
+            <tr><td>Capacity (ml)</td><td><input type='number' step='1' name='tank_cap' value='%TANK_CAP%' class='num-input'></td></tr>
+            <tr><td>Drops/ml</td><td><input type='number' name='drop_ml' value='%DROP_ML%' class='num-input'></td></tr>
+            <tr><td>Drops/Pulse</td><td><input type='number' name='drop_pls' value='%DROP_PLS%' class='num-input'></td></tr>
+            <tr><td>Warning at (%)</td><td><input type='number' name='tank_warn' value='%TANK_WARN%' class='num-input'></td></tr>
             <tr><td>Current Level</td><td>%TANK_LEVEL% ml (%TANK_PCT%%)</td></tr>
         </table>
         <div style='margin-top:10px'><a href='/refill' style='color:green;text-decoration:none;font-size:0.9em'>[Refill Tank]</a></div>
         <h3>Statistics</h3>
         <table>
             <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
-            <tr><td>Total Cycles</td><td>%PUMP_COUNT%</td></tr>
+            <tr><td>Total Juices</td><td>%PUMP_COUNT%</td></tr>
         </table>
         <div style='margin-top:10px'><a href='/reset_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
         <div class='progress'>Current Progress: %PROGRESS%%</div>
@@ -122,18 +125,18 @@ const char* htmlHelp = R"rawliteral(
         </li>
         <li><b>Night Mode:</b> Dims LED during defined hours.</li>
         <li><b>Auto-Save:</b> Settings and progress saved at standstill (< 7 km/h).</li>
-        <li><b>Stats:</b> Tracks odometer, oiling cycles, and speed profile.</li>
+        <li><b>Stats:</b> Tracks odometer, juices, and speed profile.</li>
     </ul>
     <h3>Configuration</h3>
     <p>Configure oiling intervals per speed range in the main table:</p>
     <ul>
         <li><b>Speed:</b> Speed range (e.g. 10-35 km/h).</li>
-        <li><b>Km:</b> Distance interval (km) between oilings.</li>
+        <li><b>km:</b> Distance interval (km) between oilings.</li>
         <li><b>Usage %:</b> Percentage of driving time in this range (helps optimizing).</li>
-        <li><b>Cycles:</b> Number of oiling events triggered.</li>
+        <li><b>Juices:</b> Number of oiling events triggered.</li>
         <li><b>Pulses:</b> Pump pulses per event.</li>
     </ul>
-    <p>Use '[Reset Stats]' to clear 'Usage %' and 'Cycles'.</p>
+    <p>Use '[Reset Stats]' to clear 'Usage %' and 'Juices'.</p>
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
     <ul>

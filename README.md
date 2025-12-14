@@ -1,4 +1,4 @@
-# GPS Chain Oiler (ESP32-based)
+# Chain Juicer (ESP32-based)
 
 An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The system dynamically adjusts oiling intervals based on the driven speed and offers extensive configuration options via a web interface.
 
@@ -27,7 +27,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Tank Monitor:** Calculates oil consumption and warns (Red 2x blink) when the supply runs low.
 *   **Advanced Statistics:**
     *   **Usage %:** Shows the percentage of driving time spent in each speed range.
-    *   **Cycles:** Counts the number of triggered oilings per speed range.
+    *   **Juices:** Counts the number of triggered oilings per speed range.
     *   **Odometer:** Total distance counter (includes simulated distance in Emergency Mode).
 *   **Auto-Save:** Odometer and settings are permanently saved in flash memory (NVS) at standstill (< 7 km/h).
 
@@ -100,7 +100,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 *   **LED:** Brightness for Day and Night (in %).
 *   **Statistics:**
     *   **Usage %:** Driving profile analysis to optimize intervals.
-    *   **Cycles:** Counter for oilings per range.
+    *   **Juices:** Counter for oilings per range.
     *   **Reset:** Reset stats or refill tank.
 
 ## 💡 Usage Scenarios
