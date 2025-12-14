@@ -46,7 +46,7 @@
 
 // Safety
 #define STARTUP_DELAY_MS 10000    // 10s delay after boot before pump is allowed to run
-#define PUMP_SAFETY_CUTOFF_MS 10000 // HARD LIMIT: Max continuous pump run (10s)
+#define PUMP_SAFETY_CUTOFF_MS 30000 // HARD LIMIT: Max continuous pump run (10s)
 
 // Timeouts & Intervals
 #define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)

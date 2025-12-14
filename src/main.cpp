@@ -138,6 +138,7 @@ void handleRoot() {
 #endif
     String html = htmlHeader;
     html.replace("%TIME%", getZurichTime());
+    html.replace("%SATS%", String(gps.satellites.value()));
 
     double totalRecentTime = oiler.getRecentTotalTime();
 
