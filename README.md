@@ -18,6 +18,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
     *   **Manual (Forced):** Continuous simulation of 50 km/h (ignores timeout).
 *   **Smart WiFi & Web Interface:**
     *   Configure all parameters conveniently via smartphone.
+    *   **OTA Update:** Upload new firmware directly via the web interface.
     *   LED brightness adjustable in percent (0-100%).
     *   Activation only at standstill (< 7 km/h) via long button press (> 3s).
     *   Automatic shut-off when driving (> 10 km/h) or after inactivity (5 min).
@@ -71,6 +72,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   ⚪ **White (pulsing):** WiFi Configuration Mode active (only when Idle)
 *   🟠 **Orange (2x blink):** Tank Warning (Reserve reached)
 *   🔴 **Red (fast blink):** Bleeding Mode active
+*   🔵 **Cyan (fast blink):** Firmware Update in progress
 
 ## 📱 Web Interface
 

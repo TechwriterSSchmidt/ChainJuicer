@@ -47,6 +47,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     rainModeStartTime = 0;
     emergencyMode = false;
     wifiActive = false;
+    updateMode = false;
     bleedingMode = false;
     bleedingStartTime = 0;
     buttonPressStartTime = 0;
@@ -228,8 +229,17 @@ void Oiler::updateLED() {
         return (sin(angle) + 1.0) / 2.0;
     };
 
+    // 0. Update Mode (Critical) -> CYAN Fast Blink
+    if (updateMode) {
+        strip.setBrightness(currentHighBrightness);
+        if ((now / 100) % 2 == 0) {
+            color = strip.Color(0, 255, 255); // Cyan
+        } else {
+            color = 0; // Off
+        }
+    }
     // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
-    if (bleedingMode) {
+    else if (bleedingMode) {
         strip.setBrightness(currentHighBrightness);
         if ((now / 100) % 2 == 0) {
             color = strip.Color(255, 0, 0);
@@ -467,6 +477,26 @@ void Oiler::resetTimeStats() {
     saveConfig();
 }
 
+int Oiler::calculateLocalHour(int utcHour, int day, int month, int year) {
+    // Simple CET/CEST Rule:
+    // CEST (UTC+2) starts last Sunday in March, ends last Sunday in October.
+    
+    bool isSummer = false;
+    if (month > 3 && month < 10) isSummer = true; // April to September
+    else if (month == 3) {
+        int lastSunday = 31 - ((5 * year / 4 + 4) % 7);
+        if (day > lastSunday || (day == lastSunday && utcHour >= 1)) isSummer = true;
+    }
+    else if (month == 10) {
+        int lastSunday = 31 - ((5 * year / 4 + 1) % 7);
+        if (day < lastSunday || (day == lastSunday && utcHour < 1)) isSummer = true;
+    }
+    
+    int offset = isSummer ? 2 : 1;
+    int localH = (utcHour + offset) % 24;
+    return localH;
+}
+
 void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     unsigned long now = millis();
 
@@ -484,21 +514,21 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         smoothedSpeed += speedBuffer[i];
     }
     smoothedSpeed /= SPEED_BUFFER_SIZE;
-    
+
     // Use smoothedSpeed for logic
     float speedKmh = smoothedSpeed;
     currentSpeed = speedKmh; // Update member variable for handleButton logic
-    
+
     // Update Time Stats
     if (lastTimeUpdate == 0) lastTimeUpdate = now;
     unsigned long dt = now - lastTimeUpdate;
     lastTimeUpdate = now;
-    
+
     // Only count if moving fast enough to be in a range (or at least > MIN_SPEED)
     // And avoid huge jumps (e.g. after sleep)
     if (speedKmh >= MIN_SPEED_KMH && dt < 2000) {
         double dtSeconds = (double)dt / 1000.0;
-        
+
         // Find matching range
         int activeRangeIndex = -1;
         for(int i=0; i<NUM_RANGES; i++) {
@@ -507,7 +537,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                 break;
             }
         }
-        
+
         if (activeRangeIndex != -1) {
             currentIntervalTime[activeRangeIndex] += dtSeconds;
             progressChanged = true; // Mark for saving
@@ -515,7 +545,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     }
 
     // Regular saving
-    if (now - lastSaveTime > SAVE_INTERVAL_MS) { 
+    if (now - lastSaveTime > SAVE_INTERVAL_MS) {
         saveProgress();
         lastSaveTime = now;
     }
@@ -527,7 +557,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
     if (!gpsValid) {
         hasFix = false;
-        
+
         if (lastEmergUpdate == 0) {
             lastEmergUpdate = now;
             emergencyOilCount = 0;
@@ -538,57 +568,28 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         // Static variable for simulation step (shared across calls)
         static unsigned long lastSimStep = 0;
 
-        if (emergencyModeForced) {
-            // Forced Mode: Simulate 50 km/h continuously
-            emergencyMode = true;
-            
+        if (emergencyModeForced || emergencyMode) {
+            // Forced Mode OR Auto Mode Active: Simulate 50 km/h continuously
+            if (!emergencyMode) emergencyMode = true; // Ensure flag is set if forced
+
             if (lastSimStep == 0) lastSimStep = now;
             unsigned long dt = now - lastSimStep;
             lastSimStep = now;
-            if (dt > 1000) dt = 1000; 
+            if (dt > 1000) dt = 1000;
 
             float simSpeed = 50.0;
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
             processDistance(distKm, simSpeed);
-            
+
         } else {
-            // Auto Mode: Time-based Logic
+            // Auto Mode: Waiting Phase (Not yet active)
             lastSimStep = 0; // Reset sim timer
 
-            // 1. Wait -> Oil once
-            if (timeSinceLoss > EMERGENCY_OIL_1_MS && emergencyOilCount == 0) {
-                int pulses = ranges[1].pulses;
-                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
-                triggerOil(pulses); 
-                emergencyOilCount++;
-                emergencyMode = true; 
-#ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 1st Oiling");
-#endif
-            }
-            
-            // 2. Wait -> Oil once
-            if (timeSinceLoss > EMERGENCY_OIL_2_MS && emergencyOilCount == 1) {
-                int pulses = ranges[1].pulses;
-                if (rainMode) pulses *= 2; // Double oil amount in Rain Mode
-                triggerOil(pulses);
-                emergencyOilCount++;
-#ifdef GPS_DEBUG
-                Serial.println("Emergency Mode: 2nd Oiling");
-#endif
-            }
-            
-            // 3. Timeout
+            // 3. Timeout -> Activate Emergency Mode
             if (timeSinceLoss > EMERGENCY_TIMEOUT_MS) {
-                // Timeout State (Red LED handled in updateLED)
                 emergencyMode = true; 
-            } else if (timeSinceLoss > EMERGENCY_WAIT_MS) {
-                // Active Waiting State
-                emergencyMode = true;
-            } else {
-                // Just waiting, not yet Emergency Mode
-                emergencyMode = false;
-            }
+                // Will be handled in next loop iteration by the block above
+            } 
         }
         return;
     }
@@ -598,36 +599,45 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastLat = lat;
         lastLon = lon;
         hasFix = true;
-        lastEmergUpdate = 0; 
+        lastEmergUpdate = 0;
         emergencyOilCount = 0;
-        emergencyMode = false; 
+        emergencyMode = false;
         return;
     }
-    
+
     // Reset Emergency Timer if we have valid GPS
     lastEmergUpdate = 0;
     emergencyMode = false; // Disable Emergency Mode automatically
 
     // Calculate distance (Haversine or TinyGPS function)
     double distKm = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon) / 1000.0;
-    
+
     // Only if moving and GPS not jumping (small filter)
     // Plausibility check: < MAX_SPEED_KMH + Buffer
-    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < (MAX_SPEED_KMH + 50.0)) { 
+    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < (MAX_SPEED_KMH + 50.0)) {
         lastLat = lat;
         lastLon = lon;
-        
-        // Increase Odometer
-        totalDistance += distKm;
-        progressChanged = true; // So Odometer gets saved
 
+        // Process Distance (Odometer + Oiling Logic)
         if (speedKmh >= MIN_SPEED_KMH) {
             processDistance(distKm, speedKmh);
+        } else {
+            // Just add to odometer if moving slowly but valid? 
+            // Usually we only count odometer if speed > MIN_ODOMETER_SPEED_KMH which is checked above.
+            // But processDistance handles Oiling logic which requires MIN_SPEED_KMH usually.
+            // Let's add to odometer anyway via processDistance, but speed might be low.
+            // processDistance handles ranges. If speed < range[0].min, it might not trigger oiling but adds to totalDistance.
+            // Let's call it.
+             processDistance(distKm, speedKmh);
         }
     }
 }
 
 void Oiler::processDistance(double distKm, float speedKmh) {
+    // 1. Add to Total Odometer
+    totalDistance += distKm;
+    progressChanged = true; // So Odometer gets saved
+
     // Find matching range
     int activeRangeIndex = -1;
     for(int i=0; i<NUM_RANGES; i++) {
@@ -640,14 +650,14 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     if (activeRangeIndex != -1) {
         // Virtual distance calculation:
         // We add % progress to next oiling, not km.
-        
+
         // 1. Get Target Interval from LUT (Linear Interpolation)
         int lutIndex = (int)(speedKmh / LUT_STEP);
         if (lutIndex < 0) lutIndex = 0;
         if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
-        
+
         float targetInterval = intervalLUT[lutIndex];
-        
+
         // 2. Low-Pass Filter (Additional Smoothing)
         if (smoothedInterval == 0.0) smoothedInterval = targetInterval; // Init
         smoothedInterval = (smoothedInterval * 0.95) + (targetInterval * 0.05);
@@ -656,7 +666,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
         if (interval > 0) {
             float progressDelta = distKm / interval;
-            
+
             // Rain Mode: Double wear -> Double progression
             if (rainMode) {
                 progressDelta *= 2.0;
@@ -664,7 +674,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
             currentProgress += progressDelta;
             progressChanged = true;
-            
+
             // Debug Output
             // Serial.printf("Speed: %.1f, Dist: %.4f, Prog: %.4f\n", speedKmh, distKm, currentProgress);
 
@@ -858,4 +868,8 @@ void Oiler::setWifiActive(bool active) {
         wifiActivationTime = millis();
     }
     wifiActive = active;
+}
+
+void Oiler::setUpdateMode(bool mode) {
+    updateMode = mode;
 }

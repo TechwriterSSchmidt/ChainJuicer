@@ -34,6 +34,9 @@ public:
     // WiFi Status
     void setWifiActive(bool active);
 
+    // Update Status
+    void setUpdateMode(bool mode);
+
     // Stats
     double getTotalDistance() { return totalDistance; }
     unsigned long getPumpCycles() { return pumpCycles; }
@@ -56,6 +59,9 @@ public:
     double getRecentTotalTime();
 
     void resetTimeStats();
+
+    // Time Helper
+    int calculateLocalHour(int utcHour, int day, int month, int year);
 
     // LED Settings
     uint8_t ledBrightnessDim;
@@ -87,8 +93,11 @@ public:
     void resetTankToFull();
 
 private:
+    void processDistance(double distKm, float speedKmh);
+    
     int pumpPin;
     int currentHour;
+    bool updateMode;
     SpeedRange ranges[NUM_RANGES];
     float intervalLUT[LUT_SIZE]; // Lookup Table for smoothed intervals
     void rebuildLUT(); // Helper to fill LUT
@@ -133,7 +142,6 @@ private:
     void loadConfig();
     void validateConfig();
     // saveProgress is public
-    void processDistance(double distKm, float speedKmh);
     void triggerOil(int pulses);
 
     // Emergency update and standstill save time
