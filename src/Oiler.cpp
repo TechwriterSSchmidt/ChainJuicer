@@ -585,6 +585,15 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             totalDistance += distKm; // Update Odometer
             progressChanged = true;
 
+            // Update Usage Stats for 50km/h
+            double dtSeconds = (double)dt / 1000.0;
+            for(int i=0; i<NUM_RANGES; i++) {
+                if (simSpeed >= ranges[i].minSpeed && simSpeed < ranges[i].maxSpeed) {
+                    currentIntervalTime[i] += dtSeconds;
+                    break;
+                }
+            }
+
             processDistance(distKm, simSpeed);
             
         } else {
