@@ -105,8 +105,14 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><b>GPS Control:</b> Speed-dependent intervals (Active > 10 km/h).</li>
         <li><b>Drift Filter:</b> Ignores GPS signal reflections (multipath) to prevent ghost mileage.</li>
-        <li><b>Rain Mode:</b> Doubles oil amount. Auto-Off after 30 min.</li>
-        <li><b>Emergency Mode:</b> Auto-active if no GPS > 3 min. Simulates a speed of 50 km/h. Disables Rain Mode.</li>
+        <li><b>Rain Mode:</b> Doubles oil amount and turns off automatically after 30 min or on reboot.</li>
+        <li><b>Emergency Mode:</b>
+            <ul>
+                <li>Auto-activates if no GPS > 3 min.</li>
+                <li>Simulates a constant speed of 50 km/h and adds to odometer.</li>
+                <li>Disables 'Rain Mode'.</li>
+            </ul>
+        </li>
         <li><b>Night Mode:</b> Dims LED during defined hours.</li>
         <li><b>Auto-Save:</b> Settings and progress saved at standstill (< 7 km/h).</li>
         <li><b>Stats:</b> Tracks odometer, oiling cycles, and speed profile.</li>
@@ -120,7 +126,7 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Cycles:</b> Number of oiling events triggered.</li>
         <li><b>Pulses:</b> Pump pulses per event.</li>
     </ul>
-    <p>Use <b>[Reset Stats]</b> to clear Usage % and Cycles.</p>
+    <p>Use '[Reset Stats]' to clear 'Usage %' and 'Cycles'.</p>
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
     <ul>
@@ -129,19 +135,19 @@ const char* htmlHelp = R"rawliteral(
     </ul>
     <h3>Button Functions</h3>
     <ul>
-        <li><b>Short Press (< 1.5s):</b> Toggle Rain Mode.</li>
-        <li><b>Long Press (> 10s):</b> Bleeding Mode (10s pump). Only at standstill.</li>
+        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode'.</li>
+        <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (10s pump). Only at standstill.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
         <li><span class='color-box' style='background:green'></span> <b>Green:</b> GPS OK (Ready).</li>
-        <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> Rain Mode Active.</li>
+        <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
-        <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> Emergency Mode (No GPS > 3 min).</li>
+        <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> 'Emergency Mode' (No GPS > 3 min).</li>
         <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s).</li>
-        <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White pulse:</b> WiFi Config Active.</li>
-        <li><span class='color-box' style='background:red'></span> <b>Red (2x blink):</b> Tank Warning.</li>
-        <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> Bleeding Mode.</li>
+        <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White pulse:</b> 'WiFi Config' Active.</li>
+        <li><span class='color-box' style='background:red'></span> <b>Red (2x blink):</b> 'Tank Warning'.</li>
+        <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>
     </ul>
     <a href='/' class='btn'>Back</a>
 </body>
