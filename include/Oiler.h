@@ -152,6 +152,7 @@ private:
     // Non-blocking oiling state
     bool isOiling;
     unsigned long oilingStartTime;
+    unsigned long pumpActivityStartTime; // Safety Cutoff
     int oilingPulsesRemaining;
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW

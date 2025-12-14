@@ -5,6 +5,7 @@
 #include <TinyGPS++.h>
 #include <esp_task_wdt.h>
 #include <Update.h>
+#include <Preferences.h>
 #include "config.h"
 #include "Oiler.h"
 #include "html_pages.h"
@@ -249,12 +250,64 @@ void handleSave() {
 }
 
 void setup() {
+    // ---------------------------------------------------------
+    // FACTORY RESET CHECK (Must be first)
+    // ---------------------------------------------------------
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    // Check if button is pressed during boot
+    if (digitalRead(BUTTON_PIN) == LOW) {
+        Serial.begin(115200); // Ensure Serial is ready
+        Serial.println("Button pressed at boot. Checking for Factory Reset...");
+        
+        // Initialize LED for feedback
+        Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+        strip.begin();
+        strip.setBrightness(50);
+        
+        unsigned long startPress = millis();
+        bool resetTriggered = false;
+
+        while (digitalRead(BUTTON_PIN) == LOW) {
+            unsigned long duration = millis() - startPress;
+            
+            // Visual Feedback: Yellow while holding
+            strip.setPixelColor(0, strip.Color(255, 255, 0)); // Yellow
+            strip.show();
+
+            if (duration > FACTORY_RESET_PRESS_MS) {
+                resetTriggered = true;
+                // Visual Feedback: Red blinking fast
+                for(int i=0; i<10; i++) {
+                    strip.setPixelColor(0, strip.Color(255, 0, 0)); // Red
+                    strip.show();
+                    delay(100);
+                    strip.setPixelColor(0, 0); // Off
+                    strip.show();
+                    delay(100);
+                }
+                break; // Exit loop to perform reset
+            }
+            delay(10);
+        }
+
+        if (resetTriggered) {
+            Serial.println("PERFORMING FACTORY RESET...");
+            Preferences prefs;
+            prefs.begin("oiler", false);
+            prefs.clear(); // Nuke everything
+            prefs.end();
+            Serial.println("Done. Restarting...");
+            ESP.restart();
+        }
+    }
+    // ---------------------------------------------------------
+
     // Safety: Ensure Pump is OFF immediately
     // Set level LOW before switching to OUTPUT to prevent glitches
     digitalWrite(PUMP_PIN, LOW);
     pinMode(PUMP_PIN, OUTPUT);
 
-    Serial.begin(115200);
+    if(!Serial) Serial.begin(115200);
     
     // Initialize Watchdog
     esp_task_wdt_init(WDT_TIMEOUT, true);

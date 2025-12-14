@@ -21,6 +21,15 @@
 #define LED_BRIGHTNESS_DIM 20   // Brightness for status LED during normal operation (0-255)
 #define LED_BRIGHTNESS_HIGH 150 // Brightness for events
 
+// LED Timings
+#define LED_PERIOD_OILING 1500      // Breathing duration for Oiling
+#define LED_PERIOD_EMERGENCY 1500   // Pulse cycle for Emergency Mode
+#define LED_PERIOD_WIFI 2000        // Pulse cycle for WiFi
+#define LED_PERIOD_GPS 1000         // Pulse cycle for GPS Search
+#define LED_BLINK_FAST 100          // Fast blink (Bleeding/Reset)
+#define LED_BLINK_TANK 2000         // Tank warning cycle
+#define LED_WIFI_SHOW_DURATION 10000 // How long to show WiFi LED after activation
+
 // Default Values
 #define PULSE_DURATION_MS 250      // Duration of the pump impulse (HIGH)
 #define PAUSE_DURATION_MS 750     // Pause between impulses (LOW)
@@ -33,18 +42,17 @@
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode
 #define WIFI_PRESS_MS 3000        // > 3s: Activate WiFi (if standing still)
 #define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
+#define FACTORY_RESET_PRESS_MS 10000 // > 10s at Boot: Factory Reset
 
 // Safety
 #define STARTUP_DELAY_MS 10000    // 10s delay after boot before pump is allowed to run
+#define PUMP_SAFETY_CUTOFF_MS 10000 // HARD LIMIT: Max continuous pump run (10s)
 
 // Timeouts & Intervals
 #define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)
 #define RAIN_MODE_AUTO_OFF_MS 1800000 // 30 Minutes (30 * 60 * 1000)
 #define SAVE_INTERVAL_MS 300000   // 5 Minutes (Regular Save)
 #define STANDSTILL_SAVE_MS 120000 // 2 Minutes (Min interval for standstill save)
-#define EMERGENCY_WAIT_MS 300000  // 5 Minutes (Wait before Auto-Emergency)
-#define EMERGENCY_OIL_1_MS 900000 // 15 Minutes (1st Oil)
-#define EMERGENCY_OIL_2_MS 1800000 // 30 Minutes (2nd Oil)
 #define EMERGENCY_TIMEOUT_MS 1860000 // 31 Minutes (Timeout)
 
 // AP Configuration

@@ -60,6 +60,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Oiling State Init
     isOiling = false;
     oilingStartTime = 0;
+    pumpActivityStartTime = 0;
     oilingPulsesRemaining = 0;
     lastPulseTime = 0;
     pulseState = false;
@@ -171,6 +172,7 @@ void Oiler::handleButton() {
             if (currentSpeed < MIN_SPEED_KMH) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
+                pumpActivityStartTime = millis(); // Safety Cutoff Start
 #ifdef GPS_DEBUG
                 Serial.println("Bleeding Mode STARTED");
 #endif
@@ -232,7 +234,7 @@ void Oiler::updateLED() {
     // 0. Update Mode (Critical) -> CYAN Fast Blink
     if (updateMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 100) % 2 == 0) {
+        if ((now / LED_BLINK_FAST) % 2 == 0) {
             color = strip.Color(0, 255, 255); // Cyan
         } else {
             color = 0; // Off
@@ -241,7 +243,7 @@ void Oiler::updateLED() {
     // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
     else if (bleedingMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 100) % 2 == 0) {
+        if ((now / LED_BLINK_FAST) % 2 == 0) {
             color = strip.Color(255, 0, 0);
         } else {
             color = 0; // Off
@@ -249,7 +251,7 @@ void Oiler::updateLED() {
     } 
     // 2. Oiling Event -> YELLOW Breathing
     else if (isOiling || millis() < ledOilingEndTimestamp) {
-        float breath = getPulse(1500); 
+        float breath = getPulse(LED_PERIOD_OILING); 
         uint8_t bri = (uint8_t)(breath * currentHighBrightness);
         if (bri < 5) bri = 5;
         strip.setBrightness(bri);
@@ -258,7 +260,7 @@ void Oiler::updateLED() {
     // 3. Tank Warning -> ORANGE Blinking (2x fast)
     else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
         strip.setBrightness(currentHighBrightness);
-        int phase = now % 2000; // 2s cycle
+        int phase = now % LED_BLINK_TANK; // 2s cycle
         // Blink 1: 0-200, Blink 2: 400-600
         if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
             color = strip.Color(255, 69, 0); // OrangeRed
@@ -268,7 +270,7 @@ void Oiler::updateLED() {
     }
     // 4. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
     else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
-         int phase = now % 1500; // 1.5s Cycle
+         int phase = now % LED_PERIOD_EMERGENCY; // 1.5s Cycle
          // Pulse 1: 0-100, Pulse 2: 200-300
          if ((phase >= 0 && phase < 100) || (phase >= 200 && phase < 300)) {
              strip.setBrightness(currentHighBrightness);
@@ -285,15 +287,15 @@ void Oiler::updateLED() {
     }
     // 6. No GPS (Searching) -> MAGENTA Pulsing
     else if (!hasFix) {
-        float pulse = getPulse(1000);
+        float pulse = getPulse(LED_PERIOD_GPS);
         uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
         if (bri < 5) bri = 5;
         strip.setBrightness(bri);
         color = strip.Color(255, 0, 255);
     }
     // 7. WiFi Active (Idle Override) -> WHITE Pulsing
-    else if (wifiActive && (now - wifiActivationTime < 10000)) {
-        float pulse = getPulse(2000) * 0.8 + 0.2;
+    else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
+        float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
         uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
         if (bri < 5) bri = 5;
         strip.setBrightness(bri);
@@ -721,6 +723,7 @@ void Oiler::triggerOil(int pulses) {
 
     // Initialize Non-Blocking Oiling
     isOiling = true;
+    pumpActivityStartTime = millis(); // Safety Cutoff Start
     oilingPulsesRemaining = pulses;
     pulseState = false; // Will start with HIGH in handleOiling
     lastPulseTime = millis() - 1000; // Force immediate start
@@ -734,6 +737,16 @@ void Oiler::processPump() {
 
     // Safety: Startup Delay
     if (now - startupTime < STARTUP_DELAY_MS) {
+        return;
+    }
+
+    // SAFETY CUTOFF: Prevent pump from running too long (e.g. software bug)
+    if ((isOiling || bleedingMode) && (now - pumpActivityStartTime > PUMP_SAFETY_CUTOFF_MS)) {
+        Serial.println("[CRITICAL] Safety Cutoff triggered! Pump ran too long.");
+        digitalWrite(pumpPin, LOW);
+        isOiling = false;
+        bleedingMode = false;
+        pulseState = false;
         return;
     }
 
