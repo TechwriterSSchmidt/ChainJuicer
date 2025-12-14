@@ -106,7 +106,7 @@ const char* htmlHelp = R"rawliteral(
         <li><b>GPS Control:</b> Speed-dependent intervals (Active > 10 km/h).</li>
         <li><b>Drift Filter:</b> Ignores GPS signal reflections (multipath) to prevent ghost mileage.</li>
         <li><b>Rain Mode:</b> Doubles oil amount. Auto-Off after 30 min.</li>
-        <li><b>Emergency Mode:</b> Auto-active if no GPS > 3 min. Simulates 50 km/h. Disables Rain Mode.</li>
+        <li><b>Emergency Mode:</b> Auto-active if no GPS > 3 min. Simulates a speed of 50 km/h. Disables Rain Mode.</li>
         <li><b>Night Mode:</b> Dims LED during defined hours.</li>
         <li><b>Auto-Save:</b> Settings and progress saved at standstill (< 7 km/h).</li>
         <li><b>Stats:</b> Tracks odometer, oiling cycles, and speed profile.</li>
