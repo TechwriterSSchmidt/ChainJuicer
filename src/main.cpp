@@ -254,9 +254,7 @@ void setup() {
     server.on("/library/test/success.html", handleRoot); // Apple
     server.on("/ncsi.txt", handleRoot); // Windows
     server.on("/connecttest.txt", handleRoot); // Microsoft
-    server.on("/favicon.ico", [](){ 
-        server.send(200, "image/svg+xml", lemonIcon); 
-    }); 
+    server.on("/favicon.ico", [](){ server.send(404, "text/plain", ""); }); 
     
     server.onNotFound([](){
         // Filter out common noise to keep serial clean
