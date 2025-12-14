@@ -26,7 +26,7 @@ const char* htmlHeader = R"rawliteral(
 <body>
     <h2>Chain Oiler Config</h2>
     <div class='help-link'><a href='/help'>Help & Manual</a></div>
-    <div class='time'>Time (GPS): %TIME% | Sats: %SATS%</div>
+    <div class='time'>Time: %TIME% | Sats: %SATS%</div>
     <form action='/save' method='POST'>
         <h3>Driving Profile</h3>
         <table>
@@ -105,7 +105,12 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><b>GPS Control:</b> Speed-dependent intervals (Active > 10 km/h).</li>
         <li><b>Drift Filter:</b> Ignores GPS signal reflections (multipath) to prevent ghost mileage.</li>
-        <li><b>Rain Mode:</b> Doubles oil amount and turns off automatically after 30 min or on reboot.</li>
+        <li><b>Rain Mode:</b>
+            <ul>
+                <li>Doubles oil amount.</li>
+                <li>Turns off automatically after 30 min or on reboot.</li>
+            </ul>
+        </li>
         <li><b>Emergency Mode:</b>
             <ul>
                 <li>Auto-activates if no GPS > 3 min.</li>
