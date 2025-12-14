@@ -1,4 +1,4 @@
-# GPS Chain Oiler (ESP32)
+# 🍋 Chain Juicer (ESP32)
 
 An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The system dynamically adjusts oiling intervals based on the driven speed and offers extensive configuration options via a web interface.
 
@@ -7,15 +7,14 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
 *   **Smart GPS Filter:** Detects and ignores "ghost speeds" (multipath reflections) indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
+*   **Safety Cutoff:** Hard limit for the pump (max. 60s continuous run) to prevent hardware damage in case of software glitches.
 *   **Startup Delay:** 10-second safety delay after boot to prevent pump malfunctions during initialization.
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
 *   **Emergency Mode:**
-    *   **Automatic:** Activates if no GPS signal is received for more than 5 minutes.
-        *   After 15 min: 1st oiling.
-        *   After 30 min: 2nd oiling.
-        *   After 31 min: Timeout (Red LED, no further oiling).
-    *   **Manual (Forced):** Continuous simulation of 50 km/h (ignores timeout).
+    *   **Automatic:** Activates if no GPS signal is received for more than 3 minutes. Simulates a constant speed of 50 km/h to keep the chain lubricated.
+    *   **Safety Timeout:** Automatically stops after 31 minutes to prevent oiling when parked (if ignition is left on).
+    *   **Manual (Forced):** Continuous simulation of 50 km/h (ignores timeout). Resets automatically on reboot.
 *   **Smart WiFi & Web Interface:**
     *   Configure all parameters conveniently via smartphone.
     *   **OTA Update:** Upload new firmware directly via the web interface.
@@ -27,9 +26,10 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Tank Monitor:** Calculates oil consumption and warns (pulsing LED) when the supply runs low.
 *   **Advanced Statistics:**
     *   **Driving Profile (Time %):** Shows the percentage of driving time spent in each speed range.
-    *   **Oiling Counter:** Counts the number of triggered oilings per speed range.
+    *   **Juices Counter:** Counts the number of triggered oiling events per speed range.
     *   **Odometer:** Total distance counter.
 *   **Data Security:** Odometer and settings are permanently saved in flash memory (NVS).
+*   **Factory Reset:** Ability to reset all settings to default via hardware button.
 
 ## 🛠 Hardware
 
@@ -61,6 +61,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 | **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue) |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Long Hold** | > 10s | At Standstill (< 7 km/h) | Start **Bleeding Mode** (LED: Red blinking, pump runs 10s) |
+| **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
 
 ### LED Status Codes
 
@@ -84,8 +85,8 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 *   **LED:** Brightness for Day and Night (in %).
 *   **Statistics:**
     *   **Time %:** Driving profile analysis to optimize intervals.
-    *   **Oilings:** Counter for oilings per range.
-    *   Total odometer and pump cycles (Reset possible).
+    *   **Juices:** Counter for oiling events per range.
+    *   Total odometer and pump juices (Reset possible).
 
 ## ⚙️ Technical Details
 

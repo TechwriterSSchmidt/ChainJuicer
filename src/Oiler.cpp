@@ -296,7 +296,15 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     } 
-    // 2. Oiling Event -> YELLOW Breathing
+    // 2. WiFi Active (High Priority Indication) -> WHITE Pulsing
+    else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
+        float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
+        uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
+        color = strip.Color(255, 255, 255);
+    }
+    // 3. Oiling Event -> YELLOW Breathing
     else if (isOiling || millis() < ledOilingEndTimestamp) {
         float breath = getPulse(LED_PERIOD_OILING); 
         uint8_t bri = (uint8_t)(breath * currentHighBrightness);
@@ -304,7 +312,7 @@ void Oiler::updateLED() {
         strip.setBrightness(bri);
         color = strip.Color(255, 200, 0);
     } 
-    // 3. Tank Warning -> ORANGE Blinking (2x fast)
+    // 4. Tank Warning -> ORANGE Blinking (2x fast)
     else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
         strip.setBrightness(currentHighBrightness);
         int phase = now % LED_BLINK_TANK; // 2s cycle
@@ -315,7 +323,7 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     }
-    // 4. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
+    // 5. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
     else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
          int phase = now % LED_PERIOD_EMERGENCY; // 1.5s Cycle
          // Pulse 1: 0-100, Pulse 2: 200-300
@@ -327,26 +335,18 @@ void Oiler::updateLED() {
              color = strip.Color(0, 255, 0); // Green
          }
     }
-    // 5. Rain Mode -> BLUE Static
+    // 6. Rain Mode -> BLUE Static
     else if (rainMode) {
         strip.setBrightness(currentDimBrightness);
         color = strip.Color(0, 0, 255);
     }
-    // 6. No GPS (Searching) -> MAGENTA Pulsing
+    // 7. No GPS (Searching) -> MAGENTA Pulsing
     else if (!hasFix) {
         float pulse = getPulse(LED_PERIOD_GPS);
         uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
         if (bri < 5) bri = 5;
         strip.setBrightness(bri);
         color = strip.Color(255, 0, 255);
-    }
-    // 7. WiFi Active (Idle Override) -> WHITE Pulsing
-    else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
-        float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
-        uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(255, 255, 255);
     }
     // 8. Idle / Ready -> GREEN Static
     else {
