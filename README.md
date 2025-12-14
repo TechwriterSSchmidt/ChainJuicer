@@ -6,7 +6,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
-*   **Smart GPS Filter:** Detects and ignores "ghost speeds" (multipath reflections) indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
+*   **Drift Filter:** Detects and ignores satellite signal reflections (multipath) to prevent "ghost mileage" indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
     *   *Note:* Automatically disabled if Emergency Mode is active (forced or auto).
@@ -15,7 +15,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
         *   Simulates driving at 50 km/h.
         *   Automatically disables Rain Mode.
     *   **Manual (Forced):** Continuous simulation of 50 km/h. Forces Rain Mode OFF.
-*   **Smart WiFi & Web Interface:**
+*   **WiFi & Web Interface:**
     *   Configure all parameters conveniently via smartphone.
     *   LED brightness adjustable in percent (0-100%).
     *   Activation only at standstill (< 7 km/h) via long button press (> 3s).
@@ -23,12 +23,12 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
     *   **New:** Displays current Satellite count in the header.
 *   **Night Mode:** Automatic dimming of the status LED based on GPS time. Separate brightness adjustable for events (oiling, WiFi).
 *   **Bleeding Mode:** Continuous pumping to fill the oil line after maintenance.
-*   **Tank Monitor:** Calculates oil consumption and warns (pulsing LED) when the supply runs low.
+*   **Tank Monitor:** Calculates oil consumption and warns (Red 2x blink) when the supply runs low.
 *   **Advanced Statistics:**
-    *   **Driving Profile (Time %):** Shows the percentage of driving time spent in each speed range.
-    *   **Oiling Counter:** Counts the number of triggered oilings per speed range.
+    *   **Usage %:** Shows the percentage of driving time spent in each speed range.
+    *   **Cycles:** Counts the number of triggered oilings per speed range.
     *   **Odometer:** Total distance counter (includes simulated distance in Emergency Mode).
-*   **Data Security:** Odometer and settings are permanently saved in flash memory (NVS).
+*   **Auto-Save:** Odometer and settings are permanently saved in flash memory (NVS) at standstill (< 7 km/h).
 
 ## 🛠 Hardware
 
@@ -83,11 +83,10 @@ ESP32 GPIO (the one that switches the MOSFET
 *   🟢 **Green:** Normal Operation (GPS Fix available)
 *   🔵 **Blue:** Rain Mode Active
 *   🟣 **Magenta:** No GPS Signal (Searching...)
-*   🔵 **Cyan:** Emergency Mode (No GPS, Simulation active)
-*   🔴 **Red (Bright):** Emergency Timeout (> 31 Min without GPS)
+*   🔵 **Cyan:** Emergency Mode (No GPS > 3 min, Simulation active)
 *   🟡 **Yellow:** Oiling in progress (lit for 3s)
 *   ⚪ **White (pulsing):** WiFi Configuration Mode active
-*   🔴 **Red (pulsing 2x):** Tank Warning (Reserve reached)
+*   🔴 **Red (2x blink):** Tank Warning (Reserve reached)
 *   🔴 **Red (blinking):** Bleeding Mode active
 
 ## 📱 Web Interface
@@ -99,8 +98,8 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 *   **Modes:** Rain Mode, Emergency Mode (Force), Night Mode (Times & Brightness).
 *   **LED:** Brightness for Day and Night (in %).
 *   **Statistics:**
-    *   **Time %:** Driving profile analysis to optimize intervals.
-    *   **Oilings:** Counter for oilings per range.
+    *   **Usage %:** Driving profile analysis to optimize intervals.
+    *   **Cycles:** Counter for oilings per range.
     *   **Reset:** Reset stats or refill tank.
 
 ## 💡 Usage Scenarios
@@ -132,14 +131,13 @@ If your pump runs immediately when powering on the ESP32:
 1.  Check wiring: Ensure the 10k Pull-Down resistor is present between Gate and GND.
 2.  Check Config: Ensure `PUMP_INVERTED` is `false` in `config.h`.
 3.  Check MOSFET: Ensure you are using a Logic Level MOSFET (Vgs(th) < 2.5V) and not a standard MOSFET or BJT Darlington without proper bias.
-    *   Total odometer and pump cycles (Reset possible).
 
 ## ⚙️ Technical Details
 
 *   **Non-Blocking:** Pump control is asynchronous.
 *   **Adaptive Smoothing:** Combination of Lookup Table and Low-Pass Filter.
 *   **Smart Oiling (Hysteresis):** Oiling is triggered at **95% of the calculated distance**.
-*   **Memory Protection:** The odometer is saved intelligently (at standstill < 7 km/h, but max. every 2 minutes).
+*   **Auto-Save:** The odometer is saved intelligently (at standstill < 7 km/h, but max. every 2 minutes).
 *   **Timezone:** Automatic calculation of Central European Time (CET/CEST).
 
 ## 💻 Installation (PlatformIO)
