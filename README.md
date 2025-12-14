@@ -15,6 +15,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
         *   Simulates driving at 50 km/h.
         *   Automatically disables Rain Mode.
     *   **Manual (Forced):** Continuous simulation of 50 km/h. Forces Rain Mode OFF.
+        *   *Safety Feature:* Automatically resets to OFF when the ignition is turned off (reboot) to prevent accidental oiling in the garage.
 *   **WiFi & Web Interface:**
     *   Configure all parameters conveniently via smartphone.
     *   LED brightness adjustable in percent (0-100%).

@@ -359,7 +359,10 @@ void Oiler::loadConfig() {
     tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
 
     // Load Emergency Mode forced setting
-    emergencyModeForced = preferences.getBool("emerg_force", false);
+    // SAFETY: Always start with Forced Emergency Mode OFF to prevent accidental oiling in garage
+    emergencyModeForced = false; 
+    // emergencyModeForced = preferences.getBool("emerg_force", false); // DISABLED FOR SAFETY
+
     // If forced, activate immediately
     if (emergencyModeForced) {
         emergencyMode = true;
@@ -409,6 +412,7 @@ void Oiler::saveConfig() {
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
+    // preferences.putBool("emerg_force", emergencyModeForced); // DISABLED FOR SAFETY
 
     // Save Tank Monitor
     preferences.putBool("tank_en", tankMonitorEnabled);
@@ -429,7 +433,7 @@ void Oiler::saveConfig() {
         preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
-    preferences.putBool("emerg_force", emergencyModeForced);
+    // preferences.putBool("emerg_force", emergencyModeForced); // DISABLED FOR SAFETY
 
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }

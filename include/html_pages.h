@@ -1,11 +1,15 @@
 #ifndef HTML_PAGES_H
 #define HTML_PAGES_H
 
+// Simple Lemon SVG Icon
+const char* lemonIcon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M15,50 Q15,15 50,15 Q85,15 85,50 Q85,85 50,85 Q15,85 15,50' fill='#FFEB3B' stroke='#FBC02D' stroke-width='3' transform='rotate(-45, 50, 50)'/><circle cx='35' cy='40' r='2' fill='#F9A825' opacity='0.6'/><circle cx='65' cy='60' r='2' fill='#F9A825' opacity='0.6'/><circle cx='50' cy='50' r='2' fill='#F9A825' opacity='0.6'/></svg>";
+
 const char* htmlHeader = R"rawliteral(
 <html>
 <head>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Chain Oiler</title>
+    <title>Chain Juicer</title>
+    <link rel="icon" href="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20100%20100%27%3E%3Cpath%20d%3D%27M15%2C50%20Q15%2C15%2050%2C15%20Q85%2C15%2085%2C50%20Q85%2C85%2050%2C85%20Q15%2C85%2015%2C50%27%20fill%3D%27%23FFEB3B%27%20stroke%3D%27%23FBC02D%27%20stroke-width%3D%273%27%20transform%3D%27rotate(-45%2C%2050%2C%2050)%27%2F%3E%3Ccircle%20cx%3D%2735%27%20cy%3D%2740%27%20r%3D%272%27%20fill%3D%27%23F9A825%27%20opacity%3D%270.6%27%2F%3E%3Ccircle%20cx%3D%2765%27%20cy%3D%2760%27%20r%3D%272%27%20fill%3D%27%23F9A825%27%20opacity%3D%270.6%27%2F%3E%3Ccircle%20cx%3D%2750%27%20cy%3D%2750%27%20r%3D%272%27%20fill%3D%27%23F9A825%27%20opacity%3D%270.6%27%2F%3E%3C%2Fsvg%3E">
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
         h2{text-align:center;color:#333}
@@ -24,7 +28,7 @@ const char* htmlHeader = R"rawliteral(
     </style>
 </head>
 <body>
-    <h2>Chain Oiler Config</h2>
+    <h2>🍋 Chain Juicer</h2>
     <div class='help-link'><a href='/help'>Help & Manual</a></div>
     <div class='time'>Time: %TIME% | Sats: %SATS%</div>
     <form action='/save' method='POST'>
