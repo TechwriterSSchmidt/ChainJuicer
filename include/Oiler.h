@@ -18,26 +18,27 @@ public:
     void loop(); // Main loop for button and LED
     void saveConfig();
     void saveProgress(); // Public for manual saving
+    
+    // --- Configuration Getters ---
     SpeedRange* getRangeConfig(int index);
     
-    // Getters for Logging
+    // --- Logging & Stats Getters ---
     float getSmoothedSpeed() { return currentSpeed; }
     double getOdometer() { return totalDistance; }
     float getCurrentDistAccumulator() { return currentProgress * smoothedInterval; }
     float getCurrentTargetDistance() { return smoothedInterval; }
     bool isPumpRunning() { return isOiling; }
-
     float getCurrentProgress() { return currentProgress; }
+    
+    // --- Mode Getters & Setters ---
     bool isRainMode() { return rainMode; }
     void setRainMode(bool mode);
 
-    // Emergency Mode
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
 
-    // Emergency Mode Forced
-    void setEmergencyModeForced(bool forced);
     bool isEmergencyModeForced() { return emergencyModeForced; }
+    void setEmergencyModeForced(bool forced);
 
     // Factory Reset
     void checkFactoryReset();

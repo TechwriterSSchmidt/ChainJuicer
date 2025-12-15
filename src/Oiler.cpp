@@ -445,7 +445,6 @@ void Oiler::loadConfig() {
     // Load Emergency Mode forced setting
     // SAFETY: Always start with Forced Emergency Mode OFF to prevent accidental oiling in garage
     emergencyModeForced = false; 
-    // emergencyModeForced = preferences.getBool("emerg_force", false); // DISABLED FOR SAFETY
 
     // If forced, activate immediately
     if (emergencyModeForced) {
@@ -496,7 +495,6 @@ void Oiler::saveConfig() {
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
-    // preferences.putBool("emerg_force", emergencyModeForced); // DISABLED FOR SAFETY
 
     // Save Tank Monitor
     preferences.putBool("tank_en", tankMonitorEnabled);
@@ -517,8 +515,6 @@ void Oiler::saveConfig() {
         preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
-    // preferences.putBool("emerg_force", emergencyModeForced); // DISABLED FOR SAFETY
-
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
@@ -913,7 +909,6 @@ void Oiler::processPump() {
                     float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
                     currentTankLevelMl -= mlConsumed;
                     if (currentTankLevelMl < 0) currentTankLevelMl = 0;
-                    // Serial.printf("Bleeding Pulse: %.2f ml consumed\n", mlConsumed);
                 }
             }
         }

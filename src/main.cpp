@@ -38,14 +38,6 @@ unsigned long wifiStartTime = 0;
 bool wifiActive = false; // Default OFF
 const unsigned long WIFI_TIMEOUT = WIFI_TIMEOUT_MS;
 
-// HTML Page for Configuration
-#include "html_pages.h"
-
-bool isSummerTime(int year, int month, int day, int hour) {
-    // Deprecated: Logic moved to Oiler::calculateLocalHour
-    return false; 
-}
-
 String getZurichTime() {
     if (!gps.time.isValid() || !gps.date.isValid()) return "--:--";
     
@@ -57,17 +49,8 @@ String getZurichTime() {
     
     // Use Oiler's centralized logic
     int localHour = oiler.calculateLocalHour(hour, day, month, year);
-    int offset = (localHour - hour + 24) % 24; // Calculate offset back from result
-    if (offset > 12) offset -= 24; // Handle wrap around if needed, but simple diff is enough for display
     
-    // Actually, calculateLocalHour returns the hour. We can just use it.
-    // But we want to display the offset (UTC+1 or +2).
-    // Let's re-derive offset or just check summer time again?
-    // To be clean, let's trust the result.
-    
-    // Re-calculate offset for display string
-    // If localHour == hour + 2 -> Offset 2
-    // If localHour == hour + 1 -> Offset 1
+    // Calculate offset for display string (UTC+1 or +2)
     int diff = localHour - hour;
     if (diff < 0) diff += 24;
     
@@ -458,9 +441,7 @@ void loop() {
     // Update Oiler Logic
     // Pass current time to Oiler (for Night Mode)
     if (gps.time.isValid() && gps.date.isValid()) {
-        int offset = isSummerTime(gps.date.year(), gps.date.month(), gps.date.day(), gps.time.hour()) ? 2 : 1;
-        int h = gps.time.hour() + offset;
-        if (h >= 24) h -= 24;
+        int h = oiler.calculateLocalHour(gps.time.hour(), gps.date.day(), gps.date.month(), gps.date.year());
         oiler.setCurrentHour(h);
     }
     
