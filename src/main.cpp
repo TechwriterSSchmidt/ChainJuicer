@@ -177,10 +177,13 @@ void initSD() {
         
         // Dump Config
         logFile.println("EVENT,0,,,,,,,,,CONFIG DUMP START");
-        logFile.printf("EVENT,0,,,,,,,,,Rain Multiplier: %d\n", oiler.getConfig().rainMultiplier);
+        logFile.printf("EVENT,0,,,,,,,,,Rain Multiplier: %d\n", (oiler.isRainMode() ? 2 : 1));
         for(int i=0; i<5; i++) {
-            logFile.printf("EVENT,0,,,,,,,,,Range %d: >%.1f km/h -> %.1f m\n", 
-                i, oiler.getConfig().speedRanges[i], oiler.getConfig().intervals[i]);
+            SpeedRange* r = oiler.getRangeConfig(i);
+            if(r) {
+                logFile.printf("EVENT,0,,,,,,,,,Range %d: >%.1f km/h -> %.1f km\n", 
+                    i, r->minSpeed, r->intervalKm);
+            }
         }
         
         // Log Boot Reason

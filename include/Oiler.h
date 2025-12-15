@@ -19,6 +19,14 @@ public:
     void saveConfig();
     void saveProgress(); // Public for manual saving
     SpeedRange* getRangeConfig(int index);
+    
+    // Getters for Logging
+    float getSmoothedSpeed() { return currentSpeed; }
+    double getOdometer() { return totalDistance; }
+    float getCurrentDistAccumulator() { return currentProgress * smoothedInterval; }
+    float getCurrentTargetDistance() { return smoothedInterval; }
+    bool isPumpRunning() { return isOiling; }
+
     float getCurrentProgress() { return currentProgress; }
     bool isRainMode() { return rainMode; }
     void setRainMode(bool mode);

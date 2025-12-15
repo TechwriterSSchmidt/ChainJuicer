@@ -948,14 +948,6 @@ void Oiler::setRainMode(bool mode) {
     }
 }
 
-void Oiler::setEmergencyModeForced(bool forced) {
-    emergencyModeForced = forced;
-    // If Emergency Mode is forced, disable Rain Mode
-    if (emergencyModeForced) {
-        rainMode = false;
-    }
-}
-
 SpeedRange* Oiler::getRangeConfig(int index) {
     if(index >= 0 && index < NUM_RANGES) return &ranges[index];
     return nullptr;
