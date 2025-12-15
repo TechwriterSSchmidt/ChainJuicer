@@ -71,7 +71,6 @@ ESP32 GPIO (the one that switches the MOSFET
 
 *   **200R (Series):** Protects the ESP32 pin from current spikes (Gate capacitance).
 *   **10k (Pull-Down):** Keeps the Gate at GND (0V) while the ESP32 is booting.
-*   **Software:** Ensure `PUMP_INVERTED` is set to `false` in `config.h`.
 
 ## 📖 Operation
 
@@ -136,8 +135,7 @@ You installed a new oil line and need to fill it.
 ### Scenario 4: Hardware Debugging (Pump runs at boot)
 If your pump runs immediately when powering on the ESP32:
 1.  Check wiring: Ensure the 10k Pull-Down resistor is present between Gate and GND.
-2.  Check Config: Ensure `PUMP_INVERTED` is `false` in `config.h`.
-3.  Check MOSFET: Ensure you are using a Logic Level MOSFET (Vgs(th) < 2.5V) and not a standard MOSFET or BJT Darlington without proper bias.
+2.  Check MOSFET: Ensure you are using a Logic Level MOSFET (Vgs(th) < 2.5V) and not a standard MOSFET or BJT Darlington without proper bias.
 
 ## ⚙️ Technical Details
 

@@ -850,7 +850,7 @@ void Oiler::processPump() {
     // SAFETY CUTOFF: Prevent pump from running too long (e.g. software bug)
     if ((isOiling || bleedingMode) && (now - pumpActivityStartTime > PUMP_SAFETY_CUTOFF_MS)) {
         Serial.println("[CRITICAL] Safety Cutoff triggered! Pump ran too long.");
-        digitalWrite(pumpPin, LOW);
+        digitalWrite(pumpPin, PUMP_OFF);
         isOiling = false;
         bleedingMode = false;
         pulseState = false;
