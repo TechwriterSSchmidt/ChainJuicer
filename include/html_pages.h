@@ -28,7 +28,7 @@ const char* htmlHeader = R"rawliteral(
     </style>
 </head>
 <body>
-    <h2>🍋 Chain Juicer v0.9</h2>
+    <h2>🍋 Chain Juicer v1.0</h2>
     <div class='help-link'><a href='/help'>Help & Manual</a></div>
     <div class='time'>Time: %TIME% | Sats: %SATS%</div>
     <form action='/save' method='POST'>
@@ -84,6 +84,7 @@ const char* htmlFooter = R"rawliteral(
         <div style='margin-top:10px'><a href='/reset_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
         <div class='progress'>Current Progress: %PROGRESS%%</div>
         <input type='submit' value='Save' class='btn'>
+        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#999;text-decoration:none;font-size:0.8em'>[Firmware Update]</a></div>
     </form>
 </body>
 </html>
@@ -142,6 +143,7 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><b>Activate:</b> Hold button (> 3s) at standstill.</li>
         <li><b>Deactivate:</b> Auto-off when driving (> 10 km/h) or after 5 min inactivity.</li>
+        <li><b>Update:</b> Upload new firmware (.bin) via the web interface.</li>
     </ul>
     <h3>Button Functions</h3>
     <ul>
@@ -158,8 +160,34 @@ const char* htmlHelp = R"rawliteral(
         <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White pulse:</b> 'WiFi Config' Active.</li>
         <li><span class='color-box' style='background:red'></span> <b>Red (2x blink):</b> 'Tank Warning'.</li>
         <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>
+        <li><span class='color-box' style='background:cyan'></span> <b>Cyan (fast blink):</b> Firmware Update.</li>
     </ul>
     <a href='/' class='btn'>Back</a>
+</body>
+</html>
+)rawliteral";
+
+const char* htmlUpdate = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Firmware Update</title>
+    <style>
+        body{font-family:sans-serif;margin:0;padding:20px;background:#f4f4f9;text-align:center}
+        h2{color:#333}
+        form{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:inline-block}
+        input[type=file]{margin-bottom:15px}
+        input[type=submit]{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;font-size:16px}
+    </style>
+</head>
+<body>
+    <h2>Firmware Update</h2>
+    <form method='POST' action='/update' enctype='multipart/form-data'>
+        <input type='file' name='update'>
+        <br>
+        <input type='submit' value='Update Firmware'>
+    </form>
 </body>
 </html>
 )rawliteral";

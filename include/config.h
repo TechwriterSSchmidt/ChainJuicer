@@ -28,7 +28,6 @@
 
 #define GPS_BAUD 9600  // GPS Baud Rate
 
-
 // Debug Configuration
 #define GPS_DEBUG          // Uncomment to enable GPS debug output on Serial
 
@@ -36,6 +35,28 @@
 #define NUM_LEDS 2
 #define LED_BRIGHTNESS_DIM 20   // Brightness for status LED during normal operation (0-255)
 #define LED_BRIGHTNESS_HIGH 150 // Brightness for events (0-255)
+
+// SD Logging Configuration
+// Uncomment to enable SD Card Logging
+#define SD_LOGGING_ACTIVE 
+
+#ifdef SD_LOGGING_ACTIVE
+    #define SD_CS_PIN 5
+    #define SD_MOSI_PIN 23
+    #define SD_MISO_PIN 19
+    #define SD_CLK_PIN 18
+    #define LOG_FILE_PREFIX "/log_"
+    #define LOG_INTERVAL_MS 1000 // Log every 1 second
+#endif
+
+// LED Timings
+#define LED_PERIOD_OILING 1500      // Breathing duration for Oiling
+#define LED_PERIOD_EMERGENCY 1500   // Pulse cycle for Emergency Mode
+#define LED_PERIOD_WIFI 2000        // Pulse cycle for WiFi
+#define LED_PERIOD_GPS 1000         // Pulse cycle for GPS Search
+#define LED_BLINK_FAST 100          // Fast blink (Bleeding/Reset)
+#define LED_BLINK_TANK 2000         // Tank warning cycle
+#define LED_WIFI_SHOW_DURATION 10000 // How long to show WiFi LED after activation
 
 // Default Values
 #define PULSE_DURATION_MS 150      // Duration in ms of the pump impulse (HIGH)
@@ -49,9 +70,11 @@
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode
 #define WIFI_PRESS_MS 3000        // > 3s: Activate WiFi (if standing still)
 #define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
+#define FACTORY_RESET_PRESS_MS 10000 // > 10s at Boot: Factory Reset
 
 // Safety
 // STARTUP_DELAY_MS removed as hardware pull-down handles boot glitches
+#define PUMP_SAFETY_CUTOFF_MS 30000 // HARD LIMIT: Max continuous pump run (10s)
 
 // Timeouts & Intervals
 #define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)

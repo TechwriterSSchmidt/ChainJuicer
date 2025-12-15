@@ -4,8 +4,17 @@
 #include <DNSServer.h>
 #include <TinyGPS++.h>
 #include <esp_task_wdt.h>
+#include <Update.h>
+#include <Preferences.h>
 #include "config.h"
 #include "Oiler.h"
+#include "html_pages.h"
+
+#ifdef SD_LOGGING_ACTIVE
+    #include "FS.h"
+    #include "SD.h"
+    #include "SPI.h"
+#endif
 
 // Watchdog Timeout in seconds
 #define WDT_TIMEOUT 8
@@ -17,6 +26,13 @@ WebServer server(80);
 DNSServer dnsServer;
 Oiler oiler;
 
+#ifdef SD_LOGGING_ACTIVE
+    File logFile;
+    String currentLogFileName = "";
+    unsigned long lastLogTime = 0;
+    bool sdInitialized = false;
+#endif
+
 // WiFi Timer Variables
 unsigned long wifiStartTime = 0;
 bool wifiActive = false; // Default OFF
@@ -26,18 +42,8 @@ const unsigned long WIFI_TIMEOUT = WIFI_TIMEOUT_MS;
 #include "html_pages.h"
 
 bool isSummerTime(int year, int month, int day, int hour) {
-    if (month < 3 || month > 10) return false; 
-    if (month > 3 && month < 10) return true; 
-
-    if (month == 3) {
-        int lastSunday = 31 - ((5 * year / 4 + 4) % 7);
-        return day > lastSunday || (day == lastSunday && hour >= 1); // Switch at 1:00 UTC
-    }
-    if (month == 10) {
-        int lastSunday = 31 - ((5 * year / 4 + 1) % 7);
-        return day < lastSunday || (day == lastSunday && hour < 1); // Switch at 1:00 UTC
-    }
-    return false;
+    // Deprecated: Logic moved to Oiler::calculateLocalHour
+    return false; 
 }
 
 String getZurichTime() {
@@ -49,14 +55,24 @@ String getZurichTime() {
     int hour = gps.time.hour();
     int minute = gps.time.minute();
     
-    // Timezone Logic for Zurich (CET/CEST)
-    int offset = isSummerTime(year, month, day, hour) ? 2 : 1;
+    // Use Oiler's centralized logic
+    int localHour = oiler.calculateLocalHour(hour, day, month, year);
+    int offset = (localHour - hour + 24) % 24; // Calculate offset back from result
+    if (offset > 12) offset -= 24; // Handle wrap around if needed, but simple diff is enough for display
     
-    hour += offset; 
-    if (hour >= 24) hour -= 24;
+    // Actually, calculateLocalHour returns the hour. We can just use it.
+    // But we want to display the offset (UTC+1 or +2).
+    // Let's re-derive offset or just check summer time again?
+    // To be clean, let's trust the result.
+    
+    // Re-calculate offset for display string
+    // If localHour == hour + 2 -> Offset 2
+    // If localHour == hour + 1 -> Offset 1
+    int diff = localHour - hour;
+    if (diff < 0) diff += 24;
     
     char buf[32];
-    sprintf(buf, "%02d:%02d (UTC+%d)", hour, minute, offset);
+    sprintf(buf, "%02d:%02d (UTC+%d)", localHour, minute, diff);
     return String(buf);
 }
 
@@ -95,6 +111,112 @@ void handleRefill() {
     server.sendHeader("Location", "/");
     server.send(303);
 }
+
+void handleUpdate() {
+    resetWifiTimer();
+    server.send(200, "text/html", htmlUpdate);
+}
+
+void handleUpdateResult() {
+    resetWifiTimer();
+    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
+    ESP.restart();
+}
+
+void handleUpdateProcess() {
+    resetWifiTimer();
+    oiler.setUpdateMode(true); // Enable LED indication
+    HTTPUpload& upload = server.upload();
+    if (upload.status == UPLOAD_FILE_START) {
+        Serial.printf("Update: %s\n", upload.filename.c_str());
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
+            Update.printError(Serial);
+        }
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+        /* flashing firmware to ESP*/
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+            Update.printError(Serial);
+        }
+    } else if (upload.status == UPLOAD_FILE_END) {
+        if (Update.end(true)) { //true to set the size to the current progress
+            Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+        } else {
+            Update.printError(Serial);
+        }
+    }
+}
+
+#ifdef SD_LOGGING_ACTIVE
+void initSD() {
+    SPI.begin(SD_CLK_PIN, SD_MISO_PIN, SD_MOSI_PIN, SD_CS_PIN);
+    if (!SD.begin(SD_CS_PIN)) {
+        Serial.println("SD Card Mount Failed");
+        return;
+    }
+    
+    uint8_t cardType = SD.cardType();
+    if (cardType == CARD_NONE) {
+        Serial.println("No SD card attached");
+        return;
+    }
+
+    // Find next available log file
+    int logIndex = 0;
+    do {
+        logIndex++;
+        currentLogFileName = String(LOG_FILE_PREFIX) + String(logIndex) + ".csv";
+    } while (SD.exists(currentLogFileName));
+
+    Serial.print("Logging to: ");
+    Serial.println(currentLogFileName);
+
+    logFile = SD.open(currentLogFileName, FILE_WRITE);
+    if (logFile) {
+        // Write Header
+        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Sats,HDOP,Message");
+        
+        // Dump Config
+        logFile.println("EVENT,0,,,,,,,,,CONFIG DUMP START");
+        logFile.printf("EVENT,0,,,,,,,,,Rain Multiplier: %d\n", oiler.getConfig().rainMultiplier);
+        for(int i=0; i<5; i++) {
+            logFile.printf("EVENT,0,,,,,,,,,Range %d: >%.1f km/h -> %.1f m\n", 
+                i, oiler.getConfig().speedRanges[i], oiler.getConfig().intervals[i]);
+        }
+        
+        // Log Boot Reason
+        esp_reset_reason_t reason = esp_reset_reason();
+        logFile.printf("EVENT,%lu,,,,,,,,,Boot Reason: %d\n", millis(), reason);
+        
+        logFile.close();
+        sdInitialized = true;
+    } else {
+        Serial.println("Failed to open log file for writing");
+    }
+}
+
+void writeLogLine(String type, String message = "") {
+    if (!sdInitialized) return;
+
+    File f = SD.open(currentLogFileName, FILE_APPEND);
+    if (f) {
+        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%s\n",
+            type.c_str(),
+            millis(),
+            gps.speed.kmph(),
+            oiler.getSmoothedSpeed(),
+            oiler.getOdometer(),
+            oiler.getCurrentDistAccumulator(),
+            oiler.getCurrentTargetDistance(),
+            oiler.isPumpRunning(),
+            oiler.isRainMode(),
+            gps.satellites.value(),
+            gps.hdop.hdop(),
+            message.c_str()
+        );
+        f.close();
+    }
+}
+#endif
 
 void handleRoot() {
     resetWifiTimer();
@@ -216,12 +338,20 @@ void handleSave() {
 }
 
 void setup() {
+    Serial.begin(115200);
+
+    // ---------------------------------------------------------
+    // FACTORY RESET CHECK (Must be first)
+    // ---------------------------------------------------------
+    oiler.checkFactoryReset();
+    // ---------------------------------------------------------
+
     // Safety: Ensure Pump is OFF immediately
     // Set level LOW before switching to OUTPUT to prevent glitches
     digitalWrite(PUMP_PIN, PUMP_OFF);
     pinMode(PUMP_PIN, OUTPUT);
 
-    Serial.begin(115200);
+    if(!Serial) Serial.begin(115200);
     
     // Initialize Watchdog
     esp_task_wdt_init(WDT_TIMEOUT, true);
@@ -236,6 +366,10 @@ void setup() {
     // Oiler Start
     oiler.begin();
 
+#ifdef SD_LOGGING_ACTIVE
+    initSD();
+#endif
+
     // WiFi Start Logic: Default OFF
     // Start DNS Server only when needed
 
@@ -246,6 +380,10 @@ void setup() {
     server.on("/reset_stats", handleResetStats);
     server.on("/reset_time_stats", handleResetTimeStats);
     server.on("/refill", handleRefill);
+    
+    // OTA Update
+    server.on("/update", HTTP_GET, handleUpdate);
+    server.on("/update", HTTP_POST, handleUpdateResult, handleUpdateProcess);
     
     // Captive Portal / Connectivity Checks
     server.on("/generate_204", handleRoot);  // Android
@@ -331,6 +469,13 @@ void loop() {
     // Run Oiler main loop (Button, LED, Bleeding)
     oiler.loop();
 
+#ifdef SD_LOGGING_ACTIVE
+    if (millis() - lastLogTime > LOG_INTERVAL_MS) {
+        writeLogLine("DATA");
+        lastLogTime = millis();
+    }
+#endif
+
     // --- WiFi Management ---
     unsigned long currentMillis = millis();
 
@@ -339,7 +484,8 @@ void loop() {
     static bool wifiButtonHeld = false;
 
     if (oiler.isButtonPressed()) {
-        if (currentSpeed < MIN_SPEED_KMH) { // threshold to handle GPS drift
+        // Allow WiFi activation if speed is low OR if we have no GPS fix yet (assuming standstill/setup)
+        if (currentSpeed < MIN_SPEED_KMH || !gps.location.isValid()) { 
             if (!wifiButtonHeld) {
                 wifiButtonPressStart = currentMillis;
                 wifiButtonHeld = true;

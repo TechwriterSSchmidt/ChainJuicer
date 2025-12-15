@@ -47,6 +47,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     rainModeStartTime = 0;
     emergencyMode = false;
     wifiActive = false;
+    updateMode = false;
     bleedingMode = false;
     bleedingStartTime = 0;
     buttonPressStartTime = 0;
@@ -60,6 +61,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Oiling State Init
     isOiling = false;
     oilingStartTime = 0;
+    pumpActivityStartTime = 0;
     oilingPulsesRemaining = 0;
     lastPulseTime = 0;
     pulseState = false;
@@ -114,6 +116,53 @@ void Oiler::begin() {
     strip.begin();
     strip.setBrightness(ledBrightnessDim);
     strip.show(); // All pixels off
+}
+
+void Oiler::checkFactoryReset() {
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    // Check if button is pressed during boot
+    if (digitalRead(BUTTON_PIN) == LOW) {
+        Serial.println("Button pressed at boot. Checking for Factory Reset...");
+        
+        // Initialize LED for feedback
+        strip.begin(); // Ensure strip is initialized
+        strip.setBrightness(50);
+        
+        unsigned long startPress = millis();
+        bool resetTriggered = false;
+
+        while (digitalRead(BUTTON_PIN) == LOW) {
+            unsigned long duration = millis() - startPress;
+            
+            // Visual Feedback: Yellow while holding
+            for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, strip.Color(255, 255, 0)); // Yellow
+            strip.show();
+
+            if (duration > FACTORY_RESET_PRESS_MS) {
+                resetTriggered = true;
+                // Visual Feedback: Red blinking fast
+                for(int k=0; k<10; k++) {
+                    for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, strip.Color(255, 0, 0)); // Red
+                    strip.show();
+                    delay(100);
+                    for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, 0); // Off
+                    strip.show();
+                    delay(100);
+                }
+                break; // Exit loop to perform reset
+            }
+            delay(10);
+        }
+
+        if (resetTriggered) {
+            Serial.println("PERFORMING FACTORY RESET...");
+            preferences.begin("oiler", false);
+            preferences.clear(); // Nuke everything
+            preferences.end();
+            Serial.println("Done. Restarting...");
+            ESP.restart();
+        }
+    }
 }
 
 void Oiler::loop() {
@@ -182,6 +231,7 @@ void Oiler::handleButton() {
             if (currentSpeed < MIN_SPEED_KMH) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
+                pumpActivityStartTime = millis(); // Safety Cutoff Start
 #ifdef GPS_DEBUG
                 Serial.println("Bleeding Mode STARTED");
 #endif
@@ -234,17 +284,44 @@ void Oiler::updateLED() {
         }
     }
 
-    if (bleedingMode) {
-        // Bleeding: Red blinking
+    // Helper for sine wave pulse (0.0 to 1.0)
+    auto getPulse = [&](int periodMs) -> float {
+        float angle = (now % periodMs) * 2.0 * PI / periodMs;
+        return (sin(angle) + 1.0) / 2.0;
+    };
+
+    // 0. Update Mode (Critical) -> CYAN Fast Blink
+    if (updateMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 250) % 2 == 0) {
+        if ((now / LED_BLINK_FAST) % 2 == 0) {
+            color = strip.Color(0, 255, 255); // Cyan
+        } else {
+            color = 0; // Off
+        }
+    }
+    // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
+    else if (bleedingMode) {
+        strip.setBrightness(currentHighBrightness);
+        if ((now / LED_BLINK_FAST) % 2 == 0) {
             color = strip.Color(255, 0, 0);
         } else {
             color = 0; // Off
         }
-    } else if (isOiling || millis() < ledOilingEndTimestamp) {
-        // Oiling: Yellow
-        strip.setBrightness(currentHighBrightness);
+    } 
+    // 2. WiFi Active (High Priority Indication) -> WHITE Pulsing
+    else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
+        float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
+        uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
+        color = strip.Color(255, 255, 255);
+    }
+    // 3. Oiling Event -> YELLOW Breathing
+    else if (isOiling || millis() < ledOilingEndTimestamp) {
+        float breath = getPulse(LED_PERIOD_OILING); 
+        uint8_t bri = (uint8_t)(breath * currentHighBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
         color = strip.Color(255, 200, 0);
     } else if (wifiActive) {
         // WiFi Active: White pulsing
@@ -255,7 +332,19 @@ void Oiler::updateLED() {
         
         strip.setBrightness(brightness);
         color = strip.Color(255, 255, 255); // White
-    } else if (!hasFix) {
+    } 
+    // 4. Tank Warning -> ORANGE Blinking (2x fast)
+    else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+        strip.setBrightness(currentHighBrightness);
+        int phase = now % LED_BLINK_TANK; // 2s cycle
+        // Blink 1: 0-200, Blink 2: 400-600
+        if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
+            color = strip.Color(255, 69, 0); // OrangeRed
+        } else {
+            color = 0; // Off
+        }
+    }
+    else if (!hasFix) {
         // No GPS
         unsigned long timeSinceLoss = (lastEmergUpdate > 0) ? (now - lastEmergUpdate) : 0;
         
@@ -268,43 +357,38 @@ void Oiler::updateLED() {
              strip.setBrightness(currentDimBrightness);
              color = strip.Color(0, 255, 255);
         } else {
-             // No GPS (Short term): Magenta Dim
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(255, 0, 255);
+            color = 0; // Off
         }
-    } else if (rainMode) {
-        // Rain Mode: Blue Dim
+    }
+    // 5. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
+    else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
+         int phase = now % LED_PERIOD_EMERGENCY; // 1.5s Cycle
+         // Pulse 1: 0-100, Pulse 2: 200-300
+         if ((phase >= 0 && phase < 100) || (phase >= 200 && phase < 300)) {
+             strip.setBrightness(currentHighBrightness);
+             color = strip.Color(255, 140, 0); // Orange
+         } else {
+             strip.setBrightness(currentDimBrightness);
+             color = strip.Color(0, 255, 0); // Green
+         }
+    }
+    // 6. Rain Mode -> BLUE Static
+    else if (rainMode) {
         strip.setBrightness(currentDimBrightness);
         color = strip.Color(0, 0, 255);
-    } else {
-        // Normal: Green Dim (Status OK)
+    }
+    // 7. No GPS (Searching) -> MAGENTA Pulsing
+    else if (!hasFix) {
+        float pulse = getPulse(LED_PERIOD_GPS);
+        uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
+        if (bri < 5) bri = 5;
+        strip.setBrightness(bri);
+        color = strip.Color(255, 0, 255);
+    }
+    // 8. Idle / Ready -> GREEN Static
+    else {
         strip.setBrightness(currentDimBrightness);
         color = strip.Color(0, 255, 0);
-    }
-
-    // Tank Warning Overlay (Red Pulse 2x then pause)
-    if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-        unsigned long cycle = now % 7500; // 7.5s cycle (2x 1s pulse + 0.5s gap + 5s pause)
-        float val = 0.0;
-        bool active = false;
-        
-        // Pulse 1: 0-1000ms
-        if (cycle < 1000) { 
-            val = sin((cycle / 1000.0) * PI);
-            active = true;
-        } 
-        // Pulse 2: 1500-2500ms (500ms gap)
-        else if (cycle > 1500 && cycle < 2500) { 
-            val = sin(((cycle - 1500) / 1000.0) * PI);
-            active = true;
-        }
-        
-        if (active) {
-            uint8_t bri = (uint8_t)(val * currentHighBrightness);
-            if (bri < 5) bri = 5; // Minimum visibility
-            strip.setBrightness(bri);
-            color = strip.Color(255, 0, 0); // Red
-        }
     }
 
     for(int i=0; i<NUM_LEDS; i++) {
@@ -483,6 +567,26 @@ void Oiler::resetTimeStats() {
     saveConfig();
 }
 
+int Oiler::calculateLocalHour(int utcHour, int day, int month, int year) {
+    // Simple CET/CEST Rule:
+    // CEST (UTC+2) starts last Sunday in March, ends last Sunday in October.
+    
+    bool isSummer = false;
+    if (month > 3 && month < 10) isSummer = true; // April to September
+    else if (month == 3) {
+        int lastSunday = 31 - ((5 * year / 4 + 4) % 7);
+        if (day > lastSunday || (day == lastSunday && utcHour >= 1)) isSummer = true;
+    }
+    else if (month == 10) {
+        int lastSunday = 31 - ((5 * year / 4 + 1) % 7);
+        if (day < lastSunday || (day == lastSunday && utcHour < 1)) isSummer = true;
+    }
+    
+    int offset = isSummer ? 2 : 1;
+    int localH = (utcHour + offset) % 24;
+    return localH;
+}
+
 void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     unsigned long now = millis();
 
@@ -500,21 +604,21 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         smoothedSpeed += speedBuffer[i];
     }
     smoothedSpeed /= SPEED_BUFFER_SIZE;
-    
+
     // Use smoothedSpeed for logic
     float speedKmh = smoothedSpeed;
     currentSpeed = speedKmh; // Update member variable for handleButton logic
-    
+
     // Update Time Stats
     if (lastTimeUpdate == 0) lastTimeUpdate = now;
     unsigned long dt = now - lastTimeUpdate;
     lastTimeUpdate = now;
-    
+
     // Only count if moving fast enough to be in a range (or at least > MIN_SPEED)
     // And avoid huge jumps (e.g. after sleep)
     if (speedKmh >= MIN_SPEED_KMH && dt < 2000) {
         double dtSeconds = (double)dt / 1000.0;
-        
+
         // Find matching range
         int activeRangeIndex = -1;
         for(int i=0; i<NUM_RANGES; i++) {
@@ -523,7 +627,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                 break;
             }
         }
-        
+
         if (activeRangeIndex != -1) {
             currentIntervalTime[activeRangeIndex] += dtSeconds;
             progressChanged = true; // Mark for saving
@@ -531,7 +635,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     }
 
     // Regular saving
-    if (now - lastSaveTime > SAVE_INTERVAL_MS) { 
+    if (now - lastSaveTime > SAVE_INTERVAL_MS) {
         saveProgress();
         lastSaveTime = now;
     }
@@ -543,7 +647,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
     if (!gpsValid) {
         hasFix = false;
-        
+
         if (lastEmergUpdate == 0) {
             lastEmergUpdate = now;
             emergencyOilCount = 0;
@@ -581,7 +685,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             if (lastSimStep == 0) lastSimStep = now;
             unsigned long dt = now - lastSimStep;
             lastSimStep = now;
-            if (dt > 1000) dt = 1000; 
+            if (dt > 1000) dt = 1000;
 
             float simSpeed = 50.0;
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
@@ -599,7 +703,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             }
 
             processDistance(distKm, simSpeed);
-            
+
         } else {
             // Waiting for timeout...
             emergencyMode = false;
@@ -613,36 +717,45 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         lastLat = lat;
         lastLon = lon;
         hasFix = true;
-        lastEmergUpdate = 0; 
+        lastEmergUpdate = 0;
         emergencyOilCount = 0;
-        emergencyMode = false; 
+        emergencyMode = false;
         return;
     }
-    
+
     // Reset Emergency Timer if we have valid GPS
     lastEmergUpdate = 0;
     emergencyMode = false; // Disable Emergency Mode automatically
 
     // Calculate distance (Haversine or TinyGPS function)
     double distKm = TinyGPSPlus::distanceBetween(lastLat, lastLon, lat, lon) / 1000.0;
-    
+
     // Only if moving and GPS not jumping (small filter)
     // Plausibility check: < MAX_SPEED_KMH + Buffer
-    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < (MAX_SPEED_KMH + 50.0)) { 
+    if (distKm > 0.005 && speedKmh > MIN_ODOMETER_SPEED_KMH && speedKmh < (MAX_SPEED_KMH + 50.0)) {
         lastLat = lat;
         lastLon = lon;
-        
-        // Increase Odometer
-        totalDistance += distKm;
-        progressChanged = true; // So Odometer gets saved
 
+        // Process Distance (Odometer + Oiling Logic)
         if (speedKmh >= MIN_SPEED_KMH) {
             processDistance(distKm, speedKmh);
+        } else {
+            // Just add to odometer if moving slowly but valid? 
+            // Usually we only count odometer if speed > MIN_ODOMETER_SPEED_KMH which is checked above.
+            // But processDistance handles Oiling logic which requires MIN_SPEED_KMH usually.
+            // Let's add to odometer anyway via processDistance, but speed might be low.
+            // processDistance handles ranges. If speed < range[0].min, it might not trigger oiling but adds to totalDistance.
+            // Let's call it.
+             processDistance(distKm, speedKmh);
         }
     }
 }
 
 void Oiler::processDistance(double distKm, float speedKmh) {
+    // 1. Add to Total Odometer
+    totalDistance += distKm;
+    progressChanged = true; // So Odometer gets saved
+
     // Find matching range
     int activeRangeIndex = -1;
     for(int i=0; i<NUM_RANGES; i++) {
@@ -655,14 +768,14 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     if (activeRangeIndex != -1) {
         // Virtual distance calculation:
         // We add % progress to next oiling, not km.
-        
+
         // 1. Get Target Interval from LUT (Linear Interpolation)
         int lutIndex = (int)(speedKmh / LUT_STEP);
         if (lutIndex < 0) lutIndex = 0;
         if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
-        
+
         float targetInterval = intervalLUT[lutIndex];
-        
+
         // 2. Low-Pass Filter (Additional Smoothing)
         if (smoothedInterval == 0.0) smoothedInterval = targetInterval; // Init
         smoothedInterval = (smoothedInterval * 0.95) + (targetInterval * 0.05);
@@ -671,7 +784,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
         if (interval > 0) {
             float progressDelta = distKm / interval;
-            
+
             // Rain Mode: Double wear -> Double progression
             if (rainMode) {
                 progressDelta *= 2.0;
@@ -679,7 +792,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
             currentProgress += progressDelta;
             progressChanged = true;
-            
+
             // Debug Output
             // Serial.printf("Speed: %.1f, Dist: %.4f, Prog: %.4f\n", speedKmh, distKm, currentProgress);
 
@@ -726,6 +839,7 @@ void Oiler::triggerOil(int pulses) {
 
     // Initialize Non-Blocking Oiling
     isOiling = true;
+    pumpActivityStartTime = millis(); // Safety Cutoff Start
     oilingPulsesRemaining = pulses;
     pulseState = false; // Will start with HIGH in handleOiling
     lastPulseTime = millis() - 1000; // Force immediate start
@@ -737,6 +851,15 @@ void Oiler::triggerOil(int pulses) {
 void Oiler::processPump() {
     unsigned long now = millis();
 
+    // SAFETY CUTOFF: Prevent pump from running too long (e.g. software bug)
+    if ((isOiling || bleedingMode) && (now - pumpActivityStartTime > PUMP_SAFETY_CUTOFF_MS)) {
+        Serial.println("[CRITICAL] Safety Cutoff triggered! Pump ran too long.");
+        digitalWrite(pumpPin, LOW);
+        isOiling = false;
+        bleedingMode = false;
+        pulseState = false;
+        return;
+    }
     // Check if we should stop bleeding
     if (bleedingMode) {
         if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
@@ -819,6 +942,18 @@ void Oiler::setRainMode(bool mode) {
         rainModeStartTime = millis();
     }
     rainMode = mode;
+    // If Rain Mode is activated, disable forced Emergency Mode
+    if (rainMode) {
+        emergencyModeForced = false;
+    }
+}
+
+void Oiler::setEmergencyModeForced(bool forced) {
+    emergencyModeForced = forced;
+    // If Emergency Mode is forced, disable Rain Mode
+    if (emergencyModeForced) {
+        rainMode = false;
+    }
 }
 
 SpeedRange* Oiler::getRangeConfig(int index) {
@@ -878,4 +1013,15 @@ void Oiler::setTankFill(float levelMl) {
 void Oiler::resetTankToFull() {
     currentTankLevelMl = tankCapacityMl;
     saveConfig();
+}
+
+void Oiler::setWifiActive(bool active) {
+    if (active && !wifiActive) {
+        wifiActivationTime = millis();
+    }
+    wifiActive = active;
+}
+
+void Oiler::setUpdateMode(bool mode) {
+    updateMode = mode;
 }

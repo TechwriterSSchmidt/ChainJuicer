@@ -31,8 +31,14 @@ public:
     void setEmergencyModeForced(bool forced);
     bool isEmergencyModeForced() { return emergencyModeForced; }
 
+    // Factory Reset
+    void checkFactoryReset();
+
     // WiFi Status
-    void setWifiActive(bool active) { wifiActive = active; }
+    void setWifiActive(bool active);
+
+    // Update Status
+    void setUpdateMode(bool mode);
 
     // Stats
     double getTotalDistance() { return totalDistance; }
@@ -56,6 +62,9 @@ public:
     double getRecentTotalTime();
 
     void resetTimeStats();
+
+    // Time Helper
+    int calculateLocalHour(int utcHour, int day, int month, int year);
 
     // LED Settings
     uint8_t ledBrightnessDim;
@@ -87,8 +96,11 @@ public:
     void resetTankToFull();
 
 private:
+    void processDistance(double distKm, float speedKmh);
+    
     int pumpPin;
     int currentHour;
+    bool updateMode;
     SpeedRange ranges[NUM_RANGES];
     float intervalLUT[LUT_SIZE]; // Lookup Table for smoothed intervals
     void rebuildLUT(); // Helper to fill LUT
@@ -116,6 +128,7 @@ private:
     bool wifiActive; // WiFi Status
     bool bleedingMode;
     unsigned long bleedingStartTime;
+    unsigned long wifiActivationTime;
     unsigned long buttonPressStartTime;
     bool buttonState;
     bool lastButtonState;
@@ -133,7 +146,6 @@ private:
     void loadConfig();
     void validateConfig();
     // saveProgress is public
-    void processDistance(double distKm, float speedKmh);
     void triggerOil(int pulses);
 
     // Emergency update and standstill save time
@@ -144,6 +156,7 @@ private:
     // Non-blocking oiling state
     bool isOiling;
     unsigned long oilingStartTime;
+    unsigned long pumpActivityStartTime; // Safety Cutoff
     int oilingPulsesRemaining;
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW
