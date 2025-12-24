@@ -54,6 +54,18 @@ LED GND ------------------> ESP32 GND
 LED DIN ------------------> ESP32 GPIO 32
 
 -----------------------------------------------------------------------------
+[ TEMPERATURE SENSOR (DS18B20) ]
+-----------------------------------------------------------------------------
+Sensor VCC (Red) ---------> ESP32 3.3V
+Sensor GND (Black) -------> ESP32 GND
+Sensor Data (Yellow/White)> ESP32 GPIO 15
+
+* Note: Requires a 4.7k Resistor between VCC and Data (Pull-Up).
+  VCC ----[ 4.7k ]----+
+                      |
+  Data ---------------+
+
+-----------------------------------------------------------------------------
 [ SD CARD MODULE (Optional) ]
 -----------------------------------------------------------------------------
 SD VCC -------------------> ESP32 5V (VIN) or 3.3V
@@ -69,6 +81,7 @@ SD SCK -------------------> ESP32 GPIO 18
 =============================================================================
 GPIO 04  : Button (Input Pullup)
 GPIO 05  : SD Card CS
+GPIO 15  : DS18B20 Temp Sensor (Data)
 GPIO 16  : Pump MOSFET (Output)
 GPIO 18  : SD Card SCK
 GPIO 19  : SD Card MISO
