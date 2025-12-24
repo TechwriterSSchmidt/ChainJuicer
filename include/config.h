@@ -28,6 +28,43 @@
 
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 
+// Temperature Sensor (DS18B20)
+#define TEMP_SENSOR_PIN 15 // GPIO 15 for DS18B20 Data
+#define TEMP_UPDATE_INTERVAL_MS 60000 // Measure every 60 seconds
+
+// Temperature Compensation Settings (Lookup Table)
+// Hysteresis: Temp must cross the threshold by this amount to switch states.
+// Prevents rapid toggling (e.g., at 15.0°C).
+#define TEMP_HYSTERESIS_C 2.0 
+
+// Range 1: Very Cold (< 5°C)
+#define TEMP_R1_MAX 5.0
+#define TEMP_R1_PULSE 65
+#define TEMP_R1_PAUSE 1000
+
+// Range 2: Cold (5 - 15°C)
+#define TEMP_R2_MAX 15.0
+#define TEMP_R2_PULSE 58
+#define TEMP_R2_PAUSE 750
+
+// Range 3: Normal (15 - 25°C)
+#define TEMP_R3_MAX 25.0
+#define TEMP_R3_PULSE 48
+#define TEMP_R3_PAUSE 500
+
+// Range 4: Warm (25 - 35°C)
+#define TEMP_R4_MAX 35.0
+#define TEMP_R4_PULSE 43
+#define TEMP_R4_PAUSE 400
+
+// Range 5: Hot (> 35°C)
+#define TEMP_R5_PULSE 38
+#define TEMP_R5_PAUSE 300
+
+// PWM Safety Check:
+// Pulse Width must be > PUMP_RAMP_UP_MS (12ms) to ensure the pump actually opens.
+// The configured Pulse values above include the Ramp-Up time.
+
 #define GPS_BAUD 9600  // GPS Baud Rate
 
 // Debug Configuration

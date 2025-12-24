@@ -35,11 +35,41 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 *   **Auto-Save:** Odometer and settings are permanently saved in flash memory (NVS) at standstill (< 7 km/h).
 *   **Factory Reset:** Ability to reset all settings to default via hardware button.
 
+## 🌡️ Automatic Temperature Compensation
+
+This system uses a **DS18B20** temperature sensor to adjust the pump mechanics based on the viscosity of standard chainsaw oil (ISO VG 85).
+
+**Why?**
+Oil becomes thick like syrup in winter and thin like water in summer. Without compensation, the pump might fail to move cold oil or squirt too much hot oil.
+
+**Compensation Table:**
+
+| Temperature | State | Pulse Width | Pause Duration |
+| :--- | :--- | :--- | :--- |
+| **< 5°C** | Very Thick | **65 ms** | **1000 ms** |
+| **5 - 15°C** | Thick | **58 ms** | **750 ms** |
+| **15 - 25°C** | Normal | **48 ms** | **500 ms** |
+| **25 - 35°C** | Fluid | **43 ms** | **400 ms** |
+| **> 35°C** | Thin | **38 ms** | **300 ms** |
+
+*Note: These values are derived from the "Smart Pump Calibrator" project.*
+
+**Advanced Configuration:**
+*   **Customization:** All temperature thresholds and pulse/pause timings are fully configurable in `include/config.h`.
+*   **Hysteresis:** A 2.0°C hysteresis is applied to prevent rapid switching between states when the temperature fluctuates near a threshold.
+*   **PWM Integration:** The system automatically ensures that the pulse width is always long enough to accommodate the PWM Soft-Start ramp-up (12ms).
+
+**Wiring:**
+*   **VCC:** 3.3V
+*   **GND:** GND
+*   **Data:** GPIO 15 (Default) - Requires 4.7kΩ Pull-Up Resistor to VCC.
+
 ## 🛠 Hardware
 
 *   **MCU:** ESP32-S3-TINY (or compatible ESP32 board)
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** Dosing pump (controlled via Logic Level MOSFET, e.g., NCE6020AK)
+*   **Temp Sensor:** DS18B20 (Waterproof)
 *   **LED:** WS2812B (NeoPixel) for status indication
 *   **Button:** Normally Open against GND (Input Pullup)
 
@@ -53,6 +83,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 | **Button** | GPIO 4 | Switched against GND |
 | **Boot Button** | GPIO 0 | Onboard Button (Parallel function) |
 | **LED** | GPIO 32 | WS2812B Data In |
+| **Temp Sensor** | GPIO 15 | DS18B20 Data |
 
 *(Configurable in `include/config.h`)*
 

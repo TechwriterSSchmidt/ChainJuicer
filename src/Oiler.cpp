@@ -1,7 +1,13 @@
 #include "Oiler.h"
 #include <Preferences.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
 
 Preferences preferences;
+
+// Setup OneWire and DallasTemperature
+OneWire oneWire(TEMP_SENSOR_PIN);
+DallasTemperature sensors(&oneWire);
 
 Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     pumpPin = PUMP_PIN;
@@ -97,6 +103,13 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     emergencyModeStartTime = 0;
     lastEmergencyOilTime = 0;
     emergencyOilCount = 0;
+
+    // Temperature Init
+    currentTempC = 20.0; // Default start temp
+    currentTempRangeIndex = 2; // Default Normal
+    dynamicPulseMs = TEMP_R3_PULSE; // Default Normal
+    dynamicPauseMs = TEMP_R3_PAUSE; // Default Normal
+    lastTempUpdate = 0;
 }
 
 void Oiler::begin() {
@@ -110,6 +123,9 @@ void Oiler::begin() {
         ledcSetup(PUMP_PWM_CHANNEL, PUMP_PWM_FREQ, PUMP_PWM_RESOLUTION);
         ledcAttachPin(pumpPin, PUMP_PWM_CHANNEL);
     }
+
+    // Initialize Temp Sensor
+    sensors.begin();
 
     ledOilingEndTimestamp = 0;
 
@@ -175,6 +191,12 @@ void Oiler::loop() {
     handleButton();
     processPump(); // Unified pump logic
     
+    // Temperature Update (Periodic)
+    if (millis() - lastTempUpdate > TEMP_UPDATE_INTERVAL_MS) {
+        updateTemperature();
+        lastTempUpdate = millis();
+    }
+
     // Rain Mode Auto-Off
     if (rainMode && (millis() - rainModeStartTime > RAIN_MODE_AUTO_OFF_MS)) {
         rainMode = false;
@@ -883,9 +905,11 @@ void Oiler::processPump() {
     // Logic for Pulse Generation
     // REVISED for Blocking PWM Pulse
     // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
-    if (now - lastPulseTime >= PAUSE_DURATION_MS) {
+    // UPDATE: Use dynamicPauseMs instead of static PAUSE_DURATION_MS
+    if (now - lastPulseTime >= dynamicPauseMs) {
         // Execute Blocking Pulse (Soft-Start/Stop)
-        pumpPulse(PULSE_DURATION_MS);
+        // UPDATE: Use dynamicPulseMs instead of static PULSE_DURATION_MS
+        pumpPulse(dynamicPulseMs);
         
         // Reset Timer
         lastPulseTime = millis();
@@ -1048,4 +1072,104 @@ void Oiler::setWifiActive(bool active) {
 
 void Oiler::setUpdateMode(bool mode) {
     updateMode = mode;
+}
+
+// --- NEW: Temperature Compensation Logic ---
+void Oiler::updateTemperature() {
+    sensors.requestTemperatures(); 
+    float tempC = sensors.getTempCByIndex(0);
+
+    // Check for error (-127 is error)
+    if (tempC == DEVICE_DISCONNECTED_C) {
+        // Sensor Error: Fallback to 20°C defaults (Range 2)
+        currentTempC = 20.0;
+        currentTempRangeIndex = 2;
+        dynamicPulseMs = TEMP_R3_PULSE;
+        dynamicPauseMs = TEMP_R3_PAUSE;
+#ifdef GPS_DEBUG
+        Serial.println("Temp Sensor Error! Using defaults.");
+#endif
+        return;
+    }
+
+    currentTempC = tempC;
+
+    // Hysteresis Logic
+    // We only switch ranges if the temperature crosses the threshold +/- HYSTERESIS.
+    // This prevents rapid switching at the boundaries.
+    
+    int newRange = currentTempRangeIndex;
+
+    // Determine target range based on strict thresholds first
+    int targetRange = 0;
+    if (tempC < TEMP_R1_MAX) targetRange = 0;
+    else if (tempC < TEMP_R2_MAX) targetRange = 1;
+    else if (tempC < TEMP_R3_MAX) targetRange = 2;
+    else if (tempC < TEMP_R4_MAX) targetRange = 3;
+    else targetRange = 4;
+
+    // Apply Hysteresis
+    if (targetRange != currentTempRangeIndex) {
+        // Moving UP (getting warmer)
+        if (targetRange > currentTempRangeIndex) {
+            // Check upper boundary of current range
+            float threshold = 0.0;
+            if (currentTempRangeIndex == 0) threshold = TEMP_R1_MAX;
+            else if (currentTempRangeIndex == 1) threshold = TEMP_R2_MAX;
+            else if (currentTempRangeIndex == 2) threshold = TEMP_R3_MAX;
+            else if (currentTempRangeIndex == 3) threshold = TEMP_R4_MAX;
+            
+            if (tempC > (threshold + TEMP_HYSTERESIS_C)) {
+                newRange = targetRange; // Switch allowed
+            }
+        }
+        // Moving DOWN (getting colder)
+        else {
+            // Check lower boundary of current range (which is the max of the range below)
+            float threshold = 0.0;
+            if (currentTempRangeIndex == 1) threshold = TEMP_R1_MAX;
+            else if (currentTempRangeIndex == 2) threshold = TEMP_R2_MAX;
+            else if (currentTempRangeIndex == 3) threshold = TEMP_R3_MAX;
+            else if (currentTempRangeIndex == 4) threshold = TEMP_R4_MAX;
+            
+            if (tempC < (threshold - TEMP_HYSTERESIS_C)) {
+                newRange = targetRange; // Switch allowed
+            }
+        }
+    }
+
+    currentTempRangeIndex = newRange;
+
+    // Apply Settings based on Range
+    switch (currentTempRangeIndex) {
+        case 0: // Very Cold
+            dynamicPulseMs = TEMP_R1_PULSE;
+            dynamicPauseMs = TEMP_R1_PAUSE;
+            break;
+        case 1: // Cold
+            dynamicPulseMs = TEMP_R2_PULSE;
+            dynamicPauseMs = TEMP_R2_PAUSE;
+            break;
+        case 2: // Normal
+            dynamicPulseMs = TEMP_R3_PULSE;
+            dynamicPauseMs = TEMP_R3_PAUSE;
+            break;
+        case 3: // Warm
+            dynamicPulseMs = TEMP_R4_PULSE;
+            dynamicPauseMs = TEMP_R4_PAUSE;
+            break;
+        case 4: // Hot
+            dynamicPulseMs = TEMP_R5_PULSE;
+            dynamicPauseMs = TEMP_R5_PAUSE;
+            break;
+    }
+
+    // PWM Safety Check
+    if (PUMP_USE_PWM && dynamicPulseMs <= PUMP_RAMP_UP_MS) {
+        dynamicPulseMs = PUMP_RAMP_UP_MS + 5; // Ensure at least 5ms hold time
+    }
+
+#ifdef GPS_DEBUG
+    Serial.printf("Temp: %.1f C (Range %d) -> Pulse: %lu ms, Pause: %lu ms\n", currentTempC, currentTempRangeIndex, dynamicPulseMs, dynamicPauseMs);
+#endif
 }
