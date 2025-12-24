@@ -105,6 +105,12 @@ void Oiler::begin() {
     digitalWrite(pumpPin, PUMP_OFF);
     pinMode(pumpPin, OUTPUT);
 
+    // Initialize PWM for Pump
+    if (PUMP_USE_PWM) {
+        ledcSetup(PUMP_PWM_CHANNEL, PUMP_PWM_FREQ, PUMP_PWM_RESOLUTION);
+        ledcAttachPin(pumpPin, PUMP_PWM_CHANNEL);
+    }
+
     ledOilingEndTimestamp = 0;
 
     preferences.begin("oiler", false);
@@ -875,44 +881,75 @@ void Oiler::processPump() {
 
       
     // Logic for Pulse Generation
-    if (!pulseState) {
-        // Currently LOW (Pause phase)
-        // Wait for PAUSE_DURATION_MS
-        if (now - lastPulseTime >= PAUSE_DURATION_MS) {
-            digitalWrite(pumpPin, PUMP_ON);
-            pulseState = true;
-            lastPulseTime = now;
-        }
-    } else {
-        // Currently HIGH (Pulse phase)
-        // Wait for PULSE_DURATION
-        if (now - lastPulseTime >= PULSE_DURATION_MS) {
-            digitalWrite(pumpPin, PUMP_OFF);
-            pulseState = false;
-            lastPulseTime = now;
-            
-            // Only decrement in normal oiling mode
-            if (!bleedingMode) {
-                oilingPulsesRemaining--;
-                if (oilingPulsesRemaining == 0) {
-                    isOiling = false;
+    // REVISED for Blocking PWM Pulse
+    // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
+    if (now - lastPulseTime >= PAUSE_DURATION_MS) {
+        // Execute Blocking Pulse (Soft-Start/Stop)
+        pumpPulse(PULSE_DURATION_MS);
+        
+        // Reset Timer
+        lastPulseTime = millis();
+        
+        // Handle Counters
+        if (!bleedingMode) {
+            oilingPulsesRemaining--;
+            if (oilingPulsesRemaining == 0) {
+                isOiling = false;
 #ifdef GPS_DEBUG
-                    Serial.println("OILING DONE");
+                Serial.println("OILING DONE");
 #endif
-                }
-            } else {
-                // Bleeding Mode: Count every pulse as stats & consumption
-                pumpCycles++;
-                progressChanged = true;
-                
-                if (tankMonitorEnabled) {
-                    float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
-                    currentTankLevelMl -= mlConsumed;
-                    if (currentTankLevelMl < 0) currentTankLevelMl = 0;
-                }
+            }
+        } else {
+            // Bleeding Mode: Count every pulse as stats & consumption
+            pumpCycles++;
+            progressChanged = true;
+            
+            if (tankMonitorEnabled) {
+                float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
+                currentTankLevelMl -= mlConsumed;
+                if (currentTankLevelMl < 0) currentTankLevelMl = 0;
             }
         }
     }
+}
+
+// --- HELPER FUNCTION: SMART PUMP DRIVER (PWM) ---
+void Oiler::pumpPulse(unsigned long durationMs) {
+    if (!PUMP_USE_PWM) {
+        // Fallback: Hard Switching
+        digitalWrite(pumpPin, PUMP_ON);
+        delay(durationMs);
+        digitalWrite(pumpPin, PUMP_OFF);
+        return;
+    }
+
+    // 1. RAMP UP (Soft Start)
+    // Linearly increase duty cycle from 0 to 255
+    unsigned long stepDelay = (PUMP_RAMP_UP_MS * 1000) / 255; // Microseconds per step
+    for (int duty = 0; duty <= 255; duty += 15) { // Step size 15 for speed
+        ledcWrite(PUMP_PWM_CHANNEL, duty);
+        delayMicroseconds(stepDelay * 15);
+    }
+    ledcWrite(PUMP_PWM_CHANNEL, 255); // Ensure full power
+
+    // 2. HOLD (Main Pulse)
+    // We subtract the ramp time from the duration to keep timing roughly accurate,
+    // but ensure at least 5ms of full power hold.
+    unsigned long holdTime = 0;
+    if (durationMs > PUMP_RAMP_UP_MS) {
+        holdTime = durationMs - PUMP_RAMP_UP_MS;
+    }
+    delay(holdTime);
+
+    // 3. RAMP DOWN (Soft Stop)
+    // Linearly decrease duty cycle from 255 to 0
+    stepDelay = (PUMP_RAMP_DOWN_MS * 1000) / 255;
+    for (int duty = 255; duty >= 0; duty -= 15) {
+        ledcWrite(PUMP_PWM_CHANNEL, duty);
+        delayMicroseconds(stepDelay * 15);
+    }
+    ledcWrite(PUMP_PWM_CHANNEL, 0); // Ensure off
+    digitalWrite(pumpPin, PUMP_OFF);    // Safety: Disable PWM pin output
 }
 
 void Oiler::setEmergencyModeForced(bool forced) {

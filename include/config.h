@@ -16,6 +16,16 @@
 #define PUMP_ON HIGH
 #define PUMP_OFF LOW
 
+// PWM Soft-Start / Soft-Stop (Silent Mode)
+// Instead of hard 12V pulses, we ramp the voltage up and down.
+// This reduces mechanical noise ("clack") and wear.
+#define PUMP_USE_PWM true
+#define PUMP_PWM_FREQ 5000      // 5 kHz is safe for most solenoids
+#define PUMP_PWM_CHANNEL 0      // ESP32 LEDC Channel
+#define PUMP_PWM_RESOLUTION 8   // 8-bit resolution (0-255)
+#define PUMP_RAMP_UP_MS 12      // Soft-Start duration (Generic: 12ms)
+#define PUMP_RAMP_DOWN_MS 12    // Soft-Stop duration (Generic: 12ms)
+
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 
 #define GPS_BAUD 9600  // GPS Baud Rate

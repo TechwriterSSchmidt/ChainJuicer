@@ -170,6 +170,9 @@ private:
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW
 
+    // Helper for PWM Pump Control
+    void pumpPulse(unsigned long durationMs);
+
     // Safety & UX
     unsigned long ledOilingEndTimestamp;
 
