@@ -39,27 +39,27 @@
 
 // Range 1: Very Cold (< 5°C)
 #define TEMP_R1_MAX 5.0
-#define TEMP_R1_PULSE 65
-#define TEMP_R1_PAUSE 1000
+#define TEMP_R1_PULSE 90
+#define TEMP_R1_PAUSE 2106
 
 // Range 2: Cold (5 - 15°C)
 #define TEMP_R2_MAX 15.0
-#define TEMP_R2_PULSE 58
-#define TEMP_R2_PAUSE 750
+#define TEMP_R2_PULSE 65
+#define TEMP_R2_PAUSE 1580
 
 // Range 3: Normal (15 - 25°C)
 #define TEMP_R3_MAX 25.0
-#define TEMP_R3_PULSE 48
-#define TEMP_R3_PAUSE 500
+#define TEMP_R3_PULSE 45
+#define TEMP_R3_PAUSE 1053
 
 // Range 4: Warm (25 - 35°C)
 #define TEMP_R4_MAX 35.0
-#define TEMP_R4_PULSE 43
-#define TEMP_R4_PAUSE 400
+#define TEMP_R4_PULSE 41
+#define TEMP_R4_PAUSE 842
 
 // Range 5: Hot (> 35°C)
-#define TEMP_R5_PULSE 38
-#define TEMP_R5_PAUSE 300
+#define TEMP_R5_PULSE 36
+#define TEMP_R5_PAUSE 632
 
 // PWM Safety Check:
 // Pulse Width must be > PUMP_RAMP_UP_MS (12ms) to ensure the pump actually opens.
