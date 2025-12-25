@@ -148,6 +148,15 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Pulses:</b> Pump pulses per event.</li>
     </ul>
     <p>Use '[Reset Stats]' to clear 'Usage %' and 'Juices'.</p>
+    <h3>Temperature Compensation</h3>
+    <p>Adjusts pump mechanics based on oil viscosity (Temperature).</p>
+    <ul>
+        <li><b>Sensor:</b> Requires DS18B20 sensor. If missing, only "Normal" range is active.</li>
+        <li><b>Ranges:</b> 5 temperature zones (Very Cold to Hot).</li>
+        <li><b>Pulse:</b> Duration of the pump stroke (ms). Higher = More power for thick oil.</li>
+        <li><b>Pause:</b> Wait time after stroke (ms). Higher = More time for refill.</li>
+        <li><b>Max Temp:</b> Upper limit for the range.</li>
+    </ul>
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
     <ul>
