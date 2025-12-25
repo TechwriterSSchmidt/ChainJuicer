@@ -242,6 +242,26 @@ void handleRoot() {
         footer = footer.substring(8); // Remove </table>
     }
     
+    // Temperature Compensation Injection
+    bool sensorConnected = oiler.isTempSensorConnected();
+    // footer.replace("%TEMP_DISABLED%", sensorConnected ? "" : "disabled"); // Removed outer disable logic
+
+    for(int i=0; i<5; i++) {
+        Oiler::TempRange* t = oiler.getTempRangeConfig(i);
+        if(t) {
+            if(i < 4) footer.replace("%T" + String(i) + "_MAX%", String(t->maxTemp, 1));
+            footer.replace("%T" + String(i) + "_P%", String(t->pulseMs));
+            footer.replace("%T" + String(i) + "_W%", String(t->pauseMs));
+        }
+        
+        // Row Class Logic: Disable all except Normal (Index 2) if sensor is missing
+        String rowClass = "";
+        if (!sensorConnected && i != 2) {
+            rowClass = "disabled";
+        }
+        footer.replace("%ROW_CLASS_" + String(i) + "%", rowClass);
+    }
+
     footer.replace("%PROGRESS%", String(oiler.getCurrentProgress() * 100.0, 1));
     
     // Convert 0-255 to 0-100% for Display
@@ -282,6 +302,16 @@ void handleSave() {
         if(server.hasArg("p" + String(i))) r->pulses = server.arg("p" + String(i)).toInt();
     }
     
+    // Save Temperature Compensation
+    for(int i=0; i<5; i++) {
+        Oiler::TempRange* t = oiler.getTempRangeConfig(i);
+        if(t) {
+            if(i < 4 && server.hasArg("t" + String(i) + "_m")) t->maxTemp = server.arg("t" + String(i) + "_m").toFloat();
+            if(server.hasArg("t" + String(i) + "_p")) t->pulseMs = server.arg("t" + String(i) + "_p").toInt();
+            if(server.hasArg("t" + String(i) + "_w")) t->pauseMs = server.arg("t" + String(i) + "_w").toInt();
+        }
+    }
+
     // Convert 0-100% back to 0-255
     if(server.hasArg("led_dim")) {
         int val = server.arg("led_dim").toInt();

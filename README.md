@@ -55,9 +55,10 @@ Oil becomes thick like syrup in winter and thin like water in summer. Without co
 *Note: These values are derived from the "Smart Pump Calibrator" project.*
 
 **Advanced Configuration:**
-*   **Customization:** All temperature thresholds and pulse/pause timings are fully configurable in `include/config.h`.
+*   **Web Interface:** All temperature thresholds and pulse/pause timings are fully configurable via the Web Interface.
 *   **Hysteresis:** A 2.0°C hysteresis is applied to prevent rapid switching between states when the temperature fluctuates near a threshold.
 *   **PWM Integration:** The system automatically ensures that the pulse width is always long enough to accommodate the PWM Soft-Start ramp-up (12ms).
+*   **Sensor Detection:** If no sensor is connected, the Web Interface will gray out the settings, and the system defaults to the "Normal" (20°C) profile.
 
 **Wiring:**
 *   **VCC:** 3.3V

@@ -21,6 +21,16 @@ public:
     
     // --- Configuration Getters ---
     SpeedRange* getRangeConfig(int index);
+
+    // Temperature Configuration
+    struct TempRange {
+        float maxTemp;
+        int pulseMs;
+        int pauseMs;
+    };
+    TempRange tempRanges[5];
+    TempRange* getTempRangeConfig(int index);
+    bool isTempSensorConnected();
     
     // --- Logging & Stats Getters ---
     float getSmoothedSpeed() { return currentSpeed; }

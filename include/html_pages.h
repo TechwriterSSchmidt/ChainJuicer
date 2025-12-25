@@ -25,6 +25,7 @@ const char* htmlHeader = R"rawliteral(
         .time{text-align:center;color:#888;font-size:0.9em;margin-bottom:10px}
         .help-link{text-align:center;margin-bottom:15px}
         .help-link a{color:#007bff;text-decoration:none}
+        .disabled{opacity:0.5;pointer-events:none}
     </style>
 </head>
 <body>
@@ -47,6 +48,15 @@ const char* htmlHeader = R"rawliteral(
 )rawliteral";
 
 const char* htmlFooter = R"rawliteral(
+        </table>
+        <h3>Temperature Compensation</h3>
+        <table>
+            <tr><th>Range</th><th>Max Temp</th><th>Pulse</th><th>Pause</th></tr>
+            <tr class='%ROW_CLASS_0%'><td>Very Cold</td><td><input type='number' step='0.1' name='t0_m' value='%T0_MAX%' class='km-input'></td><td><input type='number' name='t0_p' value='%T0_P%' class='pulse-input'></td><td><input type='number' name='t0_w' value='%T0_W%' class='num-input'></td></tr>
+            <tr class='%ROW_CLASS_1%'><td>Cold</td><td><input type='number' step='0.1' name='t1_m' value='%T1_MAX%' class='km-input'></td><td><input type='number' name='t1_p' value='%T1_P%' class='pulse-input'></td><td><input type='number' name='t1_w' value='%T1_W%' class='num-input'></td></tr>
+            <tr class='%ROW_CLASS_2%'><td>Normal</td><td><input type='number' step='0.1' name='t2_m' value='%T2_MAX%' class='km-input'></td><td><input type='number' name='t2_p' value='%T2_P%' class='pulse-input'></td><td><input type='number' name='t2_w' value='%T2_W%' class='num-input'></td></tr>
+            <tr class='%ROW_CLASS_3%'><td>Warm</td><td><input type='number' step='0.1' name='t3_m' value='%T3_MAX%' class='km-input'></td><td><input type='number' name='t3_p' value='%T3_P%' class='pulse-input'></td><td><input type='number' name='t3_w' value='%T3_W%' class='num-input'></td></tr>
+            <tr class='%ROW_CLASS_4%'><td>Hot</td><td>&gt; Warm</td><td><input type='number' name='t4_p' value='%T4_P%' class='pulse-input'></td><td><input type='number' name='t4_w' value='%T4_W%' class='num-input'></td></tr>
         </table>
         <h3>General</h3>
         <table>

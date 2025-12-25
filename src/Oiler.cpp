@@ -20,6 +20,13 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     ranges[3] = {75, 95, 15.0, 2};
     ranges[4] = {95, MAX_SPEED_KMH, 15.0, 2};
     
+    // Initialize Temperature Ranges (Defaults from config.h)
+    tempRanges[0] = {TEMP_R1_MAX, TEMP_R1_PULSE, TEMP_R1_PAUSE};
+    tempRanges[1] = {TEMP_R2_MAX, TEMP_R2_PULSE, TEMP_R2_PAUSE};
+    tempRanges[2] = {TEMP_R3_MAX, TEMP_R3_PULSE, TEMP_R3_PAUSE};
+    tempRanges[3] = {TEMP_R4_MAX, TEMP_R4_PULSE, TEMP_R4_PAUSE};
+    tempRanges[4] = {999.0,       TEMP_R5_PULSE, TEMP_R5_PAUSE}; // Max temp for last range is effectively infinite
+
     currentProgress = 0.0;
     lastLat = 0.0;
     lastLon = 0.0;
@@ -433,6 +440,18 @@ void Oiler::loadConfig() {
         ranges[i].intervalKm = preferences.getFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
         ranges[i].pulses = preferences.getInt((keyBase + "_p").c_str(), ranges[i].pulses);
     }
+
+    // Load Temperature Compensation Settings
+    for(int i=0; i<5; i++) {
+        String keyBase = "t" + String(i);
+        tempRanges[i].pulseMs = preferences.getInt((keyBase + "_p").c_str(), tempRanges[i].pulseMs);
+        tempRanges[i].pauseMs = preferences.getInt((keyBase + "_w").c_str(), tempRanges[i].pauseMs);
+        // Max Temp is only configurable for ranges 0-3 (Range 4 is > Range 3 Max)
+        if (i < 4) {
+            tempRanges[i].maxTemp = preferences.getFloat((keyBase + "_m").c_str(), tempRanges[i].maxTemp);
+        }
+    }
+
     currentProgress = preferences.getFloat("progress", 0.0);
     ledBrightnessDim = preferences.getUChar("led_dim", LED_BRIGHTNESS_DIM);
     ledBrightnessHigh = preferences.getUChar("led_high", LED_BRIGHTNESS_HIGH);
@@ -511,6 +530,17 @@ void Oiler::saveConfig() {
         preferences.putFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
         preferences.putInt((keyBase + "_p").c_str(), ranges[i].pulses);
     }
+
+    // Save Temperature Compensation Settings
+    for(int i=0; i<5; i++) {
+        String keyBase = "t" + String(i);
+        preferences.putInt((keyBase + "_p").c_str(), tempRanges[i].pulseMs);
+        preferences.putInt((keyBase + "_w").c_str(), tempRanges[i].pauseMs);
+        if (i < 4) {
+            preferences.putFloat((keyBase + "_m").c_str(), tempRanges[i].maxTemp);
+        }
+    }
+
     preferences.putUChar("led_dim", ledBrightnessDim);
     preferences.putUChar("led_high", ledBrightnessHigh);
     
@@ -1009,6 +1039,15 @@ SpeedRange* Oiler::getRangeConfig(int index) {
     return nullptr;
 }
 
+Oiler::TempRange* Oiler::getTempRangeConfig(int index) {
+    if(index >= 0 && index < 5) return &tempRanges[index];
+    return nullptr;
+}
+
+bool Oiler::isTempSensorConnected() {
+    return sensors.getDeviceCount() > 0;
+}
+
 bool Oiler::isButtonPressed() {
     // Return the debounced state of the button
     return !digitalRead(BUTTON_PIN) || !digitalRead(BOOT_BUTTON_PIN); // Active LOW -> returns true if pressed
@@ -1102,10 +1141,10 @@ void Oiler::updateTemperature() {
 
     // Determine target range based on strict thresholds first
     int targetRange = 0;
-    if (tempC < TEMP_R1_MAX) targetRange = 0;
-    else if (tempC < TEMP_R2_MAX) targetRange = 1;
-    else if (tempC < TEMP_R3_MAX) targetRange = 2;
-    else if (tempC < TEMP_R4_MAX) targetRange = 3;
+    if (tempC < tempRanges[0].maxTemp) targetRange = 0;
+    else if (tempC < tempRanges[1].maxTemp) targetRange = 1;
+    else if (tempC < tempRanges[2].maxTemp) targetRange = 2;
+    else if (tempC < tempRanges[3].maxTemp) targetRange = 3;
     else targetRange = 4;
 
     // Apply Hysteresis
@@ -1114,10 +1153,7 @@ void Oiler::updateTemperature() {
         if (targetRange > currentTempRangeIndex) {
             // Check upper boundary of current range
             float threshold = 0.0;
-            if (currentTempRangeIndex == 0) threshold = TEMP_R1_MAX;
-            else if (currentTempRangeIndex == 1) threshold = TEMP_R2_MAX;
-            else if (currentTempRangeIndex == 2) threshold = TEMP_R3_MAX;
-            else if (currentTempRangeIndex == 3) threshold = TEMP_R4_MAX;
+            if (currentTempRangeIndex < 4) threshold = tempRanges[currentTempRangeIndex].maxTemp;
             
             if (tempC > (threshold + TEMP_HYSTERESIS_C)) {
                 newRange = targetRange; // Switch allowed
@@ -1127,10 +1163,7 @@ void Oiler::updateTemperature() {
         else {
             // Check lower boundary of current range (which is the max of the range below)
             float threshold = 0.0;
-            if (currentTempRangeIndex == 1) threshold = TEMP_R1_MAX;
-            else if (currentTempRangeIndex == 2) threshold = TEMP_R2_MAX;
-            else if (currentTempRangeIndex == 3) threshold = TEMP_R3_MAX;
-            else if (currentTempRangeIndex == 4) threshold = TEMP_R4_MAX;
+            if (currentTempRangeIndex > 0) threshold = tempRanges[currentTempRangeIndex - 1].maxTemp;
             
             if (tempC < (threshold - TEMP_HYSTERESIS_C)) {
                 newRange = targetRange; // Switch allowed
@@ -1141,27 +1174,9 @@ void Oiler::updateTemperature() {
     currentTempRangeIndex = newRange;
 
     // Apply Settings based on Range
-    switch (currentTempRangeIndex) {
-        case 0: // Very Cold
-            dynamicPulseMs = TEMP_R1_PULSE;
-            dynamicPauseMs = TEMP_R1_PAUSE;
-            break;
-        case 1: // Cold
-            dynamicPulseMs = TEMP_R2_PULSE;
-            dynamicPauseMs = TEMP_R2_PAUSE;
-            break;
-        case 2: // Normal
-            dynamicPulseMs = TEMP_R3_PULSE;
-            dynamicPauseMs = TEMP_R3_PAUSE;
-            break;
-        case 3: // Warm
-            dynamicPulseMs = TEMP_R4_PULSE;
-            dynamicPauseMs = TEMP_R4_PAUSE;
-            break;
-        case 4: // Hot
-            dynamicPulseMs = TEMP_R5_PULSE;
-            dynamicPauseMs = TEMP_R5_PAUSE;
-            break;
+    if (currentTempRangeIndex >= 0 && currentTempRangeIndex < 5) {
+        dynamicPulseMs = tempRanges[currentTempRangeIndex].pulseMs;
+        dynamicPauseMs = tempRanges[currentTempRangeIndex].pauseMs;
     }
 
     // PWM Safety Check
