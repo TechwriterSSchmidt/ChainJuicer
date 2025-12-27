@@ -1123,23 +1123,34 @@ void Oiler::updateTemperature() {
     lastTemp = tempC;
     currentTempC = tempC;
 
-    // 1. Determine Viscosity Factor based on Oil Type
-    // Factor k: How much to increase pulse per 10°C drop
-    float k_pulse = 1.25; // Default Normal
+    // 1. Calculate Viscosity using Arrhenius Equation
+    // Constants derived from ISO VG 85 Oil (84.2 mm²/s @ 40°C, 11.2 mm²/s @ 100°C)
+    // Formula: ln(v) = A + B/T
+    const float A = -8.122;
+    const float B = 3931.8;
+    
+    float tempK = currentTempC + 273.15;
+    float viscosityCurrent = exp(A + (B / tempK));
+    
+    // Reference Viscosity at 25°C
+    float tempRefK = 25.0 + 273.15;
+    float viscosityRef = exp(A + (B / tempRefK)); // ~158.4 mm²/s
+
+    // 2. Determine Compensation Aggressiveness based on Oil Type Setting
+    // The pump pulse doesn't need to scale 1:1 with viscosity.
+    // We use an exponent to tune how "hard" the system reacts to viscosity changes.
+    float compensationExponent = 0.5; // Default Normal (Square Root of viscosity ratio)
     
     switch (tempConfig.oilType) {
-        case OIL_THIN:   k_pulse = 1.10; break; // +10% per 10°C colder
-        case OIL_NORMAL: k_pulse = 1.25; break; // +25% per 10°C colder
-        case OIL_THICK:  k_pulse = 1.40; break; // +40% per 10°C colder
+        case OIL_THIN:   compensationExponent = 0.3; break; // Gentle compensation
+        case OIL_NORMAL: compensationExponent = 0.5; break; // Normal compensation
+        case OIL_THICK:  compensationExponent = 0.7; break; // Aggressive compensation
     }
 
-    // 2. Calculate Temperature Difference to Reference (25°C)
-    // Positive Diff = Colder than 25°C
-    float tempDiff = 25.0 - currentTempC;
-    
-    // 3. Calculate Exponential Factor
-    // factor = k ^ (diff / 10)
-    float factor = pow(k_pulse, tempDiff / 10.0);
+    // 3. Calculate Factor
+    // Ratio > 1.0 means oil is thicker than at 25°C
+    float viscosityRatio = viscosityCurrent / viscosityRef;
+    float factor = pow(viscosityRatio, compensationExponent);
 
     // 4. Apply Factor
     unsigned long newPulse = (unsigned long)(tempConfig.basePulse25 * factor);
