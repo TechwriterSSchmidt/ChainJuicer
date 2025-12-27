@@ -194,7 +194,6 @@ private:
 
     // Temperature Compensation
     float currentTempC;
-    int currentTempRangeIndex; // 0=Very Cold, 1=Cold, 2=Normal, 3=Warm, 4=Hot
     unsigned long dynamicPulseMs;
     unsigned long dynamicPauseMs;
     unsigned long lastTempUpdate;

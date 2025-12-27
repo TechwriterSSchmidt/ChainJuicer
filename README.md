@@ -37,28 +37,22 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 
 ## 🌡️ Automatic Temperature Compensation
 
-This system uses a **DS18B20** temperature sensor to adjust the pump mechanics based on the viscosity of standard chainsaw oil (ISO VG 85).
+This system uses a **DS18B20** temperature sensor to adjust the pump mechanics based on the viscosity of the oil.
 
 **Why?**
 Oil becomes thick like syrup in winter and thin like water in summer. Without compensation, the pump might fail to move cold oil or squirt too much hot oil.
 
-**Compensation Table:**
+**New Simplified Logic:**
+Instead of complex tables, the system now uses a smart calculation based on a reference point and an oil profile.
 
-| Temperature | State | Pulse Width | Pause Duration |
-| :--- | :--- | :--- | :--- |
-| **< 5°C** | Very Thick | **65 ms** | **1000 ms** |
-| **5 - 15°C** | Thick | **58 ms** | **750 ms** |
-| **15 - 25°C** | Normal | **48 ms** | **500 ms** |
-| **25 - 35°C** | Fluid | **43 ms** | **400 ms** |
-| **> 35°C** | Thin | **38 ms** | **300 ms** |
+*   **Reference:** You set the optimal Pulse and Pause duration for **25°C** (Normal Temperature).
+*   **Oil Profile:** Select your oil type (Thin, Normal, Thick).
+*   **Calculation:** The ESP32 automatically calculates the required energy for any temperature using an exponential viscosity formula.
+*   **Hysteresis:** A 3.0°C buffer prevents rapid switching.
 
-*Note: These values are derived from the "Smart Pump Calibrator" project.*
-
-**Advanced Configuration:**
-*   **Web Interface:** All temperature thresholds and pulse/pause timings are fully configurable via the Web Interface.
-*   **Hysteresis:** A 2.0°C hysteresis is applied to prevent rapid switching between states when the temperature fluctuates near a threshold.
-*   **PWM Integration:** The system automatically ensures that the pulse width is always long enough to accommodate the PWM Soft-Start ramp-up (12ms).
-*   **Sensor Detection:** If no sensor is connected, the Web Interface will gray out the settings, and the system defaults to the "Normal" (20°C) profile.
+**Configuration:**
+*   **Web Interface:** Simply enter your 25°C values and select the oil type.
+*   **Sensor Detection:** If no sensor is connected, the system defaults to 25°C.
 
 **Wiring:**
 *   **VCC:** 3.3V

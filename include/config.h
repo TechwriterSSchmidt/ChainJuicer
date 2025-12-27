@@ -32,35 +32,6 @@
 #define TEMP_SENSOR_PIN 15 // GPIO 15 for DS18B20 Data
 #define TEMP_UPDATE_INTERVAL_MS 60000 // Measure every 60 seconds
 
-// Temperature Compensation Settings (Lookup Table)
-// Hysteresis: Temp must cross the threshold by this amount to switch states.
-// Prevents rapid toggling (e.g., at 15.0°C).
-#define TEMP_HYSTERESIS_C 2.0 
-
-// Range 1: Very Cold (< 5°C)
-#define TEMP_R1_MAX 5.0
-#define TEMP_R1_PULSE 90
-#define TEMP_R1_PAUSE 2120
-
-// Range 2: Cold (5 - 15°C)
-#define TEMP_R2_MAX 15.0
-#define TEMP_R2_PULSE 70
-#define TEMP_R2_PAUSE 1590
-
-// Range 3: Normal (15 - 25°C)
-#define TEMP_R3_MAX 25.0
-#define TEMP_R3_PULSE 50
-#define TEMP_R3_PAUSE 1060
-
-// Range 4: Warm (25 - 35°C)
-#define TEMP_R4_MAX 35.0
-#define TEMP_R4_PULSE 45
-#define TEMP_R4_PAUSE 850
-
-// Range 5: Hot (> 35°C)
-#define TEMP_R5_PULSE 40
-#define TEMP_R5_PAUSE 635
-
 // PWM Safety Check:
 // Pulse Width must be > PUMP_RAMP_UP_MS (12ms) to ensure the pump actually opens.
 // The configured Pulse values above include the Ramp-Up time.

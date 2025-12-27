@@ -111,10 +111,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     emergencyOilCount = 0;
 
     // Temperature Init
-    currentTempC = 20.0; // Default start temp
-    currentTempRangeIndex = 2; // Default Normal
-    dynamicPulseMs = TEMP_R3_PULSE; // Default Normal
-    dynamicPauseMs = TEMP_R3_PAUSE; // Default Normal
+    currentTempC = 25.0; // Default start temp
+    dynamicPulseMs = (unsigned long)tempConfig.basePulse25;
+    dynamicPauseMs = (unsigned long)tempConfig.basePause25;
     lastTempUpdate = 0;
 }
 
