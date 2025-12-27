@@ -48,12 +48,15 @@ This system uses a **DS18B20** temperature sensor to adjust the pump mechanics b
 **Why?**
 Oil becomes thick like syrup in winter and thin like water in summer. Without compensation, the pump might fail to move cold oil or squirt too much hot oil.
 
-**New Simplified Logic:**
-Instead of complex tables, the system now uses a smart calculation based on a reference point and an oil profile.
+**New Simplified Logic (Arrhenius):**
+Instead of complex tables, the system uses the Arrhenius equation to model oil viscosity changes.
 
 *   **Reference:** You set the optimal Pulse and Pause duration for **25°C** (Normal Temperature).
+    *   *Recommendation:* Use a long pause (~2000ms) and adjust the pulse width. This ensures the pump always has enough time to refill, even with thick, cold oil.
 *   **Oil Profile:** Select your oil type (Thin, Normal, Thick).
-*   **Calculation:** The ESP32 automatically calculates the required energy for any temperature using an exponential viscosity formula.
+*   **Calculation:** The ESP32 automatically calculates the required energy for any temperature.
+*   **Safety Limits:**
+    *   **Minimum Pulse:** The system enforces a hard limit of **50ms** for the pulse duration to ensure the solenoid always moves, preventing "stuck" states at high temperatures.
 *   **Hysteresis:** A 3.0°C buffer prevents rapid switching.
 
 **Configuration:**

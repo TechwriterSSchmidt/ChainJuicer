@@ -21,9 +21,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     ranges[4] = {95, MAX_SPEED_KMH, 15.0, 2};
     
     // Initialize Temperature Configuration (Defaults)
-    // Updated based on Calibration: 55ms Pulse / 400ms Pause for reliability
+    // Updated based on Calibration: 55ms Pulse for reliability
     tempConfig.basePulse25 = 55.0;
-    tempConfig.basePause25 = 400.0;
+    tempConfig.basePause25 = 1500.0;
     tempConfig.oilType = OIL_NORMAL;
     lastTemp = 25.0; // Init hysteresis memory
 
@@ -1140,12 +1140,13 @@ void Oiler::updateTemperature() {
     // 2. Determine Compensation Aggressiveness based on Oil Type Setting
     // The pump pulse doesn't need to scale 1:1 with viscosity.
     // We use an exponent to tune how "hard" the system reacts to viscosity changes.
-    float compensationExponent = 0.5; // Default Normal (Square Root of viscosity ratio)
+    // Updated based on real-world calibration at 10°C: Pump is very efficient, needs less compensation.
+    float compensationExponent = 0.25; // Default Normal
     
     switch (tempConfig.oilType) {
-        case OIL_THIN:   compensationExponent = 0.3; break; // Gentle compensation
-        case OIL_NORMAL: compensationExponent = 0.5; break; // Normal compensation
-        case OIL_THICK:  compensationExponent = 0.7; break; // Aggressive compensation
+        case OIL_THIN:   compensationExponent = 0.15; break; // Gentle compensation (Was 0.3)
+        case OIL_NORMAL: compensationExponent = 0.25; break; // Normal compensation (Was 0.5)
+        case OIL_THICK:  compensationExponent = 0.35; break; // Aggressive compensation (Was 0.7)
     }
 
     // 3. Calculate Factor
@@ -1159,7 +1160,7 @@ void Oiler::updateTemperature() {
 
     // Safety Limits
     if (newPulse > 150) newPulse = 150;
-    if (newPulse < 20) newPulse = 20;
+    if (newPulse < 50) newPulse = 50; // Minimum 50ms for reliability
     
     // Pause should not be too short (min 100ms)
     if (newPause < 100) newPause = 100;

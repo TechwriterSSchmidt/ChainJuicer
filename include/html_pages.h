@@ -51,7 +51,7 @@ const char* htmlFooter = R"rawliteral(
         </table>
         <h3>Temperature Compensation</h3>
         <table>
-            <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
+            <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' min='50' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
             <tr><td>Pause Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pause' value='%TC_PAUSE%' class='num-input'></td></tr>
             <tr><td colspan='2'><b>Oil Viscosity Profile:</b></td></tr>
             <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>

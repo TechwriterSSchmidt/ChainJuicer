@@ -302,7 +302,11 @@ void handleSave() {
     }
     
     // Save Temperature Compensation (New Simplified Model)
-    if(server.hasArg("tc_pulse")) oiler.tempConfig.basePulse25 = server.arg("tc_pulse").toFloat();
+    if(server.hasArg("tc_pulse")) {
+        float val = server.arg("tc_pulse").toFloat();
+        if (val < 50.0) val = 50.0;
+        oiler.tempConfig.basePulse25 = val;
+    }
     if(server.hasArg("tc_pause")) oiler.tempConfig.basePause25 = server.arg("tc_pause").toFloat();
     if(server.hasArg("oil_type")) oiler.tempConfig.oilType = (Oiler::OilType)server.arg("oil_type").toInt();
 
