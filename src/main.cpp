@@ -213,6 +213,12 @@ void handleRoot() {
     String html = htmlHeader;
     html.replace("%TIME%", getZurichTime());
     html.replace("%SATS%", String(gps.satellites.value()));
+    
+    String tempHeader = "--";
+    if (oiler.isTempSensorConnected()) {
+        tempHeader = String(oiler.getCurrentTempC(), 1);
+    }
+    html.replace("%TEMP%", tempHeader);
 
     double totalRecentTime = oiler.getRecentTotalTime();
 
@@ -464,8 +470,15 @@ void loop() {
     }
     
     // Update Oiler with GPS data
-    if (gps.location.isUpdated() || gps.speed.isUpdated()) {
-        oiler.update(currentSpeed, gps.location.lat(), gps.location.lng(), gps.location.isValid());
+    // Ensure update is called at least every 1000ms to handle Emergency Mode (Forced or Auto)
+    static unsigned long lastOilerUpdate = 0;
+    bool gpsFresh = gps.location.isUpdated() || gps.speed.isUpdated();
+    
+    if (gpsFresh || (millis() - lastOilerUpdate > 1000)) {
+        // If called due to timeout (gpsFresh=false), we pass false as validity
+        // This allows the Oiler to detect signal loss and trigger Auto-Emergency Mode
+        oiler.update(currentSpeed, gps.location.lat(), gps.location.lng(), gpsFresh);
+        lastOilerUpdate = millis();
     }
     
     // Run Oiler main loop (Button, LED, Bleeding)

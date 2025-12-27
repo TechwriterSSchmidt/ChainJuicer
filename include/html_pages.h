@@ -31,7 +31,7 @@ const char* htmlHeader = R"rawliteral(
 <body>
     <h2>🍋 Chain Juicer v1.0</h2>
     <div class='help-link'><a href='/help'>Help & Manual</a></div>
-    <div class='time'>Time: %TIME% | Sats: %SATS%</div>
+    <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
         <h3>Driving Profile</h3>
         <table>
@@ -55,8 +55,8 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Pause Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pause' value='%TC_PAUSE%' class='num-input'></td></tr>
             <tr><td colspan='2'><b>Oil Viscosity Profile:</b></td></tr>
             <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
-            <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. 80W-90)</td></tr>
-            <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Chainsaw)</td></tr>
+            <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. Mineral Oil 80w90)</td></tr>
+            <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Gear Oil SAE 90)</td></tr>
             <tr><td colspan='2' style='font-size:0.8em;color:#666'>Current Temp: %TEMP_C% &deg;C</td></tr>
         </table>
         <h3>General</h3>
