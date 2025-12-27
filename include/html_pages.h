@@ -49,7 +49,7 @@ const char* htmlHeader = R"rawliteral(
 
 const char* htmlFooter = R"rawliteral(
         </table>
-        <h3>Temperature Compensation (Reference: 25&deg;C)</h3>
+        <h3>Temperature Compensation</h3>
         <table>
             <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
             <tr><td>Pause Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pause' value='%TC_PAUSE%' class='num-input'></td></tr>
@@ -152,8 +152,8 @@ const char* htmlHelp = R"rawliteral(
     <h3>Temperature Compensation</h3>
     <p>Adjusts pump mechanics based on oil viscosity (Temperature).</p>
     <ul>
-        <li><b>Sensor:</b> Requires DS18B20 sensor. If missing, defaults to 25&deg;C.</li>
-        <li><b>Reference:</b> Set Pulse and Pause for 25&deg;C (Normal Temp).</li>
+        <li><b>Sensor:</b> Requires temperature sensor. If missing, defaults to settings for normal temperature.</li>
+        <li><b>Reference:</b> Set Pulse and Pause for normal temperature.</li>
         <li><b>Oil Type:</b> Select your oil viscosity profile (Thin, Normal, Thick).</li>
         <li><b>Logic:</b> The system automatically calculates the required energy for colder/warmer temperatures based on the selected profile.</li>
         <li><b>Hysteresis:</b> 3&deg;C buffer prevents rapid switching.</li>
