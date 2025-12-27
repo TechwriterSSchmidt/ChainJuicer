@@ -2,6 +2,12 @@
 
 An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The system dynamically adjusts oiling intervals based on the driven speed and offers extensive configuration options via a web interface.
 
+## Support my projects
+
+Your tip motivates me to continue developing cool stuff for the DIY community. Thank you very much for your support!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D01HVT9A)
+
 ## 🚀 Features
 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
