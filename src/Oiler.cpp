@@ -23,7 +23,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability
     tempConfig.basePulse25 = 55.0;
-    tempConfig.basePause25 = 1500.0;
+    tempConfig.basePause25 = 2000.0;
     tempConfig.oilType = OIL_NORMAL;
     lastTemp = 25.0; // Init hysteresis memory
 
