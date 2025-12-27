@@ -253,7 +253,7 @@ void handleRoot() {
     footer.replace("%OIL_NORMAL%", (oiler.tempConfig.oilType == Oiler::OIL_NORMAL) ? "checked" : "");
     footer.replace("%OIL_THICK%", (oiler.tempConfig.oilType == Oiler::OIL_THICK) ? "checked" : "");
     
-    footer.replace("%TEMP_C%", String(oiler.currentTempC, 1));
+    footer.replace("%TEMP_C%", String(oiler.getCurrentTempC(), 1));
 
     footer.replace("%PROGRESS%", String(oiler.getCurrentProgress() * 100.0, 1));
     

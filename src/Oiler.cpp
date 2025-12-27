@@ -525,15 +525,15 @@ void Oiler::saveConfig() {
     }
 
     // Save Temperature Compensation Settings
-    for(int i=0; i<5; i++) {
-        String keyBase = "t" + String(i);
-        preferences.putInt((keyBase + "_p").c_str(), tempRanges[i].pulseMs);
-        preferences.putInt((keyBase + "_w").c_str(), tempRanges[i].pauseMs);
-        if (i < 4) {
-            preferences.putFloat((keyBase + "_m").c_str(), tempRanges[i].maxTemp);
     preferences.putFloat("tc_pulse", tempConfig.basePulse25);
     preferences.putFloat("tc_pause", tempConfig.basePause25);
-    preferences.putInt("tc_oil", (int)tempConfig.oilType);references.putInt("night_start", nightStartHour);
+    preferences.putInt("tc_oil", (int)tempConfig.oilType);
+
+    preferences.putUChar("led_dim", ledBrightnessDim);
+    preferences.putUChar("led_high", ledBrightnessHigh);
+    
+    preferences.putBool("night_en", nightModeEnabled);
+    preferences.putInt("night_start", nightStartHour);
     preferences.putInt("night_end", nightEndHour);
     preferences.putUChar("night_bri", nightBrightness);
     preferences.putUChar("night_bri_h", nightBrightnessHigh);
