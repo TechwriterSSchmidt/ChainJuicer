@@ -20,12 +20,11 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     ranges[3] = {75, 95, 15.0, 2};
     ranges[4] = {95, MAX_SPEED_KMH, 15.0, 2};
     
-    // Initialize Temperature Ranges (Defaults from config.h)
-    tempRanges[0] = {TEMP_R1_MAX, TEMP_R1_PULSE, TEMP_R1_PAUSE};
-    tempRanges[1] = {TEMP_R2_MAX, TEMP_R2_PULSE, TEMP_R2_PAUSE};
-    tempRanges[2] = {TEMP_R3_MAX, TEMP_R3_PULSE, TEMP_R3_PAUSE};
-    tempRanges[3] = {TEMP_R4_MAX, TEMP_R4_PULSE, TEMP_R4_PAUSE};
-    tempRanges[4] = {999.0,       TEMP_R5_PULSE, TEMP_R5_PAUSE}; // Max temp for last range is effectively infinite
+    // Initialize Temperature Configuration (Defaults)
+    tempConfig.basePulse25 = 60.0;
+    tempConfig.basePause25 = 230.0;
+    tempConfig.oilType = OIL_NORMAL;
+    lastTemp = 25.0; // Init hysteresis memory
 
     currentProgress = 0.0;
     lastLat = 0.0;
@@ -441,16 +440,10 @@ void Oiler::loadConfig() {
         ranges[i].pulses = preferences.getInt((keyBase + "_p").c_str(), ranges[i].pulses);
     }
 
-    // Load Temperature Compensation Settings
-    for(int i=0; i<5; i++) {
-        String keyBase = "t" + String(i);
-        tempRanges[i].pulseMs = preferences.getInt((keyBase + "_p").c_str(), tempRanges[i].pulseMs);
-        tempRanges[i].pauseMs = preferences.getInt((keyBase + "_w").c_str(), tempRanges[i].pauseMs);
-        // Max Temp is only configurable for ranges 0-3 (Range 4 is > Range 3 Max)
-        if (i < 4) {
-            tempRanges[i].maxTemp = preferences.getFloat((keyBase + "_m").c_str(), tempRanges[i].maxTemp);
-        }
-    }
+    // Load Temperature Compensation Settings (New Simplified Model)
+    tempConfig.basePulse25 = preferences.getFloat("tc_pulse", 60.0);
+    tempConfig.basePause25 = preferences.getFloat("tc_pause", 230.0);
+    tempConfig.oilType = (OilType)preferences.getInt("tc_oil", (int)OIL_NORMAL);
 
     currentProgress = preferences.getFloat("progress", 0.0);
     ledBrightnessDim = preferences.getUChar("led_dim", LED_BRIGHTNESS_DIM);
@@ -538,14 +531,9 @@ void Oiler::saveConfig() {
         preferences.putInt((keyBase + "_w").c_str(), tempRanges[i].pauseMs);
         if (i < 4) {
             preferences.putFloat((keyBase + "_m").c_str(), tempRanges[i].maxTemp);
-        }
-    }
-
-    preferences.putUChar("led_dim", ledBrightnessDim);
-    preferences.putUChar("led_high", ledBrightnessHigh);
-    
-    preferences.putBool("night_en", nightModeEnabled);
-    preferences.putInt("night_start", nightStartHour);
+    preferences.putFloat("tc_pulse", tempConfig.basePulse25);
+    preferences.putFloat("tc_pause", tempConfig.basePause25);
+    preferences.putInt("tc_oil", (int)tempConfig.oilType);references.putInt("night_start", nightStartHour);
     preferences.putInt("night_end", nightEndHour);
     preferences.putUChar("night_bri", nightBrightness);
     preferences.putUChar("night_bri_h", nightBrightnessHigh);
@@ -1039,11 +1027,6 @@ SpeedRange* Oiler::getRangeConfig(int index) {
     return nullptr;
 }
 
-Oiler::TempRange* Oiler::getTempRangeConfig(int index) {
-    if(index >= 0 && index < 5) return &tempRanges[index];
-    return nullptr;
-}
-
 bool Oiler::isTempSensorConnected() {
     return sensors.getDeviceCount() > 0;
 }
@@ -1120,64 +1103,58 @@ void Oiler::updateTemperature() {
 
     // Check for error (-127 is error)
     if (tempC == DEVICE_DISCONNECTED_C) {
-        // Sensor Error: Fallback to 20°C defaults (Range 2)
-        currentTempC = 20.0;
-        currentTempRangeIndex = 2;
-        dynamicPulseMs = TEMP_R3_PULSE;
-        dynamicPauseMs = TEMP_R3_PAUSE;
+        // Sensor Error: Fallback to 25°C defaults
+        currentTempC = 25.0;
+        dynamicPulseMs = (unsigned long)tempConfig.basePulse25;
+        dynamicPauseMs = (unsigned long)tempConfig.basePause25;
 #ifdef GPS_DEBUG
         Serial.println("Temp Sensor Error! Using defaults.");
 #endif
         return;
     }
 
+    // Hysteresis Logic (3.0°C)
+    // Only update calculation if temp changes significantly to avoid jitter
+    if (abs(tempC - lastTemp) < 3.0) {
+        // Keep old values, just update display temp
+        currentTempC = tempC; 
+        return; 
+    }
+    
+    lastTemp = tempC;
     currentTempC = tempC;
 
-    // Hysteresis Logic
-    // We only switch ranges if the temperature crosses the threshold +/- HYSTERESIS.
-    // This prevents rapid switching at the boundaries.
+    // 1. Determine Viscosity Factor based on Oil Type
+    // Factor k: How much to increase pulse per 10°C drop
+    float k_pulse = 1.25; // Default Normal
     
-    int newRange = currentTempRangeIndex;
-
-    // Determine target range based on strict thresholds first
-    int targetRange = 0;
-    if (tempC < tempRanges[0].maxTemp) targetRange = 0;
-    else if (tempC < tempRanges[1].maxTemp) targetRange = 1;
-    else if (tempC < tempRanges[2].maxTemp) targetRange = 2;
-    else if (tempC < tempRanges[3].maxTemp) targetRange = 3;
-    else targetRange = 4;
-
-    // Apply Hysteresis
-    if (targetRange != currentTempRangeIndex) {
-        // Moving UP (getting warmer)
-        if (targetRange > currentTempRangeIndex) {
-            // Check upper boundary of current range
-            float threshold = 0.0;
-            if (currentTempRangeIndex < 4) threshold = tempRanges[currentTempRangeIndex].maxTemp;
-            
-            if (tempC > (threshold + TEMP_HYSTERESIS_C)) {
-                newRange = targetRange; // Switch allowed
-            }
-        }
-        // Moving DOWN (getting colder)
-        else {
-            // Check lower boundary of current range (which is the max of the range below)
-            float threshold = 0.0;
-            if (currentTempRangeIndex > 0) threshold = tempRanges[currentTempRangeIndex - 1].maxTemp;
-            
-            if (tempC < (threshold - TEMP_HYSTERESIS_C)) {
-                newRange = targetRange; // Switch allowed
-            }
-        }
+    switch (tempConfig.oilType) {
+        case OIL_THIN:   k_pulse = 1.10; break; // +10% per 10°C colder
+        case OIL_NORMAL: k_pulse = 1.25; break; // +25% per 10°C colder
+        case OIL_THICK:  k_pulse = 1.40; break; // +40% per 10°C colder
     }
 
-    currentTempRangeIndex = newRange;
+    // 2. Calculate Temperature Difference to Reference (25°C)
+    // Positive Diff = Colder than 25°C
+    float tempDiff = 25.0 - currentTempC;
+    
+    // 3. Calculate Exponential Factor
+    // factor = k ^ (diff / 10)
+    float factor = pow(k_pulse, tempDiff / 10.0);
 
-    // Apply Settings based on Range
-    if (currentTempRangeIndex >= 0 && currentTempRangeIndex < 5) {
-        dynamicPulseMs = tempRanges[currentTempRangeIndex].pulseMs;
-        dynamicPauseMs = tempRanges[currentTempRangeIndex].pauseMs;
-    }
+    // 4. Apply Factor
+    unsigned long newPulse = (unsigned long)(tempConfig.basePulse25 * factor);
+    unsigned long newPause = (unsigned long)(tempConfig.basePause25 * factor);
+
+    // Safety Limits
+    if (newPulse > 150) newPulse = 150;
+    if (newPulse < 20) newPulse = 20;
+    
+    // Pause should not be too short (min 100ms)
+    if (newPause < 100) newPause = 100;
+
+    dynamicPulseMs = newPulse;
+    dynamicPauseMs = newPause;
 
     // PWM Safety Check
     if (PUMP_USE_PWM && dynamicPulseMs <= PUMP_RAMP_UP_MS) {
@@ -1185,6 +1162,6 @@ void Oiler::updateTemperature() {
     }
 
 #ifdef GPS_DEBUG
-    Serial.printf("Temp: %.1f C (Range %d) -> Pulse: %lu ms, Pause: %lu ms\n", currentTempC, currentTempRangeIndex, dynamicPulseMs, dynamicPauseMs);
+    Serial.printf("Temp: %.1f C (Factor %.2f) -> Pulse: %lu ms, Pause: %lu ms\n", currentTempC, factor, dynamicPulseMs, dynamicPauseMs);
 #endif
 }

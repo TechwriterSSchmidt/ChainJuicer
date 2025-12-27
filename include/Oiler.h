@@ -23,13 +23,21 @@ public:
     SpeedRange* getRangeConfig(int index);
 
     // Temperature Configuration
-    struct TempRange {
-        float maxTemp;
-        int pulseMs;
-        int pauseMs;
+    enum OilType {
+        OIL_THIN = 0,
+        OIL_NORMAL = 1,
+        OIL_THICK = 2
     };
-    TempRange tempRanges[5];
-    TempRange* getTempRangeConfig(int index);
+
+    struct TempConfig {
+        float basePulse25; // Pulse width at 25°C
+        float basePause25; // Pause duration at 25°C
+        OilType oilType;
+    };
+    
+    TempConfig tempConfig;
+    float lastTemp; // For hysteresis
+    
     bool isTempSensorConnected();
     
     // --- Logging & Stats Getters ---
@@ -39,6 +47,7 @@ public:
     float getCurrentTargetDistance() { return smoothedInterval; }
     bool isPumpRunning() { return isOiling; }
     float getCurrentProgress() { return currentProgress; }
+    float getCurrentTempC() { return currentTempC; }
     
     // --- Mode Getters & Setters ---
     bool isRainMode() { return rainMode; }

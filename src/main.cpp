@@ -156,22 +156,22 @@ void initSD() {
     logFile = SD.open(currentLogFileName, FILE_WRITE);
     if (logFile) {
         // Write Header
-        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Sats,HDOP,Message");
+        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message");
         
         // Dump Config
-        logFile.println("EVENT,0,,,,,,,,,CONFIG DUMP START");
-        logFile.printf("EVENT,0,,,,,,,,,Rain Multiplier: %d\n", (oiler.isRainMode() ? 2 : 1));
+        logFile.println("EVENT,0,,,,,,,,,,CONFIG DUMP START");
+        logFile.printf("EVENT,0,,,,,,,,,,Rain Multiplier: %d\n", (oiler.isRainMode() ? 2 : 1));
         for(int i=0; i<5; i++) {
             SpeedRange* r = oiler.getRangeConfig(i);
             if(r) {
-                logFile.printf("EVENT,0,,,,,,,,,Range %d: >%.1f km/h -> %.1f km\n", 
+                logFile.printf("EVENT,0,,,,,,,,,,Range %d: >%.1f km/h -> %.1f km\n", 
                     i, r->minSpeed, r->intervalKm);
             }
         }
         
         // Log Boot Reason
         esp_reset_reason_t reason = esp_reset_reason();
-        logFile.printf("EVENT,%lu,,,,,,,,,Boot Reason: %d\n", millis(), reason);
+        logFile.printf("EVENT,%lu,,,,,,,,,,Boot Reason: %d\n", millis(), reason);
         
         logFile.close();
         sdInitialized = true;
@@ -185,7 +185,7 @@ void writeLogLine(String type, String message = "") {
 
     File f = SD.open(currentLogFileName, FILE_APPEND);
     if (f) {
-        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%d,%.2f,%s\n",
+        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%.1f,%d,%.2f,%s\n",
             type.c_str(),
             millis(),
             gps.speed.kmph(),
@@ -195,6 +195,7 @@ void writeLogLine(String type, String message = "") {
             oiler.getCurrentTargetDistance(),
             oiler.isPumpRunning(),
             oiler.isRainMode(),
+            oiler.getCurrentTempC(),
             gps.satellites.value(),
             gps.hdop.hdop(),
             message.c_str()
@@ -244,23 +245,15 @@ void handleRoot() {
     
     // Temperature Compensation Injection
     bool sensorConnected = oiler.isTempSensorConnected();
-    // footer.replace("%TEMP_DISABLED%", sensorConnected ? "" : "disabled"); // Removed outer disable logic
-
-    for(int i=0; i<5; i++) {
-        Oiler::TempRange* t = oiler.getTempRangeConfig(i);
-        if(t) {
-            if(i < 4) footer.replace("%T" + String(i) + "_MAX%", String(t->maxTemp, 1));
-            footer.replace("%T" + String(i) + "_P%", String(t->pulseMs));
-            footer.replace("%T" + String(i) + "_W%", String(t->pauseMs));
-        }
-        
-        // Row Class Logic: Disable all except Normal (Index 2) if sensor is missing
-        String rowClass = "";
-        if (!sensorConnected && i != 2) {
-            rowClass = "disabled";
-        }
-        footer.replace("%ROW_CLASS_" + String(i) + "%", rowClass);
-    }
+    
+    footer.replace("%TC_PULSE%", String((int)oiler.tempConfig.basePulse25));
+    footer.replace("%TC_PAUSE%", String((int)oiler.tempConfig.basePause25));
+    
+    footer.replace("%OIL_THIN%", (oiler.tempConfig.oilType == Oiler::OIL_THIN) ? "checked" : "");
+    footer.replace("%OIL_NORMAL%", (oiler.tempConfig.oilType == Oiler::OIL_NORMAL) ? "checked" : "");
+    footer.replace("%OIL_THICK%", (oiler.tempConfig.oilType == Oiler::OIL_THICK) ? "checked" : "");
+    
+    footer.replace("%TEMP_C%", String(oiler.currentTempC, 1));
 
     footer.replace("%PROGRESS%", String(oiler.getCurrentProgress() * 100.0, 1));
     
@@ -302,15 +295,10 @@ void handleSave() {
         if(server.hasArg("p" + String(i))) r->pulses = server.arg("p" + String(i)).toInt();
     }
     
-    // Save Temperature Compensation
-    for(int i=0; i<5; i++) {
-        Oiler::TempRange* t = oiler.getTempRangeConfig(i);
-        if(t) {
-            if(i < 4 && server.hasArg("t" + String(i) + "_m")) t->maxTemp = server.arg("t" + String(i) + "_m").toFloat();
-            if(server.hasArg("t" + String(i) + "_p")) t->pulseMs = server.arg("t" + String(i) + "_p").toInt();
-            if(server.hasArg("t" + String(i) + "_w")) t->pauseMs = server.arg("t" + String(i) + "_w").toInt();
-        }
-    }
+    // Save Temperature Compensation (New Simplified Model)
+    if(server.hasArg("tc_pulse")) oiler.tempConfig.basePulse25 = server.arg("tc_pulse").toFloat();
+    if(server.hasArg("tc_pause")) oiler.tempConfig.basePause25 = server.arg("tc_pause").toFloat();
+    if(server.hasArg("oil_type")) oiler.tempConfig.oilType = (Oiler::OilType)server.arg("oil_type").toInt();
 
     // Convert 0-100% back to 0-255
     if(server.hasArg("led_dim")) {

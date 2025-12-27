@@ -49,14 +49,15 @@ const char* htmlHeader = R"rawliteral(
 
 const char* htmlFooter = R"rawliteral(
         </table>
-        <h3>Temperature Compensation</h3>
+        <h3>Temperature Compensation (Reference: 25&deg;C)</h3>
         <table>
-            <tr><th>Range</th><th>Max Temp</th><th>Pulse</th><th>Pause</th></tr>
-            <tr class='%ROW_CLASS_0%'><td>Very Cold</td><td><input type='number' step='0.1' name='t0_m' value='%T0_MAX%' class='km-input'></td><td><input type='number' name='t0_p' value='%T0_P%' class='pulse-input'></td><td><input type='number' name='t0_w' value='%T0_W%' class='num-input'></td></tr>
-            <tr class='%ROW_CLASS_1%'><td>Cold</td><td><input type='number' step='0.1' name='t1_m' value='%T1_MAX%' class='km-input'></td><td><input type='number' name='t1_p' value='%T1_P%' class='pulse-input'></td><td><input type='number' name='t1_w' value='%T1_W%' class='num-input'></td></tr>
-            <tr class='%ROW_CLASS_2%'><td>Normal</td><td><input type='number' step='0.1' name='t2_m' value='%T2_MAX%' class='km-input'></td><td><input type='number' name='t2_p' value='%T2_P%' class='pulse-input'></td><td><input type='number' name='t2_w' value='%T2_W%' class='num-input'></td></tr>
-            <tr class='%ROW_CLASS_3%'><td>Warm</td><td><input type='number' step='0.1' name='t3_m' value='%T3_MAX%' class='km-input'></td><td><input type='number' name='t3_p' value='%T3_P%' class='pulse-input'></td><td><input type='number' name='t3_w' value='%T3_W%' class='num-input'></td></tr>
-            <tr class='%ROW_CLASS_4%'><td>Hot</td><td>&gt; Warm</td><td><input type='number' name='t4_p' value='%T4_P%' class='pulse-input'></td><td><input type='number' name='t4_w' value='%T4_W%' class='num-input'></td></tr>
+            <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
+            <tr><td>Pause Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pause' value='%TC_PAUSE%' class='num-input'></td></tr>
+            <tr><td colspan='2'><b>Oil Viscosity Profile:</b></td></tr>
+            <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
+            <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. 80W-90)</td></tr>
+            <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Chainsaw)</td></tr>
+            <tr><td colspan='2' style='font-size:0.8em;color:#666'>Current Temp: %TEMP_C% &deg;C</td></tr>
         </table>
         <h3>General</h3>
         <table>
@@ -151,11 +152,11 @@ const char* htmlHelp = R"rawliteral(
     <h3>Temperature Compensation</h3>
     <p>Adjusts pump mechanics based on oil viscosity (Temperature).</p>
     <ul>
-        <li><b>Sensor:</b> Requires DS18B20 sensor. If missing, only "Normal" range is active.</li>
-        <li><b>Ranges:</b> 5 temperature zones (Very Cold to Hot).</li>
-        <li><b>Pulse:</b> Duration of the pump stroke (ms). Higher = More power for thick oil.</li>
-        <li><b>Pause:</b> Wait time after stroke (ms). Higher = More time for refill.</li>
-        <li><b>Max Temp:</b> Upper limit for the range.</li>
+        <li><b>Sensor:</b> Requires DS18B20 sensor. If missing, defaults to 25&deg;C.</li>
+        <li><b>Reference:</b> Set Pulse and Pause for 25&deg;C (Normal Temp).</li>
+        <li><b>Oil Type:</b> Select your oil viscosity profile (Thin, Normal, Thick).</li>
+        <li><b>Logic:</b> The system automatically calculates the required energy for colder/warmer temperatures based on the selected profile.</li>
+        <li><b>Hysteresis:</b> 3&deg;C buffer prevents rapid switching.</li>
     </ul>
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
