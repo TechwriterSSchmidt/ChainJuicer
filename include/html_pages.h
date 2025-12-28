@@ -168,7 +168,7 @@ const char* htmlHelp = R"rawliteral(
     <h3>Button Functions</h3>
     <ul>
         <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode'.</li>
-        <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (10s pump). Only at standstill.</li>
+        <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
@@ -176,7 +176,7 @@ const char* htmlHelp = R"rawliteral(
         <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> 'Emergency Mode' (No GPS > 3 min).</li>
-        <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s).</li>
+        <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s, breathes 3x).</li>
         <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White pulse:</b> 'WiFi Config' Active.</li>
         <li><span class='color-box' style='background:red'></span> <b>Red (2x blink):</b> 'Tank Warning'.</li>
         <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>

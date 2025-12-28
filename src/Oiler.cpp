@@ -923,11 +923,14 @@ void Oiler::processPump() {
     // Logic for Pulse Generation
     // REVISED for Blocking PWM Pulse
     // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
-    // UPDATE: Use dynamicPauseMs instead of static PAUSE_DURATION_MS
-    if (now - lastPulseTime >= dynamicPauseMs) {
+    
+    // Bleeding Mode: Fast pumping (80ms Pulse / 250ms Pause)
+    unsigned long effectivePause = bleedingMode ? 250 : dynamicPauseMs;
+    unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
+
+    if (now - lastPulseTime >= effectivePause) {
         // Execute Blocking Pulse (Soft-Start/Stop)
-        // UPDATE: Use dynamicPulseMs instead of static PULSE_DURATION_MS
-        pumpPulse(dynamicPulseMs);
+        pumpPulse(effectivePulse);
         
         // Reset Timer
         lastPulseTime = millis();

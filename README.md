@@ -115,7 +115,7 @@ ESP32 GPIO (the one that switches the MOSFET
 | :--- | :--- | :--- | :--- |
 | **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue). *Disabled in Emergency Mode.* |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
-| **Long Hold** | > 10s | At Standstill (< 7 km/h) | Start **Bleeding Mode** (LED: Red blinking, pump runs 10s) |
+| **Long Hold** | > 10s | At Standstill (< 7 km/h) | Start **Bleeding Mode** (LED: Red blinking, pump runs 15s @ 80ms/250ms) |
 | **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
 
 ### LED Status Codes
@@ -124,7 +124,7 @@ ESP32 GPIO (the one that switches the MOSFET
 *   🔵 **Blue:** Rain Mode Active
 *   🟣 **Magenta:** No GPS Signal (Searching...)
 *   🔵 **Cyan:** Emergency Mode (No GPS > 3 min, Simulation active)
-*   🟡 **Yellow:** Oiling in progress (lit for 3s)
+*   🟡 **Yellow:** Oiling in progress (lit for 3s, breathes 3x)
 *   ⚪ **White (pulsing):** WiFi Configuration Mode active
 *   🔴 **Red (2x blink):** Tank Warning (Reserve reached)
 *   🔴 **Red (blinking):** Bleeding Mode active
