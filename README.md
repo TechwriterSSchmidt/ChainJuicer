@@ -58,9 +58,9 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 *   **Auto-Save:** Odometer and settings are permanently saved in flash memory (NVS) at standstill (< 7 km/h).
 *   **Factory Reset:** Ability to reset all settings to default via hardware button.
 
-## 🧭 Optional IMU Features (Planned)
+## 🧭 Optional IMU Features
 
-By adding a **BNO085** (or BNO055) 9-Axis IMU, the system gains "Intelligence" and advanced safety features.
+By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" and advanced safety features. The system automatically detects if the sensor is connected.
 
 | Feature | Description | Benefit |
 | :--- | :--- | :--- |
@@ -70,7 +70,7 @@ By adding a **BNO085** (or BNO055) 9-Axis IMU, the system gains "Intelligence" a
 | **Telemetry Logger** | Records max lean angles (L/R), max acceleration, and braking G-forces. | Fun stats for the web interface ("How deep was I in that corner?"). |
 | **Dynamic Intervals** | Analyzes riding style (Cruising vs. Racing). | Reduces oiling intervals during aggressive riding (high load on chain). |
 
-*   **Calibration:** A dedicated Web Interface page will allow zeroing the sensor and calibrating the "Parked" positions.
+*   **Calibration:** A dedicated Web Interface page allows zeroing the sensor and calibrating the "Parked" positions.
 *   **Logging:** All IMU data will be logged to the SD card (if active) for analysis.
 
 ## 🌡️ Automatic Temperature Compensation
@@ -106,7 +106,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** Dosing pump (controlled via Logic Level MOSFET, e.g., NCE6020AK)
 *   **Temp Sensor:** DS18B20 (Waterproof)
-*   **IMU (Optional):** BNO085 (or BNO080) for lean angle detection and standstill logic (Planned).
+*   **IMU (Optional):** BNO085 (or BNO080) for lean angle detection and standstill logic.
 *   **LED:** WS2812B (NeoPixel) for status indication
 *   **Button:** Normally Open against GND (Input Pullup)
 
@@ -121,6 +121,8 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 | **Boot Button** | GPIO 0 | Onboard Button (Parallel function) |
 | **LED** | GPIO 32 | WS2812B Data In |
 | **Temp Sensor** | GPIO 15 | DS18B20 Data |
+| **IMU SDA** | GPIO 21 | I2C Data |
+| **IMU SCL** | GPIO 22 | I2C Clock |
 
 *(Configurable in `include/config.h`)*
 

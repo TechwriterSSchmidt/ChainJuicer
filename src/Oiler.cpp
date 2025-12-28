@@ -1249,20 +1249,6 @@ void Oiler::rebuildLUT() {
     }
 }
 
-void Oiler::setTurboMode(bool mode) {
-    if (mode && !turboMode) {
-        turboModeStartTime = millis();
-#ifdef GPS_DEBUG
-        Serial.println("Turbo Mode ACTIVATED");
-#endif
-    } else if (!mode && turboMode) {
-#ifdef GPS_DEBUG
-        Serial.println("Turbo Mode DEACTIVATED");
-#endif
-    }
-    turboMode = mode;
-}
-
 void Oiler::setTankFill(float levelMl) {
     currentTankLevelMl = levelMl;
     if (currentTankLevelMl > tankCapacityMl) currentTankLevelMl = tankCapacityMl;

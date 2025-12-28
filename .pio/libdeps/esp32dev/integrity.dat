@@ -1,4 +1,5 @@
+adafruit/Adafruit BNO08x @ ^1.2.5
+paulstoffregen/OneWire @ ^2.3.7
 adafruit/Adafruit NeoPixel @ ^1.12.0
 mikalhart/TinyGPSPlus @ ^1.0.3
 milesburton/DallasTemperature @ ^3.11.0
-paulstoffregen/OneWire @ ^2.3.7
