@@ -152,7 +152,7 @@ const char* htmlHelp = R"rawliteral(
         <li><b>km:</b> Distance interval (km) between oilings.</li>
         <li><b>Usage %:</b> Percentage of driving time in this range (helps optimizing).</li>
         <li><b>Juices:</b> Number of oiling events triggered.</li>
-        <li><b>Pulses:</b> Pump pulses per event.</li>
+        <li><b>Pulses:</b> Pump pulses per event (Default: 2).</li>
     </ul>
     <p>Use '[Reset Stats]' to clear 'Usage %' and 'Juices'.</p>
     <h3>Temperature Compensation</h3>

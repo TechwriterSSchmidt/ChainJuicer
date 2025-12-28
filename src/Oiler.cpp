@@ -14,17 +14,17 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Pin initialization moved to begin() to avoid issues during global constructor execution
     
     // Initialize default configuration
-    // Updated based on user request: Base 5km, reducing with speed
-    ranges[0] = {10, 60, 5.0, 1};
-    ranges[1] = {60, 100, 5.0, 1};
-    ranges[2] = {100, 130, 4.4, 1}; // -12.5%
-    ranges[3] = {130, 160, 3.8, 1}; // -25%
-    ranges[4] = {160, MAX_SPEED_KMH, 3.0, 1}; // -37.5% (and -50% > 190)
+    // Updated based on user request: Base 5km, reducing with speed, 2 pulses per event
+    ranges[0] = {10, 60, 5.0, 2};
+    ranges[1] = {60, 100, 5.0, 2};
+    ranges[2] = {100, 130, 4.4, 2}; // -12.5%
+    ranges[3] = {130, 160, 3.8, 2}; // -25%
+    ranges[4] = {160, MAX_SPEED_KMH, 3.0, 2}; // -37.5% (and -50% > 190)
     
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability
-    tempConfig.basePulse25 = 55.0;
-    tempConfig.basePause25 = 2000.0;
+    tempConfig.basePulse25 = (float)PULSE_DURATION_MS;
+    tempConfig.basePause25 = (float)PAUSE_DURATION_MS;
     tempConfig.oilType = OIL_NORMAL;
     lastTemp = 25.0; // Init hysteresis memory
 
@@ -91,9 +91,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Night Mode Defaults
     nightModeEnabled = false;
     nightStartHour = 20; // 20:00
-    nightEndHour = 6;    // 06:00
-    nightBrightness = 15; // Very dim
-    nightBrightnessHigh = 100; // Default for night events
+    nightEndHour = 7;    // 07:00
+    nightBrightness = 5;  // Very dim
+    nightBrightnessHigh = 15; // Default for night events
     currentHour = 12;    // Default noon
 
     // Tank Monitor Defaults
@@ -470,8 +470,8 @@ void Oiler::loadConfig() {
     }
 
     // Load Temperature Compensation Settings (New Simplified Model)
-    tempConfig.basePulse25 = preferences.getFloat("tc_pulse", 60.0);
-    tempConfig.basePause25 = preferences.getFloat("tc_pause", 230.0);
+    tempConfig.basePulse25 = preferences.getFloat("tc_pulse", (float)PULSE_DURATION_MS);
+    tempConfig.basePause25 = preferences.getFloat("tc_pause", (float)PAUSE_DURATION_MS);
     tempConfig.oilType = (OilType)preferences.getInt("tc_oil", (int)OIL_NORMAL);
 
     currentProgress = preferences.getFloat("progress", 0.0);
@@ -1061,11 +1061,17 @@ void Oiler::setRainMode(bool mode) {
         Serial.println("Rain Mode: ON");
 #endif
     } else if (!mode && rainMode) {
-        // Rain Mode turned OFF -> Flush Chain
+        // Rain Mode turned OFF -> Flush Chain (Only if moving)
+        if (currentSpeed > MIN_SPEED_KMH) {
 #ifdef GPS_DEBUG
-        Serial.println("Rain Mode: OFF -> Flushing Chain");
+            Serial.println("Rain Mode: OFF -> Flushing Chain");
 #endif
-        triggerOil(RAIN_FLUSH_PULSES);
+            triggerOil(RAIN_FLUSH_PULSES);
+        } else {
+#ifdef GPS_DEBUG
+            Serial.println("Rain Mode: OFF -> Flush skipped (Standstill)");
+#endif
+        }
     }
     
     rainMode = mode;

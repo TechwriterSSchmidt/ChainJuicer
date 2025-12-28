@@ -44,7 +44,7 @@
 // LED Configuration
 #define NUM_LEDS 2
 #define LED_BRIGHTNESS_DIM 20   // Brightness for status LED during normal operation (0-255)
-#define LED_BRIGHTNESS_HIGH 150 // Brightness for events (0-255)
+#define LED_BRIGHTNESS_HIGH 45  // Brightness for events (0-255)
 
 // SD Logging Configuration
 // Uncomment to enable SD Card Logging
@@ -70,8 +70,8 @@
 #define LED_WIFI_SHOW_DURATION 10000 // How long to show WiFi LED after activation
 
 // Default Values
-#define PULSE_DURATION_MS 150      // Duration in ms of the pump impulse (HIGH)
-#define PAUSE_DURATION_MS 850     // Pause in ms between impulses (LOW)
+#define PULSE_DURATION_MS 55       // Duration in ms of the pump impulse (HIGH) - Calibrated for reliability
+#define PAUSE_DURATION_MS 2000    // Pause in ms between impulses (LOW)
 #define MIN_SPEED_KMH 7.0         // Minimum speed for oiling (Standstill threshold)
 #define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)

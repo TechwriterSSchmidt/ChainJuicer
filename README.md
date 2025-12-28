@@ -12,7 +12,7 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
     *   **New:** Intervals can now be set as low as **0.1 km** for precise tuning.
-    *   **Default Progression:** The system comes with a pre-configured speed progression (Base 5km, reducing by ~12.5% steps >100km/h) to compensate for centrifugal oil loss.
+    *   **Default Progression:** The system comes with a pre-configured speed progression (Base 5km, reducing by ~12.5% steps >100km/h) to compensate for centrifugal oil loss. Default is **2 pulses** per event.
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
 *   **Drift Filter:** Detects and ignores satellite signal reflections (multipath) to prevent "ghost mileage" indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
 *   **Safety Cutoff:** Hard limit for the pump (max. 30s continuous run) to prevent hardware damage in case of software glitches.
