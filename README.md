@@ -74,9 +74,11 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 
 ## 🛠 Hardware
 
-*   **MCU:** ESP32-S3-TINY (or compatible ESP32 board)
+*   **MCU:** [ESP32-S3-TINY](https://de.aliexpress.com/item/1005009961593556.html) (or compatible ESP32 board).
+    *   *Note:* On this specific board, you **must** desolder the small transistor (RGB LED driver) if it interferes with the pump pin, or choose a different pin.
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
-*   **Pump:** Dosing pump (controlled via Logic Level MOSFET, e.g., NCE6020AK)
+*   **Pump:** [12V Dosing Pump](https://de.aliexpress.com/item/1005010375479436.html).
+    *   *Tip:* Use my [Smart Pump Calibrator](https://github.com/TechwriterSSchmidt/Smart-Pump-Calibrator) to find the perfect settings for your pump.
 *   **Temp Sensor:** DS18B20 (Waterproof)
 *   **IMU (Optional):** BNO085 (or BNO080) for lean angle detection and standstill logic.
 *   **LED:** WS2812B (NeoPixel) for status indication
@@ -101,6 +103,8 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 ### MOSFET Wiring (Direct Drive)
 
 To prevent the pump from triggering briefly during boot (floating pin), use a Logic Level MOSFET (e.g., NCE6020AK) and a Pull-Down resistor. Do **not** use an NPN driver stage (Emitter Follower) as it may cause threshold voltage issues with 3.3V logic.
+
+**Important:** The 200Ω series resistor and 10kΩ Pull-Down resistor are **mandatory** to prevent the pump from running uncontrollably during the ESP32 boot sequence.
 
 ```ascii
 ESP32 GPIO (the one that switches the MOSFET
@@ -200,22 +204,30 @@ If your pump runs immediately when powering on the ESP32:
 4.  Compile and upload project (`Upload`).
 5.  File system is not necessary (Data is saved in NVS/Preferences).
 
-## 🛒 BOM
+## 🛒 BOM & Costs (approx. 2025)
 
-1.  **ESP32 Board:** ESP32 WROOM 32e (4Mb) or better. I used this [board with integrated MOS switch and DCDC converter](https://de.aliexpress.com/item/1005009961593556.html) or similar.
-2.  **GPS Module:** UBLOX M10 or compatible (UART).
-3.  **Dosing Pump:** 12V Pulse Dosing Pump.
-4.  **LED:** WS2812B (NeoPixel).
-5.  **Button:** Momentary push button (normally open).
-6.  **Resistors:**
-    *   1x 220R - 470R (Series resistor).
-    *   1x 10k (Pull-down resistor).
-    *   *Note: Required to suppress the initial pump trigger during powerup with the above board.*
-7.  **Wires & Connectors:** Various lengths and types.
-8.  **Housing:** 3D printed housing. *[Link to MakerWorld or Thingiverse to be added]*
-9.  **Screws:** 8x M3x8 screws for housing and board.
-10. **Fuse:** 5A fuse and fuse holder.
-11. **Misc:** Bits and pieces (heat shrink, cable ties, etc.).
+The total project cost is very low compared to commercial alternatives (~150€+).
+
+| Component | Description | Link (Example) | Approx. Price |
+| :--- | :--- | :--- | :--- |
+| **ESP32 Board** | ESP32-S3-TINY (Integrated MOS) | [AliExpress](https://de.aliexpress.com/item/1005009961593556.html) | ~ 4.00 € |
+| **GPS Module** | M10 GNSS (Small & Fast) | [AliExpress](https://de.aliexpress.com/item/1005007759554488.html) | ~ 4.50 € |
+| **Dosing Pump** | 12V Pulse Pump | [AliExpress](https://de.aliexpress.com/item/1005010375479436.html) | ~ 12.00 € |
+| **Button** | Waterproof Handlebar Button | [AliExpress](https://de.aliexpress.com/item/1005008487982612.html) | ~ 2.50 € |
+| **LED** | WS2812B (Code supports up to 2x) | Generic | ~ 1.00 € |
+| **Small Parts** | Resistors (200R, 10k), Wires, Fuse | Generic | ~ 5.00 € |
+| **Housing** | 3D Printed (PETG/ASA) | DIY | ~ 2.00 € |
+| **Total (Basic)** | | | **~ 31.00 €** |
+| | | | |
+| **IMU (Optional)** | BNO085 (9-Axis) | [AliExpress](https://de.aliexpress.com/item/1005009898088463.html) | ~ 15.00 € |
+| **Total (Full)** | | | **~ 46.00 €** |
+
+*Note: Prices vary by shipping location and seller.*
+
+### Hardware Notes
+*   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the status display in the cockpit and a second one (optional) near the tank or pump for debugging/tank warning.
+*   **ESP32 Mod:** On the linked S3-TINY board, you might need to desolder the small RGB-Driver transistor if it interferes with the pump pin.
+*   **Resistors:** Don't forget the **200R** (Series) and **10k** (Pull-Down) for the MOSFET gate!
 
 
 
