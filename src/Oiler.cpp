@@ -263,13 +263,7 @@ void Oiler::handleButton() {
                     } else {
                         // Only toggle Rain Mode if NOT in Emergency Mode (Forced or Auto)
                         if (!emergencyMode && !emergencyModeForced) {
-                            rainMode = !rainMode;
-                            if (rainMode) rainModeStartTime = millis();
-#ifdef GPS_DEBUG
-                            Serial.print("Rain Mode: ");
-                            Serial.println(rainMode ? "ON" : "OFF");
-#endif
-                            saveConfig(); // Save setting
+                            setRainMode(!rainMode);
                         }
                     }
                 }
@@ -283,8 +277,8 @@ void Oiler::handleButton() {
         
         // Long Press: Bleeding Mode
         if (duration > BLEEDING_PRESS_MS) {
-            // SAFETY: Only allow in standstill
-            if (currentSpeed < MIN_SPEED_KMH) {
+            // SAFETY: Only allow in standstill AND NOT in Emergency Mode (Auto or Forced)
+            if (currentSpeed < MIN_SPEED_KMH && !emergencyMode && !emergencyModeForced) {
                 bleedingMode = true;
                 bleedingStartTime = millis();
                 pumpActivityStartTime = millis(); // Safety Cutoff Start
@@ -299,7 +293,11 @@ void Oiler::handleButton() {
                 saveConfig(); // Save immediately
             } else {
 #ifdef GPS_DEBUG
-                Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
+                if (emergencyMode || emergencyModeForced) {
+                    Serial.println("Bleeding blocked: Emergency Mode Active");
+                } else {
+                    Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
+                }
 #endif
             }
 
@@ -827,80 +825,77 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     progressChanged = true; // So Odometer gets saved
 
     // Find matching range
-    int activeRangeIndex = -1;
+    int activeRangeIndex = 0;
     for(int i=0; i<NUM_RANGES; i++) {
         if (speedKmh >= ranges[i].minSpeed && speedKmh < ranges[i].maxSpeed) {
-        float targetInterval;
+            activeRangeIndex = i;
+            break;
+        }
+    }
+    
+    // Update Time Stats (Seconds)
+    if (speedKmh > 0.1) {
+        currentIntervalTime[activeRangeIndex] += (distKm / speedKmh) * 3600.0;
+    }
 
-        // Check Turbo Mode
-        if (turboMode) {
-            // Check Timeout
-            if (millis() - turboModeStartTime > TURBO_MODE_DURATION_MS) {
-                setTurboMode(false);
-                // Fallback to normal LUT
-                int lutIndex = (int)(speedKmh / LUT_STEP);
-                if (lutIndex < 0) lutIndex = 0;
-                if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
-                targetInterval = intervalLUT[lutIndex];
-            } else {
-                targetInterval = TURBO_MODE_INTERVAL_KM;
-            }
-        } else {
-            // 1. Get Target Interval from LUT (Linear Interpolation)
+    float targetInterval;
+
+    // Check Turbo Mode
+    if (turboMode) {
+        // Check Timeout
+        if (millis() - turboModeStartTime > TURBO_MODE_DURATION_MS) {
+            setTurboMode(false);
+            // Fallback to normal LUT
             int lutIndex = (int)(speedKmh / LUT_STEP);
             if (lutIndex < 0) lutIndex = 0;
             if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
             targetInterval = intervalLUT[lutIndex];
+        } else {
+            targetInterval = TURBO_MODE_INTERVAL_KM;
         }
-        // Virtual distance calculation:
-        // We add % progress to next oiling, not km.
-
+    } else {
         // 1. Get Target Interval from LUT (Linear Interpolation)
         int lutIndex = (int)(speedKmh / LUT_STEP);
         if (lutIndex < 0) lutIndex = 0;
         if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
+        targetInterval = intervalLUT[lutIndex];
+    }
 
-        float targetInterval = intervalLUT[lutIndex];
+    // 2. Low-Pass Filter (Additional Smoothing)
+    if (smoothedInterval == 0.0) smoothedInterval = targetInterval; // Init
+    smoothedInterval = (smoothedInterval * 0.95) + (targetInterval * 0.05);
 
-        // 2. Low-Pass Filter (Additional Smoothing)
-        if (smoothedInterval == 0.0) smoothedInterval = targetInterval; // Init
-        smoothedInterval = (smoothedInterval * 0.95) + (targetInterval * 0.05);
+    float interval = smoothedInterval;
 
-        float interval = smoothedInterval;
+    if (interval > 0) {
+        float progressDelta = distKm / interval;
 
-        if (interval > 0) {
-            float progressDelta = distKm / interval;
+        // Rain Mode: Double wear -> Double progression
+        if (rainMode) {
+            progressDelta *= 2.0;
+        }
 
-            // Rain Mode: Double wear -> Double progression
-            if (rainMode) {
-                progressDelta *= 2.0;
+        currentProgress += progressDelta;
+        progressChanged = true;
+
+        // Oiling Trigger
+        // Changed to 100% (1.0) to ensure accurate intervals
+        // We subtract 1.0 instead of resetting to 0.0 to carry over any remainder
+        if (currentProgress >= 1.0) {
+            // Update History BEFORE resetting currentIntervalTime
+            int head = history.head;
+            history.oilingRange[head] = activeRangeIndex;
+            for(int i=0; i<NUM_RANGES; i++) {
+                history.timeInRanges[head][i] = currentIntervalTime[i];
+                currentIntervalTime[i] = 0.0; // Reset for next interval
             }
+            history.head = (head + 1) % 20;
+            if (history.count < 20) history.count++;
 
-            currentProgress += progressDelta;
-            progressChanged = true;
-
-            // Debug Output
-            // Serial.printf("Speed: %.1f, Dist: %.4f, Prog: %.4f\n", speedKmh, distKm, currentProgress);
-
-            // Oiling Trigger
-            // Changed to 100% (1.0) to ensure accurate intervals
-            // We subtract 1.0 instead of resetting to 0.0 to carry over any remainder
-            if (currentProgress >= 1.0) {
-                // Update History BEFORE resetting currentIntervalTime
-                int head = history.head;
-                history.oilingRange[head] = activeRangeIndex;
-                for(int i=0; i<NUM_RANGES; i++) {
-                    history.timeInRanges[head][i] = currentIntervalTime[i];
-                    currentIntervalTime[i] = 0.0; // Reset for next interval
-                }
-                history.head = (head + 1) % 20;
-                if (history.count < 20) history.count++;
-
-                triggerOil(ranges[activeRangeIndex].pulses);
-                currentProgress -= 1.0; // Carry over remainder
-                if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
-                saveProgress(); // Save progress
-            }
+            triggerOil(ranges[activeRangeIndex].pulses);
+            currentProgress -= 1.0; // Carry over remainder
+            if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
+            saveProgress(); // Save progress
         }
     }
 }
@@ -1062,12 +1057,23 @@ void Oiler::setRainMode(bool mode) {
 
     if (mode && !rainMode) {
         rainModeStartTime = millis();
+#ifdef GPS_DEBUG
+        Serial.println("Rain Mode: ON");
+#endif
+    } else if (!mode && rainMode) {
+        // Rain Mode turned OFF -> Flush Chain
+#ifdef GPS_DEBUG
+        Serial.println("Rain Mode: OFF -> Flushing Chain");
+#endif
+        triggerOil(RAIN_FLUSH_PULSES);
     }
+    
     rainMode = mode;
     // If Rain Mode is activated, disable forced Emergency Mode
     if (rainMode) {
         emergencyModeForced = false;
     }
+    saveConfig();
 }
 
 SpeedRange* Oiler::getRangeConfig(int index) {
@@ -1119,6 +1125,9 @@ void Oiler::rebuildLUT() {
                 }
             }
         }
+    }
+}
+
 void Oiler::setTurboMode(bool mode) {
     if (mode && !turboMode) {
         turboModeStartTime = millis();
@@ -1131,9 +1140,6 @@ void Oiler::setTurboMode(bool mode) {
 #endif
     }
     turboMode = mode;
-}
-
-    }
 }
 
 void Oiler::setTankFill(float levelMl) {

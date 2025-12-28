@@ -80,6 +80,7 @@
 #define TURBO_MODE_INTERVAL_KM 1.0    // 1 km Interval
 #define TURBO_PRESS_COUNT 3           // 3 Clicks
 #define TURBO_PRESS_WINDOW_MS 2000    // 2 Seconds window
+#define RAIN_FLUSH_PULSES 5           // Pulses to flush chain after Rain Mode ends
 
 // Button Timings
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode
