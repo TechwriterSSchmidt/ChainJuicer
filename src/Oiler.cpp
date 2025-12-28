@@ -95,8 +95,8 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     tankMonitorEnabled = false;
     tankCapacityMl = 100.0;
     currentTankLevelMl = 100.0;
-    dropsPerMl = 20;
-    dropsPerPulse = 5;
+    dropsPerMl = 50; // Calibrated: 6200 drops / 125ml = 49.6
+    dropsPerPulse = 1; // "Every pulse brings forth one drop"
     tankWarningThresholdPercent = 10;
     
     lastEmergUpdate = 0;
