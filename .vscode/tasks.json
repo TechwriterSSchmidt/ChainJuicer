@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "add_config_define",
+			"type": "shell",
+			"command": "sed -i 's/#define RAIN_TOGGLE_MS 1500/#define MULTI_CLICK_DELAY_MS 400  \\/\\/ Wait time to detect multi-clicks\\n#define RAIN_TOGGLE_MS 1500/' include/config.h",
+			"args": [
+				"include/config.h",
+				"#define RAIN_TOGGLE_MS 1500",
+				"#define MULTI_CLICK_DELAY_MS 400  // Wait time to detect multi-clicks\n#define RAIN_TOGGLE_MS 1500"
+			],
+			"group": "edit"
+		}
+	]
+}

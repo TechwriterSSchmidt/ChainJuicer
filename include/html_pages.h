@@ -173,7 +173,7 @@ const char* htmlHelp = R"rawliteral(
     </ul>
     <h3>Button Functions</h3>
     <ul>
-        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode'. (Turning OFF triggers 5 flush pulses).</li>
+        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay). (Turning OFF triggers 5 flush pulses, only if moving).</li>
         <li><b>3x Click:</b> Toggle 'Turbo Mode' (15 min @ 1km).</li>
         <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>

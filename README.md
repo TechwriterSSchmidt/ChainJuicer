@@ -120,7 +120,7 @@ ESP32 GPIO (the one that switches the MOSFET
 
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
-| **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue). *Disabled in Emergency Mode.* **Note:** Turning OFF triggers 5 flush pulses. |
+| **Short Press** | < 1.5s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 400ms delay. Turning OFF triggers 5 flush pulses (only if moving). |
 | **3x Click** | < 2s | Always | **Turbo Mode** On/Off (LED: Cyan Blink). 15 min @ 1km. |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Long Hold** | > 10s | At Standstill (< 7 km/h) & No Emergency | Start **Bleeding Mode** (LED: Red blinking, pump runs 15s @ 80ms/250ms) |

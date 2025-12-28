@@ -246,29 +246,30 @@ void Oiler::handleButton() {
                 // Short Press: Rain Mode Toggle
                 if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
                     // Multi-Click Detection for Turbo Mode
-                    unsigned long now = millis();
-                    if (now - lastClickTime > TURBO_PRESS_WINDOW_MS) {
-                        buttonClickCount = 0; // Reset if window expired
-                    }
-                    
                     buttonClickCount++;
-                    lastClickTime = now;
+                    lastClickTime = millis();
                     
                     if (buttonClickCount >= TURBO_PRESS_COUNT) {
                         // 3 Clicks -> Toggle Turbo Mode
                         setTurboMode(!turboMode);
                         buttonClickCount = 0; // Reset
-                        
-                        // Turbo Mode overrides Rain Mode interval.
-                    } else {
-                        // Only toggle Rain Mode if NOT in Emergency Mode (Forced or Auto)
-                        if (!emergencyMode && !emergencyModeForced) {
-                            setRainMode(!rainMode);
-                        }
                     }
                 }
             }
         }
+    }
+
+    // Delayed Action Handler (Single Click)
+    // Wait 400ms to see if more clicks follow
+    if (buttonClickCount > 0 && (millis() - lastClickTime > 400)) {
+        if (buttonClickCount == 1) {
+            // Single Click -> Toggle Rain Mode
+            if (!emergencyMode && !emergencyModeForced) {
+                setRainMode(!rainMode);
+            }
+        }
+        // Reset after timeout (ignores 2 clicks to prevent accidental flush)
+        buttonClickCount = 0;
     }
 
     // Check Long Press while holding (using stable buttonState)
