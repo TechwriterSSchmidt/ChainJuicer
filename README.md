@@ -78,6 +78,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
     *   *Note:* On this specific board, you **must** desolder the small transistor (RGB LED driver) if it interferes with the pump pin, or choose a different pin.
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** [12V Dosing Pump](https://de.aliexpress.com/item/1005010375479436.html).
+    *   *Durability:* Tested with 2 pumps, each > 100,000 strokes without failure.
     *   *Tip:* Use my [Smart Pump Calibrator](https://github.com/TechwriterSSchmidt/Smart-Pump-Calibrator) to find the perfect settings for your pump.
 *   **Temp Sensor:** DS18B20 (Waterproof)
 *   **IMU (Optional):** BNO085 (or BNO080) for lean angle detection and standstill logic.
