@@ -211,16 +211,21 @@ The total project cost is very low compared to commercial alternatives (~150€+
 | Component | Description | Link (Example) | Approx. Price |
 | :--- | :--- | :--- | :--- |
 | **ESP32 Board** | ESP32-S3-TINY (Integrated MOS) | [AliExpress](https://de.aliexpress.com/item/1005009961593556.html) | ~ 4.00 € |
-| **GPS Module** | M10 GNSS (Small & Fast) | [AliExpress](https://de.aliexpress.com/item/1005007759554488.html) | ~ 4.50 € |
+| **GPS Module** | ATGM336H (Small & Fast) | [AliExpress](https://de.aliexpress.com/item/1005007759554488.html) | ~ 4.50 € |
 | **Dosing Pump** | 12V Pulse Pump | [AliExpress](https://de.aliexpress.com/item/1005010375479436.html) | ~ 12.00 € |
-| **Button** | Waterproof Handlebar Button | [AliExpress](https://de.aliexpress.com/item/1005008487982612.html) | ~ 2.50 € |
+| **Oil Tank** | 120cc RC Tank | [AliExpress](https://de.aliexpress.com/item/1588019770.html) | ~ 4.00 € |
+| **Dosing Needle** | 14G Needle (100mm) | [AliExpress](https://de.aliexpress.com/item/1005010382140407.html) | ~ 2.00 € |
+| **Luer Lock Adapter** | Adapter for Needle | [AliExpress](https://de.aliexpress.com/item/1005003777344843.html) | ~ 1.00 € |
+| **TPU Hose** | 2m Oil/Fuel Line | [AliExpress](https://de.aliexpress.com/item/1005005390968147.html) | ~ 3.00 € |
+| **Temp Sensor** | DS18B20 (Waterproof) | [AliExpress](https://de.aliexpress.com/item/1005006090368473.html) | ~ 1.50 € |
+| **Button** | Waterproof Button | [AliExpress](https://de.aliexpress.com/item/1005009185830140.html) | ~ 0.70 € |
 | **LED** | WS2812B (Code supports up to 2x) | Generic | ~ 1.00 € |
-| **Small Parts** | Resistors (200R, 10k), Wires, Fuse | Generic | ~ 5.00 € |
+| **Small Parts** | Automotive Connectors (2x 2pin, 1x 4pin), Wires, Fuse | Generic | ~ 15.00 € |
 | **Housing** | 3D Printed (PETG/ASA) | DIY | ~ 2.00 € |
-| **Total (Basic)** | | | **~ 31.00 €** |
+| **Total (Basic)** | | | **~ 51.00 €** |
 | | | | |
 | **IMU (Optional)** | BNO085 (9-Axis) | [AliExpress](https://de.aliexpress.com/item/1005009898088463.html) | ~ 15.00 € |
-| **Total (Full)** | | | **~ 46.00 €** |
+| **Total (Full)** | | | **~ 66.00 €** |
 
 *Note: Prices vary by shipping location and seller.*
 
