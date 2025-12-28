@@ -16,14 +16,24 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
 *   **Drift Filter:** Detects and ignores satellite signal reflections (multipath) to prevent "ghost mileage" indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
 *   **Safety Cutoff:** Hard limit for the pump (max. 30s continuous run) to prevent hardware damage in case of software glitches.
+*   **Start Delay:** Configurable distance (default 2.0 km) that must be driven after boot before the first oiling occurs. Keeps the garage floor clean.
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
     *   *Note:* Automatically disabled if Emergency Mode is active (forced or auto).
+    *   **Rain Flush (Auto-Clean):** When Rain Mode is turned OFF, the system automatically triggers **6 pump pulses** to flush water and dirt from the chain.
+        *   *Condition:* Only activates if the bike is moving (> 7 km/h).
+        *   *Logic:* Uses 1.5x pause duration to ensure better oil distribution.
+        *   *Config:* Can be enabled/disabled via Web Interface.
 *   **Turbo Mode:**
     *   Activates via **3x Button Click**.
     *   Oils every **1 km** for **15 minutes**.
     *   Useful for cleaning the chain or re-lubricating after heavy rain/washing.
     *   Overrides normal intervals and Rain Mode logic.
+*   **Cross-Country Mode:**
+    *   Activates via **6x Button Click**.
+    *   Oils purely based on time (e.g. every 5 min).
+    *   Useful for slow offroad riding where distance is short but chain needs oil.
+    *   LED: Magenta Blinking.
 *   **Emergency Mode:**
     *   **Automatic:** Activates if no GPS signal is received for more than 3 minutes.
         *   Simulates driving at 50 km/h.
@@ -47,6 +57,21 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
     *   **Odometer:** Total distance counter (includes simulated distance in Emergency Mode).
 *   **Auto-Save:** Odometer and settings are permanently saved in flash memory (NVS) at standstill (< 7 km/h).
 *   **Factory Reset:** Ability to reset all settings to default via hardware button.
+
+## 🧭 Optional IMU Features (Planned)
+
+By adding a **BNO085** (or BNO055) 9-Axis IMU, the system gains "Intelligence" and advanced safety features.
+
+| Feature | Description | Benefit |
+| :--- | :--- | :--- |
+| **Garage Guard** | Detects if the bike is on the **Side Stand** (> 10° lean) or **Center Stand** (Calibrated position). | Prevents accidental oiling in the garage, even if the motor is running or GPS drifts. |
+| **Crash Detection** | Detects tip-overs (> 60° lean) or accidents. | Immediate safety cutoff for the pump. |
+| **Smart Stop** | Detects standstill via accelerometer before GPS reacts. | More precise oiling stops at traffic lights. |
+| **Telemetry Logger** | Records max lean angles (L/R), max acceleration, and braking G-forces. | Fun stats for the web interface ("How deep was I in that corner?"). |
+| **Dynamic Intervals** | Analyzes riding style (Cruising vs. Racing). | Reduces oiling intervals during aggressive riding (high load on chain). |
+
+*   **Calibration:** A dedicated Web Interface page will allow zeroing the sensor and calibrating the "Parked" positions.
+*   **Logging:** All IMU data will be logged to the SD card (if active) for analysis.
 
 ## 🌡️ Automatic Temperature Compensation
 
@@ -81,6 +106,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** Dosing pump (controlled via Logic Level MOSFET, e.g., NCE6020AK)
 *   **Temp Sensor:** DS18B20 (Waterproof)
+*   **IMU (Optional):** BNO085 (or BNO080) for lean angle detection and standstill logic (Planned).
 *   **LED:** WS2812B (NeoPixel) for status indication
 *   **Button:** Normally Open against GND (Input Pullup)
 
@@ -120,8 +146,9 @@ ESP32 GPIO (the one that switches the MOSFET
 
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
-| **Short Press** | < 1.5s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 400ms delay. Turning OFF triggers 5 flush pulses (only if moving). |
+| **Short Press** | < 1.5s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 400ms delay. Turning OFF triggers **Rain Flush** (6 pulses) if enabled and moving. |
 | **3x Click** | < 2s | Always | **Turbo Mode** On/Off (LED: Cyan Blink). 15 min @ 1km. |
+| **6x Click** | < 3s | Always | **Cross-Country Mode** On/Off (LED: Magenta Blink). Time based oiling. |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Long Hold** | > 10s | At Standstill (< 7 km/h) & No Emergency | Start **Bleeding Mode** (LED: Red blinking, pump runs 15s @ 80ms/250ms) |
 | **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
@@ -131,6 +158,7 @@ ESP32 GPIO (the one that switches the MOSFET
 *   🟢 **Green:** Normal Operation (GPS Fix available)
 *   🔵 **Blue:** Rain Mode Active
 *   🔵 **Cyan (blinking):** Turbo Mode Active
+*   🟣 **Magenta (blinking):** Cross-Country Mode Active
 *   🟣 **Magenta:** No GPS Signal (Searching...)
 *   🔵 **Cyan:** Emergency Mode (Auto: No GPS > 3 min)
 *   🟠 **Orange (pulsing):** Emergency Mode (Forced: GPS available)

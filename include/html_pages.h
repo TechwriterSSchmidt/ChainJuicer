@@ -30,7 +30,10 @@ const char* htmlHeader = R"rawliteral(
 </head>
 <body>
     <h2>🍋 Chain Juicer v1.0</h2>
-    <div class='help-link'><a href='/help'>Help & Manual</a></div>
+    <div class='help-link'>
+        <a href='/help'>Help & Manual</a> | 
+        <a href='/imu'>IMU Calibration</a>
+    </div>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
         <h3>Driving Profile</h3>
@@ -62,7 +65,10 @@ const char* htmlFooter = R"rawliteral(
         <h3>General</h3>
         <table>
             <tr><td>Rain Mode (x2)</td><td><input type='checkbox' name='rain_mode' %RAIN_CHECKED%></td></tr>
+            <tr><td>Rain Flush (Auto-Clean)</td><td><input type='checkbox' name='rain_flush' %RAIN_FLUSH_CHECKED%></td></tr>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
+            <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
+            <tr><td>Cross-Country Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
         </table>
         <h3>LED Settings (Day)</h3>
         <table>
@@ -126,12 +132,20 @@ const char* htmlHelp = R"rawliteral(
             <ul>
                 <li>Doubles oil amount.</li>
                 <li>Turns off automatically after 30 min or on reboot.</li>
+                <li><b>Rain Flush:</b> Triggers 6 cleaning pulses when turning Rain Mode OFF (only if moving). Can be disabled in settings.</li>
             </ul>
         </li>
         <li><b>Turbo Mode:</b>
             <ul>
                 <li>Oils every 1 km for 15 minutes.</li>
                 <li>Useful for cleaning the chain or after heavy rain.</li>
+            </ul>
+        </li>
+        <li><b>Cross-Country Mode:</b>
+            <ul>
+                <li>Activates via <b>6x Button Click</b>.</li>
+                <li>Oils purely based on time (e.g. every 5 min).</li>
+                <li>Useful for slow offroad riding where distance is short but chain needs oil.</li>
             </ul>
         </li>
         <li><b>Emergency Mode:</b>
@@ -173,8 +187,9 @@ const char* htmlHelp = R"rawliteral(
     </ul>
     <h3>Button Functions</h3>
     <ul>
-        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay). (Turning OFF triggers 5 flush pulses, only if moving).</li>
+        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay). Turning OFF triggers 'Rain Flush' (if enabled & moving).</li>
         <li><b>3x Click:</b> Toggle 'Turbo Mode' (15 min @ 1km).</li>
+        <li><b>6x Click:</b> Toggle 'Cross-Country Mode' (Time based oiling).</li>
         <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>
     <h3>LED Status</h3>
@@ -216,6 +231,72 @@ const char* htmlUpdate = R"rawliteral(
         <br>
         <input type='submit' value='Update Firmware'>
     </form>
+</body>
+</html>
+)rawliteral";
+
+const char* htmlIMU = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>IMU Calibration</title>
+    <style>
+        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
+        h2{text-align:center;color:#333}
+        h3{color:#555;margin-top:20px}
+        .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px}
+        table{width:100%;border-collapse:collapse}
+        td{padding:8px 5px;border-bottom:1px solid #eee}
+        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer}
+        .btn-cal{background:#28a745}
+        .val{font-weight:bold;font-family:monospace}
+        .note{font-size:0.9em;color:#666;margin-top:5px}
+    </style>
+</head>
+<body>
+    <h2>🧭 IMU Calibration</h2>
+    
+    <div class='card'>
+        <h3>Sensor Status</h3>
+        <table>
+            <tr><td>Model:</td><td class='val'>%IMU_MODEL%</td></tr>
+            <tr><td>Status:</td><td class='val'>%IMU_STATUS%</td></tr>
+        </table>
+    </div>
+
+    <div class='card'>
+        <h3>Live Orientation</h3>
+        <table>
+            <tr><td>Pitch (Nose Up/Down):</td><td class='val'>%PITCH%&deg;</td></tr>
+            <tr><td>Roll (Lean Left/Right):</td><td class='val'>%ROLL%&deg;</td></tr>
+        </table>
+        <div class='note'>Values update on refresh.</div>
+    </div>
+
+    <div class='card'>
+        <h3>Calibration</h3>
+        <p>Park the bike on the <b>Center Stand</b> (level ground) and press 'Set Zero'.</p>
+        <form action='/imu_zero' method='POST'>
+            <input type='submit' value='Set Zero Position' class='btn btn-cal'>
+        </form>
+        
+        <p style='margin-top:20px'>Park the bike on the <b>Side Stand</b> and press 'Set Side Stand'.</p>
+        <form action='/imu_side' method='POST'>
+            <input type='submit' value='Set Side Stand Position' class='btn btn-cal'>
+        </form>
+    </div>
+
+    <div class='card'>
+        <h3>Features</h3>
+        <ul>
+            <li><b>Garage Guard:</b> Prevents oiling if lean angle > 10&deg; (Side Stand).</li>
+            <li><b>Crash Detect:</b> Stops pump if lean angle > 60&deg;.</li>
+            <li><b>Smart Stop:</b> Detects stops faster than GPS.</li>
+        </ul>
+    </div>
+
+    <a href='/' class='btn'>Back to Main</a>
 </body>
 </html>
 )rawliteral";

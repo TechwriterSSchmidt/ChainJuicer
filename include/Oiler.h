@@ -49,12 +49,16 @@ public:
     float getCurrentProgress() { return currentProgress; }
     float getCurrentTempC() { return currentTempC; }
     
-    // --- Mode Getters & Setters ---
+    // Mode Getters & Setters
     bool isRainMode() { return rainMode; }
     void setRainMode(bool mode);
+    bool rainFlushEnabled; // Configurable setting
 
     bool isTurboMode() { return turboMode; }
     void setTurboMode(bool mode);
+
+    bool isCrossCountryMode() { return crossCountryMode; }
+    void setCrossCountryMode(bool mode);
 
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
@@ -126,6 +130,15 @@ public:
     void setTankFill(float levelMl); // Manually set level (e.g. refill)
     void resetTankToFull();
 
+    // Cross Country Settings
+    bool crossCountryMode;
+    int crossCountryIntervalMin;
+    unsigned long lastCrossCountryOilTime;
+
+    // Startup Delay
+    float startupDelayKm;
+    float currentStartupDistance;
+
 private:
     void processDistance(double distKm, float speedKmh);
     
@@ -190,6 +203,7 @@ private:
 
     // Non-blocking oiling state
     bool isOiling;
+    bool isRainFlush; // State for Rain Flush sequence
     unsigned long oilingStartTime;
     unsigned long pumpActivityStartTime; // Safety Cutoff
     int oilingPulsesRemaining;

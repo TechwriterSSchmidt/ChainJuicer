@@ -80,7 +80,12 @@
 #define TURBO_MODE_INTERVAL_KM 1.0    // 1 km Interval
 #define TURBO_PRESS_COUNT 3           // 3 Clicks
 #define TURBO_PRESS_WINDOW_MS 2000    // 2 Seconds window
-#define RAIN_FLUSH_PULSES 5           // Pulses to flush chain after Rain Mode ends
+#define RAIN_FLUSH_PULSES 6           // Pulses to flush chain after Rain Mode ends
+#define RAIN_FLUSH_ENABLED_DEFAULT true // Default state for Rain Flush
+
+#define STARTUP_DELAY_KM_DEFAULT 2.0  // Default startup delay in km
+#define CROSS_COUNTRY_INTERVAL_MIN_DEFAULT 5 // Default Cross-Country interval in minutes
+#define CROSS_COUNTRY_PRESS_COUNT 6   // 6 Clicks for Cross-Country Mode
 
 // Button Timings
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode

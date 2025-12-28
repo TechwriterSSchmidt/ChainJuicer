@@ -58,6 +58,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 
     // Button & Modes Init
     rainMode = false;
+    rainFlushEnabled = RAIN_FLUSH_ENABLED_DEFAULT;
     rainModeStartTime = 0;
     emergencyMode = false;
     wifiActive = false;
@@ -66,6 +67,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     bleedingStartTime = 0;
     turboMode = false;
     turboModeStartTime = 0;
+    crossCountryMode = false;
+    lastCrossCountryOilTime = 0;
+    crossCountryIntervalMin = CROSS_COUNTRY_INTERVAL_MIN_DEFAULT;
     buttonClickCount = 0;
     lastClickTime = 0;
     buttonPressStartTime = 0;
@@ -76,8 +80,13 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     currentSpeed = 0.0;
     smoothedInterval = 0.0; // Init
 
+    // Startup Delay
+    startupDelayKm = STARTUP_DELAY_KM_DEFAULT;
+    currentStartupDistance = 0.0;
+
     // Oiling State Init
     isOiling = false;
+    isRainFlush = false;
     oilingStartTime = 0;
     pumpActivityStartTime = 0;
     oilingPulsesRemaining = 0;
@@ -202,6 +211,17 @@ void Oiler::loop() {
     handleButton();
     processPump(); // Unified pump logic
     
+    // Cross Country Mode Logic (Time Based)
+    if (crossCountryMode) {
+        unsigned long now = millis();
+        unsigned long intervalMs = (unsigned long)crossCountryIntervalMin * 60 * 1000;
+        
+        if (now - lastCrossCountryOilTime > intervalMs) {
+            triggerOil(ranges[0].pulses); // Use pulses from first range
+            lastCrossCountryOilTime = now;
+        }
+    }
+    
     // Temperature Update (Periodic)
     if (millis() - lastTempUpdate > TEMP_UPDATE_INTERVAL_MS) {
         updateTemperature();
@@ -249,10 +269,17 @@ void Oiler::handleButton() {
                     buttonClickCount++;
                     lastClickTime = millis();
                     
-                    if (buttonClickCount >= TURBO_PRESS_COUNT) {
-                        // 3 Clicks -> Toggle Turbo Mode
-                        setTurboMode(!turboMode);
+                    if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
+                        // 6 Clicks -> Toggle Cross Country Mode
+                        setCrossCountryMode(!crossCountryMode);
                         buttonClickCount = 0; // Reset
+                    } else if (buttonClickCount == TURBO_PRESS_COUNT) {
+                        // 3 Clicks -> Toggle Turbo Mode
+                        // Wait a bit to see if it becomes 6 clicks?
+                        // No, immediate action for Turbo is better UX.
+                        // But this conflicts with 6 clicks.
+                        // Solution: We only trigger Turbo if NO more clicks follow.
+                        // Moved to Delayed Action Handler.
                     }
                 }
             }
@@ -260,15 +287,22 @@ void Oiler::handleButton() {
     }
 
     // Delayed Action Handler (Single Click)
-    // Wait 400ms to see if more clicks follow
-    if (buttonClickCount > 0 && (millis() - lastClickTime > 400)) {
+    // Wait 600ms to see if more clicks follow (increased for 6 clicks)
+    if (buttonClickCount > 0 && (millis() - lastClickTime > 600)) {
         if (buttonClickCount == 1) {
             // Single Click -> Toggle Rain Mode
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
             }
+        } else if (buttonClickCount == TURBO_PRESS_COUNT) {
+             // 3 Clicks -> Toggle Turbo Mode
+             setTurboMode(!turboMode);
+        } else if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
+             // 6 Clicks -> Toggle Cross Country Mode
+             setCrossCountryMode(!crossCountryMode);
         }
-        // Reset after timeout (ignores 2 clicks to prevent accidental flush)
+        
+        // Reset after timeout
         buttonClickCount = 0;
     }
 
@@ -368,6 +402,15 @@ void Oiler::updateLED() {
         strip.setBrightness(currentHighBrightness);
         if ((now / LED_PERIOD_TURBO) % 2 == 0) {
             color = strip.Color(0, 255, 255); // Cyan
+        } else {
+            color = 0; // Off
+        }
+    }
+    // 1.6 Cross Country Mode -> MAGENTA Blinking
+    else if (crossCountryMode) {
+        strip.setBrightness(currentHighBrightness);
+        if ((now / 1000) % 2 == 0) { // Slow blink (1s on, 1s off)
+            color = strip.Color(255, 0, 255); // Magenta
         } else {
             color = 0; // Off
         }
@@ -487,8 +530,13 @@ void Oiler::loadConfig() {
     
     // Restore Rain Mode
     rainMode = false; // Always start with Rain Mode OFF
+    rainFlushEnabled = preferences.getBool("rain_flush", RAIN_FLUSH_ENABLED_DEFAULT);
     
     emergencyMode = preferences.getBool("emerg_mode", false);
+
+    // Load Cross Country & Startup
+    crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
+    startupDelayKm = preferences.getFloat("start_dly", STARTUP_DELAY_KM_DEFAULT);
 
     // Load Stats
     totalDistance = preferences.getDouble("totalDist", 0.0);
@@ -570,7 +618,12 @@ void Oiler::saveConfig() {
     
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
+    preferences.putBool("rain_flush", rainFlushEnabled);
     preferences.putBool("emerg_mode", emergencyMode);
+
+    // Save Cross Country & Startup
+    preferences.putInt("cc_int", crossCountryIntervalMin);
+    preferences.putFloat("start_dly", startupDelayKm);
 
     // Save Tank Monitor
     preferences.putBool("tank_en", tankMonitorEnabled);
@@ -823,6 +876,19 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 void Oiler::processDistance(double distKm, float speedKmh) {
     // 1. Add to Total Odometer
     totalDistance += distKm;
+
+    // 1.1 Startup Delay Check
+    if (currentStartupDistance < startupDelayKm) {
+        currentStartupDistance += distKm;
+        return; // Skip oiling logic until delay is reached
+    }
+
+    // 1.2 Cross Country Mode Check
+    // If Cross Country Mode is active, we ignore distance-based oiling here.
+    // Oiling is handled by time in loop().
+    if (crossCountryMode) {
+        return; 
+    }
     progressChanged = true; // So Odometer gets saved
 
     // Find matching range
@@ -966,7 +1032,8 @@ void Oiler::processPump() {
     // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
     
     // Bleeding Mode: Fast pumping (80ms Pulse / 250ms Pause)
-    unsigned long effectivePause = bleedingMode ? 250 : dynamicPauseMs;
+    // Rain Flush: 1.5x Pause duration for better distribution
+    unsigned long effectivePause = bleedingMode ? 250 : (isRainFlush ? (unsigned long)(dynamicPauseMs * 1.5) : dynamicPauseMs);
     unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
@@ -981,6 +1048,7 @@ void Oiler::processPump() {
             oilingPulsesRemaining--;
             if (oilingPulsesRemaining == 0) {
                 isOiling = false;
+                isRainFlush = false; // Reset flush state
 #ifdef GPS_DEBUG
                 Serial.println("OILING DONE");
 #endif
@@ -1062,15 +1130,16 @@ void Oiler::setRainMode(bool mode) {
         Serial.println("Rain Mode: ON");
 #endif
     } else if (!mode && rainMode) {
-        // Rain Mode turned OFF -> Flush Chain (Only if moving)
-        if (currentSpeed > MIN_SPEED_KMH) {
+        // Rain Mode turned OFF -> Flush Chain (Only if moving AND enabled)
+        if (rainFlushEnabled && currentSpeed > MIN_SPEED_KMH) {
 #ifdef GPS_DEBUG
             Serial.println("Rain Mode: OFF -> Flushing Chain");
 #endif
+            isRainFlush = true; // Mark as flush sequence
             triggerOil(RAIN_FLUSH_PULSES);
         } else {
 #ifdef GPS_DEBUG
-            Serial.println("Rain Mode: OFF -> Flush skipped (Standstill)");
+            Serial.println("Rain Mode: OFF -> Flush skipped (Standstill or Disabled)");
 #endif
         }
     }
@@ -1081,6 +1150,34 @@ void Oiler::setRainMode(bool mode) {
         emergencyModeForced = false;
     }
     saveConfig();
+}
+
+void Oiler::setTurboMode(bool mode) {
+    if (mode && !turboMode) {
+        turboModeStartTime = millis();
+#ifdef GPS_DEBUG
+        Serial.println("Turbo Mode ACTIVATED");
+#endif
+    } else if (!mode && turboMode) {
+#ifdef GPS_DEBUG
+        Serial.println("Turbo Mode DEACTIVATED");
+#endif
+    }
+    turboMode = mode;
+}
+
+void Oiler::setCrossCountryMode(bool mode) {
+    if (mode && !crossCountryMode) {
+        lastCrossCountryOilTime = millis(); // Reset timer on start
+#ifdef GPS_DEBUG
+        Serial.println("Cross Country Mode ACTIVATED");
+#endif
+    } else if (!mode && crossCountryMode) {
+#ifdef GPS_DEBUG
+        Serial.println("Cross Country Mode DEACTIVATED");
+#endif
+    }
+    crossCountryMode = mode;
 }
 
 SpeedRange* Oiler::getRangeConfig(int index) {

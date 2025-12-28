@@ -269,7 +269,10 @@ void handleRoot() {
     footer.replace("%LED_HIGH%", String(map(oiler.ledBrightnessHigh, 2, 202, 0, 100)));
     
     footer.replace("%RAIN_CHECKED%", oiler.isRainMode() ? "checked" : "");
+    footer.replace("%RAIN_FLUSH_CHECKED%", oiler.rainFlushEnabled ? "checked" : "");
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
+    footer.replace("%START_DLY%", String(oiler.startupDelayKm, 1));
+    footer.replace("%CC_INT%", String(oiler.crossCountryIntervalMin));
     
     footer.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
     footer.replace("%NIGHT_START%", String(oiler.nightStartHour));
@@ -325,7 +328,11 @@ void handleSave() {
     
     // Rain Mode Checkbox handling
     oiler.setRainMode(server.hasArg("rain_mode"));
+    oiler.rainFlushEnabled = server.hasArg("rain_flush");
     oiler.setEmergencyModeForced(server.hasArg("emerg_mode"));
+    
+    if(server.hasArg("start_dly")) oiler.startupDelayKm = server.arg("start_dly").toFloat();
+    if(server.hasArg("cc_int")) oiler.crossCountryIntervalMin = server.arg("cc_int").toInt();
     
     oiler.nightModeEnabled = server.hasArg("night_en");
     if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();
@@ -349,6 +356,35 @@ void handleSave() {
 
     oiler.saveConfig();
     server.sendHeader("Location", "/");
+    server.send(303);
+}
+
+void handleIMU() {
+    resetWifiTimer();
+    String html = htmlIMU;
+    
+    // Placeholders for now (IMU not yet implemented)
+    html.replace("%IMU_MODEL%", "Not Connected");
+    html.replace("%IMU_STATUS%", "<span style='color:red'>OFF</span>");
+    html.replace("%PITCH%", "0.0");
+    html.replace("%ROLL%", "0.0");
+    
+    server.send(200, "text/html", html);
+}
+
+void handleIMUZero() {
+    resetWifiTimer();
+    // Placeholder: Save zero position
+    // oiler.imu.calibrateZero(); 
+    server.sendHeader("Location", "/imu");
+    server.send(303);
+}
+
+void handleIMUSide() {
+    resetWifiTimer();
+    // Placeholder: Save side stand position
+    // oiler.imu.calibrateSideStand();
+    server.sendHeader("Location", "/imu");
     server.send(303);
 }
 
@@ -391,6 +427,9 @@ void setup() {
     // Webserver Routes
     server.on("/", handleRoot);
     server.on("/save", handleSave);
+    server.on("/imu", handleIMU);
+    server.on("/imu_zero", handleIMUZero);
+    server.on("/imu_side", handleIMUSide);
     server.on("/help", handleHelp);
     server.on("/reset_stats", handleResetStats);
     server.on("/reset_time_stats", handleResetTimeStats);
