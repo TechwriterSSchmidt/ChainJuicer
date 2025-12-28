@@ -10,53 +10,25 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 
 ## 🚀 Features
 
-*   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
-    *   **New:** Intervals can now be set as low as **0.1 km** for precise tuning.
-    *   **Default Progression:** The system comes with a pre-configured speed progression (Base 5km, reducing by ~12.5% steps >100km/h) to compensate for centrifugal oil loss. Default is **2 pulses** per event.
-*   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
-*   **Drift Filter:** Detects and ignores satellite signal reflections (multipath) to prevent "ghost mileage" indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
-*   **Safety Cutoff:** Hard limit for the pump (max. 30s continuous run) to prevent hardware damage in case of software glitches.
-*   **Start Delay:** Configurable distance (default 2.0 km) that must be driven after boot before the first oiling occurs. Keeps the garage floor clean.
-*   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
-*   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
-    *   *Note:* Automatically disabled if Emergency Mode is active (forced or auto).
-    *   **Rain Flush (Auto-Clean):** When Rain Mode is turned OFF, the system automatically triggers **6 pump pulses** to flush water and dirt from the chain.
-        *   *Condition:* Only activates if the bike is moving (> 7 km/h).
-        *   *Logic:* Uses 1.5x pause duration to ensure better oil distribution.
-        *   *Config:* Can be enabled/disabled via Web Interface.
-*   **Turbo Mode:**
-    *   Activates via **3x Button Click**.
-    *   Oils every **1 km** for **15 minutes**.
-    *   Useful for cleaning the chain or re-lubricating after heavy rain/washing.
-    *   Overrides normal intervals and Rain Mode logic.
-*   **Cross-Country Mode:**
-    *   Activates via **6x Button Click**.
-    *   Oils purely based on time (e.g. every 5 min).
-    *   Useful for slow offroad riding where distance is short but chain needs oil.
-    *   LED: Magenta Blinking.
-*   **Emergency Mode:**
-    *   **Automatic:** Activates if no GPS signal is received for more than 3 minutes.
-        *   Simulates driving at 50 km/h.
-        *   Automatically disables Rain Mode.
-    *   **Manual (Forced):** Continuous simulation of 50 km/h. Forces Rain Mode OFF.
-        *   *Safety Feature:* Automatically resets to OFF when the ignition is turned off (reboot) to prevent accidental oiling in the garage.
-*   **WiFi & Web Interface:**
-    *   Configure all parameters conveniently via smartphone.
-    *   **OTA Update:** Upload new firmware directly via the web interface.
-    *   LED brightness adjustable in percent (0-100%).
-    *   **Activation:** Hold button (> 3s) at standstill.
-    *   **Deactivate:** Auto-off when driving (> 10 km/h) or after 5 min inactivity.
-    *   **Update:** Upload new firmware (.bin) via the web interface.
-    *   **New:** Displays current Satellite count in the header.
-*   **Night Mode:** Automatic dimming of the status LED based on GPS time. Separate brightness adjustable for events (oiling, WiFi).
-*   **Bleeding Mode:** Continuous pumping to fill the oil line after maintenance.
-*   **Tank Monitor:** Calculates oil consumption and warns (Red 2x blink) when the supply runs low.
-*   **Advanced Statistics:**
-    *   **Usage %:** Shows the percentage of driving time spent in each speed range.
-    *   **Juices:** Counts the number of triggered oilings per speed range.
-    *   **Odometer:** Total distance counter (includes simulated distance in Emergency Mode).
-*   **Auto-Save:** Odometer and settings are permanently saved in flash memory (NVS) at standstill (< 7 km/h).
-*   **Factory Reset:** Ability to reset all settings to default via hardware button.
+| Feature | Description | Details |
+| :--- | :--- | :--- |
+| **Speed-Dependent Oiling** | 5 configurable speed ranges with individual intervals. | Intervals down to **0.1 km**. Pre-configured progression (Base 5km, reducing >100km/h). Default: 2 pulses/event. |
+| **Smart Smoothing** | Linear interpolation & low-pass filter. | Avoids harsh jumps in lubrication intervals. |
+| **Drift Filter** | Ignores GPS multipath reflections. | Prevents "ghost mileage" indoors/tunnels (HDOP > 5.0 or < 5 Sats). |
+| **Safety Cutoff** | Hard limit for pump runtime. | Max 30s continuous run to prevent hardware damage. |
+| **Start Delay** | Distance driven before first oiling. | Default **2.0 km**. Keeps garage floor clean. |
+| **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
+| **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** Short Press. **Auto-Off:** 30 min or restart. **Rain Flush:** 6 pulses when turning off (if moving). |
+| **Turbo Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 3x Click. **Action:** Every 1 km for 15 min. LED: Cyan Blink. |
+| **Cross-Country Mode** | Time-based oiling for slow offroad riding. | **Button:** 6x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
+| **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
+| **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** Hold button >3s at standstill. **Features:** OTA Update, LED config, Stats, Test functions. |
+| **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
+| **Bleeding Mode** | Continuous pumping for maintenance. | Fills oil line. |
+| **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
+| **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
+| **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
+| **Factory Reset** | Reset to defaults. | Hold button at boot. |
 
 ## 🧭 Optional IMU Features
 
