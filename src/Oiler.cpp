@@ -147,6 +147,9 @@ void Oiler::begin() {
     // Initialize Temp Sensor
     sensors.begin();
 
+    // Initialize IMU
+    imu.begin(IMU_SDA, IMU_SCL);
+
     ledOilingEndTimestamp = 0;
 
     preferences.begin("oiler", false);
@@ -208,6 +211,7 @@ void Oiler::checkFactoryReset() {
 }
 
 void Oiler::loop() {
+    imu.loop(); // Update IMU data
     handleButton();
     processPump(); // Unified pump logic
     
@@ -874,6 +878,10 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 }
 
 void Oiler::processDistance(double distKm, float speedKmh) {
+    // IMU Safety Checks
+    if (imu.isCrashed()) return; // Crash detected!
+    if (imu.isParked()) return;  // Garage Guard: Parked on side stand. Ignore GPS drift.
+
     // 1. Add to Total Odometer
     totalDistance += distKm;
 
@@ -999,6 +1007,15 @@ void Oiler::triggerOil(int pulses) {
 
 void Oiler::processPump() {
     unsigned long now = millis();
+
+    // IMU Safety Cutoff
+    if (imu.isCrashed()) {
+        if (PUMP_USE_PWM) ledcWrite(PUMP_PWM_CHANNEL, 0);
+        digitalWrite(pumpPin, PUMP_OFF);
+        isOiling = false;
+        bleedingMode = false;
+        return;
+    }
 
     // SAFETY CUTOFF: Prevent pump from running too long (e.g. software bug)
     if ((isOiling || bleedingMode) && (now - pumpActivityStartTime > PUMP_SAFETY_CUTOFF_MS)) {

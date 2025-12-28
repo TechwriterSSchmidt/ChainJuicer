@@ -32,6 +32,10 @@
 #define TEMP_SENSOR_PIN 15 // GPIO 15 for DS18B20 Data
 #define TEMP_UPDATE_INTERVAL_MS 60000 // Measure every 60 seconds
 
+// IMU Configuration (BNO085)
+#define IMU_SDA 21
+#define IMU_SCL 22
+
 // PWM Safety Check:
 // Pulse Width must be > PUMP_RAMP_UP_MS (12ms) to ensure the pump actually opens.
 // The configured Pulse values above include the Ramp-Up time.

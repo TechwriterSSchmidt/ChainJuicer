@@ -4,6 +4,7 @@
 #include "config.h"
 #include <TinyGPS++.h>
 #include <Adafruit_NeoPixel.h>
+#include "ImuHandler.h"
 
 #define SPEED_BUFFER_SIZE 5
 #define LUT_STEP 5
@@ -13,6 +14,7 @@
 class Oiler {
 public:
     Oiler();
+    ImuHandler imu;
     void begin();
     void update(float speedKmh, double lat, double lon, bool gpsValid);
     void loop(); // Main loop for button and LED

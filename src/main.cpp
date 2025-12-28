@@ -363,27 +363,24 @@ void handleIMU() {
     resetWifiTimer();
     String html = htmlIMU;
     
-    // Placeholders for now (IMU not yet implemented)
-    html.replace("%IMU_MODEL%", "Not Connected");
-    html.replace("%IMU_STATUS%", "<span style='color:red'>OFF</span>");
-    html.replace("%PITCH%", "0.0");
-    html.replace("%ROLL%", "0.0");
+    html.replace("%IMU_MODEL%", oiler.imu.getModel());
+    html.replace("%IMU_STATUS%", oiler.imu.isAvailable() ? "<span style='color:green'>OK</span>" : "<span style='color:red'>Not Found</span>");
+    html.replace("%PITCH%", String(oiler.imu.getPitch(), 1));
+    html.replace("%ROLL%", String(oiler.imu.getRoll(), 1));
     
     server.send(200, "text/html", html);
 }
 
 void handleIMUZero() {
     resetWifiTimer();
-    // Placeholder: Save zero position
-    // oiler.imu.calibrateZero(); 
+    oiler.imu.calibrateZero(); 
     server.sendHeader("Location", "/imu");
     server.send(303);
 }
 
 void handleIMUSide() {
     resetWifiTimer();
-    // Placeholder: Save side stand position
-    // oiler.imu.calibrateSideStand();
+    oiler.imu.calibrateSideStand();
     server.sendHeader("Location", "/imu");
     server.send(303);
 }
