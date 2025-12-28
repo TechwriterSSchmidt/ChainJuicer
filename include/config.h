@@ -66,6 +66,7 @@
 #define LED_PERIOD_GPS 1000         // Pulse cycle for GPS Search
 #define LED_BLINK_FAST 100          // Fast blink (Bleeding/Reset)
 #define LED_BLINK_TANK 2000         // Tank warning cycle
+#define LED_PERIOD_TURBO 500        // Fast blink for Turbo Mode
 #define LED_WIFI_SHOW_DURATION 10000 // How long to show WiFi LED after activation
 
 // Default Values
@@ -75,6 +76,10 @@
 #define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
 #define BLEEDING_DURATION_MS 15000 // Pumping time in ms for bleeding
+#define TURBO_MODE_DURATION_MS 900000 // 15 Minutes
+#define TURBO_MODE_INTERVAL_KM 1.0    // 1 km Interval
+#define TURBO_PRESS_COUNT 3           // 3 Clicks
+#define TURBO_PRESS_WINDOW_MS 2000    // 2 Seconds window
 
 // Button Timings
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode

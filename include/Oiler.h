@@ -53,6 +53,9 @@ public:
     bool isRainMode() { return rainMode; }
     void setRainMode(bool mode);
 
+    bool isTurboMode() { return turboMode; }
+    void setTurboMode(bool mode);
+
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
 
@@ -152,6 +155,10 @@ private:
     // Button & Modes
     bool rainMode;
     unsigned long rainModeStartTime;
+    bool turboMode;
+    unsigned long turboModeStartTime;
+    int buttonClickCount;
+    unsigned long lastClickTime;
     bool emergencyMode;
     bool wifiActive; // WiFi Status
     bool bleedingMode;

@@ -14,11 +14,12 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Pin initialization moved to begin() to avoid issues during global constructor execution
     
     // Initialize default configuration
-    ranges[0] = {10, 35, 15.0, 2};
-    ranges[1] = {35, 55, 15.0, 2};
-    ranges[2] = {55, 75, 15.0, 2};
-    ranges[3] = {75, 95, 15.0, 2};
-    ranges[4] = {95, MAX_SPEED_KMH, 15.0, 2};
+    // Updated based on user request: Base 5km, reducing with speed
+    ranges[0] = {10, 60, 5.0, 1};
+    ranges[1] = {60, 100, 5.0, 1};
+    ranges[2] = {100, 130, 4.4, 1}; // -12.5%
+    ranges[3] = {130, 160, 3.8, 1}; // -25%
+    ranges[4] = {160, MAX_SPEED_KMH, 3.0, 1}; // -37.5% (and -50% > 190)
     
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability
@@ -63,6 +64,10 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     updateMode = false;
     bleedingMode = false;
     bleedingStartTime = 0;
+    turboMode = false;
+    turboModeStartTime = 0;
+    buttonClickCount = 0;
+    lastClickTime = 0;
     buttonPressStartTime = 0;
     buttonState = false;
     lastButtonState = false;
@@ -240,15 +245,32 @@ void Oiler::handleButton() {
                 
                 // Short Press: Rain Mode Toggle
                 if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
-                    // Only toggle if NOT in Emergency Mode (Forced or Auto)
-                    if (!emergencyMode && !emergencyModeForced) {
-                        rainMode = !rainMode;
-                        if (rainMode) rainModeStartTime = millis();
+                    // Multi-Click Detection for Turbo Mode
+                    unsigned long now = millis();
+                    if (now - lastClickTime > TURBO_PRESS_WINDOW_MS) {
+                        buttonClickCount = 0; // Reset if window expired
+                    }
+                    
+                    buttonClickCount++;
+                    lastClickTime = now;
+                    
+                    if (buttonClickCount >= TURBO_PRESS_COUNT) {
+                        // 3 Clicks -> Toggle Turbo Mode
+                        setTurboMode(!turboMode);
+                        buttonClickCount = 0; // Reset
+                        
+                        // Turbo Mode overrides Rain Mode interval.
+                    } else {
+                        // Only toggle Rain Mode if NOT in Emergency Mode (Forced or Auto)
+                        if (!emergencyMode && !emergencyModeForced) {
+                            rainMode = !rainMode;
+                            if (rainMode) rainModeStartTime = millis();
 #ifdef GPS_DEBUG
-                        Serial.print("Rain Mode: ");
-                        Serial.println(rainMode ? "ON" : "OFF");
+                            Serial.print("Rain Mode: ");
+                            Serial.println(rainMode ? "ON" : "OFF");
 #endif
-                        saveConfig(); // Save setting
+                            saveConfig(); // Save setting
+                        }
                     }
                 }
             }
@@ -342,6 +364,15 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     } 
+    // 1.5 Turbo Mode (High Priority) -> CYAN Blinking
+    else if (turboMode) {
+        strip.setBrightness(currentHighBrightness);
+        if ((now / LED_PERIOD_TURBO) % 2 == 0) {
+            color = strip.Color(0, 255, 255); // Cyan
+        } else {
+            color = 0; // Off
+        }
+    }
     // 2. WiFi Active (High Priority Indication) -> WHITE Pulsing
     else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
         float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
@@ -478,8 +509,8 @@ void Oiler::loadConfig() {
     tankMonitorEnabled = preferences.getBool("tank_en", false);
     tankCapacityMl = preferences.getFloat("tank_cap", 100.0);
     currentTankLevelMl = preferences.getFloat("tank_lvl", 100.0);
-    dropsPerMl = preferences.getInt("drop_ml", 20);
-    dropsPerPulse = preferences.getInt("drop_pls", 5);
+    dropsPerMl = preferences.getInt("drop_ml", 50);
+    dropsPerPulse = preferences.getInt("drop_pls", 1);
     tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
 
     // Load Emergency Mode forced setting
@@ -499,7 +530,7 @@ void Oiler::loadConfig() {
 void Oiler::validateConfig() {
     // Ensure no 0 or negative values exist
     for(int i=0; i<NUM_RANGES; i++) {
-        if(ranges[i].intervalKm < 1.0) ranges[i].intervalKm = 1.0; // Minimum 1km
+        if(ranges[i].intervalKm < 0.1) ranges[i].intervalKm = 0.1; // Minimum 0.1km
         if(ranges[i].pulses < 1) ranges[i].pulses = 1;             // Minimum 1 pulse
     }
     
@@ -732,9 +763,6 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             float simSpeed = 50.0;
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
             
-            totalDistance += distKm; // Update Odometer
-            progressChanged = true;
-
             // Update Usage Stats for 50km/h
             double dtSeconds = (double)dt / 1000.0;
             for(int i=0; i<NUM_RANGES; i++) {
@@ -802,12 +830,28 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     int activeRangeIndex = -1;
     for(int i=0; i<NUM_RANGES; i++) {
         if (speedKmh >= ranges[i].minSpeed && speedKmh < ranges[i].maxSpeed) {
-            activeRangeIndex = i;
-            break;
-        }
-    }
+        float targetInterval;
 
-    if (activeRangeIndex != -1) {
+        // Check Turbo Mode
+        if (turboMode) {
+            // Check Timeout
+            if (millis() - turboModeStartTime > TURBO_MODE_DURATION_MS) {
+                setTurboMode(false);
+                // Fallback to normal LUT
+                int lutIndex = (int)(speedKmh / LUT_STEP);
+                if (lutIndex < 0) lutIndex = 0;
+                if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
+                targetInterval = intervalLUT[lutIndex];
+            } else {
+                targetInterval = TURBO_MODE_INTERVAL_KM;
+            }
+        } else {
+            // 1. Get Target Interval from LUT (Linear Interpolation)
+            int lutIndex = (int)(speedKmh / LUT_STEP);
+            if (lutIndex < 0) lutIndex = 0;
+            if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
+            targetInterval = intervalLUT[lutIndex];
+        }
         // Virtual distance calculation:
         // We add % progress to next oiling, not km.
 
@@ -838,10 +882,10 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             // Debug Output
             // Serial.printf("Speed: %.1f, Dist: %.4f, Prog: %.4f\n", speedKmh, distKm, currentProgress);
 
-            // Early Oiling: 95% instead of 100% Virtual Distance
-            // Prevents edge cases during mode switches
-            // 5% safety margin eliminates double oilings
-            if (currentProgress >= 0.95) {
+            // Oiling Trigger
+            // Changed to 100% (1.0) to ensure accurate intervals
+            // We subtract 1.0 instead of resetting to 0.0 to carry over any remainder
+            if (currentProgress >= 1.0) {
                 // Update History BEFORE resetting currentIntervalTime
                 int head = history.head;
                 history.oilingRange[head] = activeRangeIndex;
@@ -853,7 +897,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
                 if (history.count < 20) history.count++;
 
                 triggerOil(ranges[activeRangeIndex].pulses);
-                currentProgress = 0.0; // Reset
+                currentProgress -= 1.0; // Carry over remainder
+                if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
                 saveProgress(); // Save progress
             }
         }
@@ -1074,6 +1119,20 @@ void Oiler::rebuildLUT() {
                 }
             }
         }
+void Oiler::setTurboMode(bool mode) {
+    if (mode && !turboMode) {
+        turboModeStartTime = millis();
+#ifdef GPS_DEBUG
+        Serial.println("Turbo Mode ACTIVATED");
+#endif
+    } else if (!mode && turboMode) {
+#ifdef GPS_DEBUG
+        Serial.println("Turbo Mode DEACTIVATED");
+#endif
+    }
+    turboMode = mode;
+}
+
     }
 }
 

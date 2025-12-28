@@ -156,7 +156,7 @@ void initSD() {
     logFile = SD.open(currentLogFileName, FILE_WRITE);
     if (logFile) {
         // Write Header
-        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message");
+        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Turbo_Mode");
         
         // Dump Config
         logFile.println("EVENT,0,,,,,,,,,,CONFIG DUMP START");
@@ -185,7 +185,7 @@ void writeLogLine(String type, String message = "") {
 
     File f = SD.open(currentLogFileName, FILE_APPEND);
     if (f) {
-        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%.1f,%d,%.2f,%s\n",
+        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%.1f,%d,%.2f,%s,%d\n",
             type.c_str(),
             millis(),
             gps.speed.kmph(),
@@ -198,7 +198,8 @@ void writeLogLine(String type, String message = "") {
             oiler.getCurrentTempC(),
             gps.satellites.value(),
             gps.hdop.hdop(),
-            message.c_str()
+            message.c_str(),
+            oiler.isTurboMode()
         );
         f.close();
     }
@@ -481,7 +482,8 @@ void loop() {
     if (gpsFresh || (millis() - lastOilerUpdate > 1000)) {
         // If called due to timeout (gpsFresh=false), we pass false as validity
         // This allows the Oiler to detect signal loss and trigger Auto-Emergency Mode
-        oiler.update(currentSpeed, gps.location.lat(), gps.location.lng(), gpsFresh);
+        // Also treat poor signal as invalid to ensure we don't get stuck in "0 km/h" state while driving
+        oiler.update(currentSpeed, gps.location.lat(), gps.location.lng(), gpsFresh && !signalPoor);
         lastOilerUpdate = millis();
     }
     

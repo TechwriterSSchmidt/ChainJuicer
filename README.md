@@ -11,12 +11,19 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 ## 🚀 Features
 
 *   **Speed-Dependent Oiling:** 5 configurable speed ranges with individual intervals (km) and pump pulses.
+    *   **New:** Intervals can now be set as low as **0.1 km** for precise tuning.
+    *   **Default Progression:** The system comes with a pre-configured speed progression (Base 5km, reducing by ~12.5% steps >100km/h) to compensate for centrifugal oil loss.
 *   **Smart Smoothing:** Uses a lookup table with linear interpolation and a low-pass filter to avoid harsh jumps in lubrication intervals.
 *   **Drift Filter:** Detects and ignores satellite signal reflections (multipath) to prevent "ghost mileage" indoors or in tunnels (HDOP > 5.0 or < 5 satellites).
 *   **Safety Cutoff:** Hard limit for the pump (max. 30s continuous run) to prevent hardware damage in case of software glitches.
 *   **GPS Precision:** Exact distance measurement via GPS module (TinyGPS++).
 *   **Rain Mode:** Doubles the oil amount in wet conditions. Activatable via button. Automatic shut-off after 30 minutes or upon restart (ignition off).
     *   *Note:* Automatically disabled if Emergency Mode is active (forced or auto).
+*   **Turbo Mode:**
+    *   Activates via **3x Button Click**.
+    *   Oils every **1 km** for **15 minutes**.
+    *   Useful for cleaning the chain or re-lubricating after heavy rain/washing.
+    *   Overrides normal intervals and Rain Mode logic.
 *   **Emergency Mode:**
     *   **Automatic:** Activates if no GPS signal is received for more than 3 minutes.
         *   Simulates driving at 50 km/h.
@@ -114,6 +121,7 @@ ESP32 GPIO (the one that switches the MOSFET
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
 | **Short Press** | < 1.5s | Always | **Rain Mode** On/Off (LED: Blue). *Disabled in Emergency Mode.* |
+| **3x Click** | < 2s | Always | **Turbo Mode** On/Off (LED: Cyan Blink). 15 min @ 1km. |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Long Hold** | > 10s | At Standstill (< 7 km/h) | Start **Bleeding Mode** (LED: Red blinking, pump runs 15s @ 80ms/250ms) |
 | **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
@@ -122,11 +130,13 @@ ESP32 GPIO (the one that switches the MOSFET
 
 *   🟢 **Green:** Normal Operation (GPS Fix available)
 *   🔵 **Blue:** Rain Mode Active
+*   🔵 **Cyan (blinking):** Turbo Mode Active
 *   🟣 **Magenta:** No GPS Signal (Searching...)
-*   🔵 **Cyan:** Emergency Mode (No GPS > 3 min, Simulation active)
+*   🔵 **Cyan:** Emergency Mode (Auto: No GPS > 3 min)
+*   🟠 **Orange (pulsing):** Emergency Mode (Forced: GPS available)
 *   🟡 **Yellow:** Oiling in progress (lit for 3s, breathes 3x)
 *   ⚪ **White (pulsing):** WiFi Configuration Mode active
-*   🔴 **Red (2x blink):** Tank Warning (Reserve reached)
+*   🟠 **Orange (2x blink):** Tank Warning (Reserve reached)
 *   🔴 **Red (blinking):** Bleeding Mode active
 *   🔵 **Cyan (fast blink):** Firmware Update in progress
 

@@ -128,6 +128,12 @@ const char* htmlHelp = R"rawliteral(
                 <li>Turns off automatically after 30 min or on reboot.</li>
             </ul>
         </li>
+        <li><b>Turbo Mode:</b>
+            <ul>
+                <li>Oils every 1 km for 15 minutes.</li>
+                <li>Useful for cleaning the chain or after heavy rain.</li>
+            </ul>
+        </li>
         <li><b>Emergency Mode:</b>
             <ul>
                 <li>Auto-activates if no GPS > 3 min.</li>
@@ -168,12 +174,14 @@ const char* htmlHelp = R"rawliteral(
     <h3>Button Functions</h3>
     <ul>
         <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode'.</li>
+        <li><b>3x Click:</b> Toggle 'Turbo Mode' (15 min @ 1km).</li>
         <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
         <li><span class='color-box' style='background:green'></span> <b>Green:</b> GPS OK (Ready).</li>
         <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
+        <li><span class='color-box' style='background:cyan'></span> <b>Cyan (blink):</b> 'Turbo Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> 'Emergency Mode' (No GPS > 3 min).</li>
         <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s, breathes 3x).</li>
