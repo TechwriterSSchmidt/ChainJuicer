@@ -68,7 +68,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Cross-Country Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
-            <tr><td colspan='2'><b>Turbo / Cleaning Mode:</b></td></tr>
+            <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='turbo_ev' value='%TURBO_EV%' class='num-input'></td></tr>
             <tr><td>Pulses per Event</td><td><input type='number' name='turbo_pls' value='%TURBO_PLS%' class='num-input'></td></tr>
             <tr><td>Interval (Seconds)</td><td><input type='number' name='turbo_int' value='%TURBO_INT%' class='num-input'></td></tr>
@@ -137,9 +137,9 @@ const char* htmlHelp = R"rawliteral(
                 <li>Turns off automatically after 30 min or on reboot.</li>
             </ul>
         </li>
-        <li><b>Turbo Mode:</b>
+        <li><b>Chain Flush Mode:</b>
             <ul>
-                <li>Oils every 1 km for 15 minutes.</li>
+                <li>Oils periodically (Time based) for cleaning.</li>
                 <li>Useful for cleaning the chain or after heavy rain.</li>
             </ul>
         </li>
@@ -190,7 +190,7 @@ const char* htmlHelp = R"rawliteral(
     <h3>Button Functions</h3>
     <ul>
         <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay).</li>
-        <li><b>3x Click:</b> Toggle 'Turbo Mode' (15 min @ 1km).</li>
+        <li><b>3x Click:</b> Toggle 'Chain Flush Mode' (Configurable).</li>
         <li><b>6x Click:</b> Toggle 'Cross-Country Mode' (Time based oiling).</li>
         <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>
@@ -198,7 +198,7 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><span class='color-box' style='background:green'></span> <b>Green:</b> GPS OK (Ready).</li>
         <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
-        <li><span class='color-box' style='background:cyan'></span> <b>Cyan (blink):</b> 'Turbo Mode' Active.</li>
+        <li><span class='color-box' style='background:cyan'></span> <b>Cyan (blink):</b> 'Chain Flush Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> 'Emergency Mode' (No GPS > 3 min).</li>
         <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s, breathes 3x).</li>

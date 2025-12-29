@@ -18,8 +18,8 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 | **Safety Cutoff** | Hard limit for pump runtime. | Max 30s continuous run to prevent hardware damage. |
 | **Start Delay** | Distance driven before first oiling. | Default **2.0 km**. Keeps garage floor clean. |
 | **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
-| **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** Short Press. **Auto-Off:** 30 min or restart. **Rain Flush:** 6 pulses when turning off (if moving). |
-| **Turbo Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 3x Click. **Action:** Every 1 km for 15 min. LED: Cyan Blink. |
+| **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** Short Press. **Auto-Off:** 30 min or restart. |
+| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 3x Click. **Action:** Time-based (Configurable). LED: Cyan Blink. |
 | **Cross-Country Mode** | Time-based oiling for slow offroad riding. | **Button:** 6x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** Hold button >3s at standstill. **Features:** OTA Update, LED config, Stats, Test functions. |
@@ -82,6 +82,31 @@ For advanced users and data analysis, you can connect a standard **MicroSD Card 
 | **HDOP** | GPS Precision (Lower is better) |
 | **Message** | System messages or debug info |
 | **Turbo_Mode** | 1 = Active, 0 = Inactive |
+
+## 🛠️ Hardware & Functionality Matrix
+
+This table shows which features are available depending on the connected hardware components.
+
+| Feature | Basic Setup | + Temp Sensor | + IMU (MPU6050) | + SD Card |
+| :--- | :---: | :---: | :---: | :---: |
+| **Speed-Dependent Oiling** | ✅ | ✅ | ✅ | ✅ |
+| **Rain Mode** | ✅ | ✅ | ✅ | ✅ |
+| **Chain Flush Mode** | ✅ | ✅ | ✅ | ✅ |
+| **Cross-Country Mode** | ✅ | ✅ | ✅ | ✅ |
+| **Emergency Mode** | ✅ | ✅ | ✅ | ✅ |
+| **Night Mode** | ✅ | ✅ | ✅ | ✅ |
+| **Tank Monitor** | ✅ | ✅ | ✅ | ✅ |
+| **Temp. Compensation** | ❌ | ✅ | ✅ | ✅ |
+| **Turn Safety (Cornering)** | ❌ | ❌ | ✅ | ✅ |
+| **Crash Detection** | ❌ | ❌ | ✅ | ✅ |
+| **Garage Guard** | ❌ | ❌ | ✅ | ✅ |
+| **Smart Stop** | ❌ | ❌ | ✅ | ✅ |
+| **Data Logging** | ❌ | ❌ | ❌ | ✅ |
+
+*   **Basic Setup:** ESP32, GPS Module, Pump, Button, LED.
+*   **Temp Sensor:** DS18B20 (OneWire).
+*   **IMU:** MPU6050 or BMI160 (I2C).
+*   **SD Card:** MicroSD Module (SPI).
 
 ## 🌡️ Automatic Temperature Compensation
 
