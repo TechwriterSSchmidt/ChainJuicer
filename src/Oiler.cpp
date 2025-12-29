@@ -13,13 +13,21 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     pumpPin = PUMP_PIN;
     // Pin initialization moved to begin() to avoid issues during global constructor execution
     
-    // Initialize default configuration
-    // Updated based on user request: Base 5km, reducing with speed, 2 pulses per event
-    ranges[0] = {10, 60, 5.0, 2};
-    ranges[1] = {60, 100, 5.0, 2};
-    ranges[2] = {100, 130, 4.4, 2}; // -12.5%
-    ranges[3] = {130, 160, 3.8, 2}; // -25%
-    ranges[4] = {160, MAX_SPEED_KMH, 3.0, 2}; // -37.5% (and -50% > 190)
+    // Initialize default configuration - Swiss Alpine Profile
+    // Range 0: City / Hairpins (10-45 km/h) -> 6.0 km (Low centrifugal force)
+    ranges[0] = {10, 45, 6.0, 2};
+    
+    // Range 1: Mountain Passes / Main Zone (45-75 km/h) -> 5.0 km (Base)
+    ranges[1] = {45, 75, 5.0, 2};
+    
+    // Range 2: Country Roads (75-105 km/h) -> 4.4 km (-12.5% from Base)
+    ranges[2] = {75, 105, 4.4, 2}; 
+    
+    // Range 3: Highway (105-135 km/h) -> 3.8 km (-25% from Base)
+    ranges[3] = {105, 135, 3.8, 2}; 
+    
+    // Range 4: High Speed (135+ km/h) -> 3.0 km (-40% from Base)
+    ranges[4] = {135, MAX_SPEED_KMH, 3.0, 2};
     
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability

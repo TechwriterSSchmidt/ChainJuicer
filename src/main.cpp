@@ -8,6 +8,7 @@
 #include <Preferences.h>
 #include "config.h"
 #include "Oiler.h"
+#include "AuxManager.h"
 #include "html_pages.h"
 
 #ifdef SD_LOGGING_ACTIVE
@@ -25,6 +26,7 @@ HardwareSerial gpsSerial(2); // UART2
 WebServer server(80);
 DNSServer dnsServer;
 Oiler oiler;
+AuxManager auxManager;
 
 #ifdef SD_LOGGING_ACTIVE
     File logFile;
@@ -396,6 +398,49 @@ void handleIMUConfig() {
     server.send(303);
 }
 
+void handleAuxConfig() {
+    resetWifiTimer();
+    String html = htmlAuxConfig;
+    
+    AuxMode mode = auxManager.getMode();
+    html.replace("%MODE_OFF%", (mode == AUX_MODE_OFF) ? "selected" : "");
+    html.replace("%MODE_SMART%", (mode == AUX_MODE_SMART_POWER) ? "selected" : "");
+    html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
+    
+    int base, rainB, startL, startS;
+    float speedF, tempF;
+    auxManager.getGripSettings(base, speedF, tempF, rainB, startL, startS);
+    
+    html.replace("%BASE%", String(base));
+    html.replace("%SPEEDF%", String(speedF, 1));
+    html.replace("%TEMPF%", String(tempF, 1));
+    html.replace("%RAINB%", String(rainB));
+    html.replace("%STARTL%", String(startL));
+    html.replace("%STARTS%", String(startS));
+    
+    server.send(200, "text/html", html);
+}
+
+void handleSaveAux() {
+    resetWifiTimer();
+    
+    if (server.hasArg("mode")) {
+        auxManager.setMode((AuxMode)server.arg("mode").toInt());
+    }
+    
+    int base = server.arg("base").toInt();
+    float speedF = server.arg("speedF").toFloat();
+    float tempF = server.arg("tempF").toFloat();
+    int rainB = server.arg("rainB").toInt();
+    int startL = server.arg("startL").toInt();
+    int startS = server.arg("startS").toInt();
+    
+    auxManager.setGripSettings(base, speedF, tempF, rainB, startL, startS);
+    
+    server.sendHeader("Location", "/aux");
+    server.send(303);
+}
+
 void handleIMUZero() {
     resetWifiTimer();
     oiler.imu.calibrateZero(); 
@@ -438,6 +483,7 @@ void setup() {
     
     // Oiler Start
     oiler.begin();
+    auxManager.begin(&oiler.imu);
 
 #ifdef SD_LOGGING_ACTIVE
     initSD();
@@ -448,15 +494,18 @@ void setup() {
 
     // Webserver Routes
     server.on("/", handleRoot);
-    server.on("/save", handleSave);
-    server.on("/imu", handleIMU);
-    server.on("/imu_zero", handleIMUZero);
-    server.on("/imu_side", handleIMUSide);
+    server.on("/save", HTTP_POST, handleSave);
     server.on("/help", handleHelp);
+    
+    // IMU Routes
     server.on("/imu", handleIMU);
     server.on("/imu_zero", HTTP_POST, handleIMUZero);
     server.on("/imu_side", HTTP_POST, handleIMUSide);
     server.on("/imu_config", HTTP_POST, handleIMUConfig);
+    
+    // Aux Routes
+    server.on("/aux", handleAuxConfig);
+    server.on("/save_aux", HTTP_POST, handleSaveAux);
     
     server.on("/reset_stats", handleResetStats);
     server.on("/reset_time_stats", handleResetTimeStats);
@@ -555,6 +604,9 @@ void loop() {
     
     // Run Oiler main loop (Button, LED, Bleeding)
     oiler.loop();
+    
+    // Run Aux Manager Loop
+    auxManager.loop(oiler.getSmoothedSpeed(), oiler.lastTemp, oiler.isRainMode());
 
 #ifdef SD_LOGGING_ACTIVE
     if (millis() - lastLogTime > LOG_INTERVAL_MS) {

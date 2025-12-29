@@ -9,6 +9,8 @@
 #define GPS_RX_PIN 27      // GPS RX to ESP TX - LEFT SIDE (Middle)
 #define GPS_TX_PIN 26      // GPS TX to ESP RX - LEFT SIDE (Middle)
 #define BUTTON_PIN 4      // Handlebar button - LEFT SIDE (Top of block)
+#define RAIN_SENSOR_PIN 34 // Analog Input for Rain Sensor
+#define AUX_PIN 17         // Auxiliary Output (Smart Power / Heated Grips)
 
 // Pump Logic Configuration
 // Normal Logic: HIGH = Pump ON, LOW = Pump OFF

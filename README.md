@@ -12,7 +12,7 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 
 | Feature | Description | Details |
 | :--- | :--- | :--- |
-| **Speed-Dependent Oiling** | 5 configurable speed ranges with individual intervals. | Intervals down to **0.1 km**. Pre-configured progression (Base 5km, reducing >100km/h). Default: 2 pulses/event. |
+| **Speed-Dependent Oiling** | 5 configurable speed ranges with individual intervals. | Intervals down to **0.1 km**. Pre-configured "Swiss Alpine Profile" (Base 5km, optimized for passes & highways). Default: 2 pulses/event. |
 | **Smart Smoothing** | Linear interpolation & low-pass filter. | Avoids harsh jumps in lubrication intervals. |
 | **Drift Filter** | Ignores GPS multipath reflections. | Prevents "ghost mileage" indoors/tunnels (HDOP > 5.0 or < 5 Sats). |
 | **Safety Cutoff** | Hard limit for pump runtime. | Max 30s continuous run to prevent hardware damage. |
@@ -26,6 +26,7 @@ Your tip motivates me to continue developing cool stuff for the DIY community. T
 | **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
 | **Bleeding Mode** | Continuous pumping for maintenance. | Fills oil line. |
 | **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
+| **Aux Port Manager** | Smart control for accessories. | **Smart Power:** Auto-ON when engine runs (IMU). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
 | **Factory Reset** | Reset to defaults. | Hold button at boot. |
@@ -101,6 +102,7 @@ This table shows which features are available depending on the connected hardwar
 | **Crash Detection** | ❌ | ❌ | ✅ | ✅ |
 | **Garage Guard** | ❌ | ❌ | ✅ | ✅ |
 | **Smart Stop** | ❌ | ❌ | ✅ | ✅ |
+| **Aux Port Manager** | ✅ | ✅ | ✅ | ✅ |
 | **Data Logging** | ❌ | ❌ | ❌ | ✅ |
 
 *   **Basic Setup:** ESP32, GPS Module, Pump, Button, LED.
@@ -134,6 +136,27 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **VCC:** Board dependent (e.g. 5V-12V for Wide Range boards, or 3.3V/5V for standard)
 *   **GND:** GND
 *   **Data:** GPIO 15 (Default) - Requires 4.7kΩ Pull-Up Resistor to VCC.
+
+## 🔌 Aux Port Manager (GPIO 17)
+
+The system features a versatile Auxiliary Output (MOSFET/Relay driver) that can be configured for two main purposes:
+
+### 1. Smart Power (Switched Live)
+Turns on your accessories (Navigation, USB, Lights) only when the engine is running.
+*   **Logic:** Uses the IMU to detect engine vibration and movement.
+*   **Timeout:** Keeps power ON for 10 seconds after motion stops (prevents flickering).
+*   **Benefit:** No need to tap into the bike's wiring harness or ignition switch. Connect directly to the battery via the Chain Juicer.
+
+### 2. Automated Heated Grips
+Advanced PWM control for heated grips, far superior to simple "Low/High" switches.
+*   **Base Level:** Set your preferred minimum heat.
+*   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor).
+*   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor).
+*   **Rain Boost:** Automatically adds extra heat when Rain Mode is active.
+*   **Startup Boost:** Heats up quickly (e.g. 80% for 60s) when you start the ride.
+
+**Configuration:**
+All parameters (Base %, Speed Factor, Temp Factor, Boosts) are fully configurable via the new "Aux Config" web page.
 
 ## 🛠 Hardware
 
@@ -235,6 +258,21 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 | **Configuration** | Hold > 3s (Standstill) | **LED: White Pulse.** Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
 | **Tank Empty** | Reserve reached | **LED: Orange 2x Blink.** **Tank Warning**. Refill tank and reset counter via Web Interface. |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** Ensure 10k Pull-Down resistor is installed between Gate and GND. |
+
+### Pin Assignment (Current Config)
+
+| Pin | Function | Note |
+| :--- | :--- | :--- |
+| **GPIO 16** | Pump (MOSFET) | Active HIGH |
+| **GPIO 17** | Aux Port (MOSFET) | Smart Power / Heated Grips |
+| **GPIO 32** | LED (WS2812B) | Data In |
+| **GPIO 27** | GPS RX | Connect to GPS TX |
+| **GPIO 26** | GPS TX | Connect to GPS RX |
+| **GPIO 4** | Button | Input Pullup (Active LOW) |
+| **GPIO 15** | Temp Sensor | DS18B20 Data (Pullup 4.7k) |
+| **GPIO 21** | I2C SDA | IMU Data |
+| **GPIO 22** | I2C SCL | IMU Clock |
+| **GPIO 34** | Rain Sensor | Analog Input (Reserved) |
 
 ## ⚙️ Technical Details
 

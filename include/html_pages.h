@@ -32,7 +32,8 @@ const char* htmlHeader = R"rawliteral(
     <h2>🍋 Chain Juicer v1.0</h2>
     <div class='help-link'>
         <a href='/help'>Help & Manual</a> | 
-        <a href='/imu'>IMU Calibration</a>
+        <a href='/imu'>IMU Calibration</a> |
+        <a href='/aux'>Aux Config</a>
     </div>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
@@ -180,6 +181,20 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Logic:</b> The system automatically calculates the required energy for colder/warmer temperatures based on the selected profile.</li>
         <li><b>Hysteresis:</b> 3&deg;C buffer prevents rapid switching.</li>
     </ul>
+    <h3>Aux Port Manager (GPIO 17)</h3>
+    <p>Controls the Auxiliary Output for accessories.</p>
+    <ul>
+        <li><b>Smart Power:</b> Turns ON when engine is running (detected via IMU vibration). Stays ON for 10s after stop.</li>
+        <li><b>Heated Grips:</b> Automated PWM control.
+            <ul>
+                <li><b>Base:</b> Minimum heat level.</li>
+                <li><b>Speed:</b> Increases heat with speed (Wind chill).</li>
+                <li><b>Temp:</b> Increases heat with cold (requires Temp Sensor).</li>
+                <li><b>Rain:</b> Adds boost in Rain Mode.</li>
+                <li><b>Startup:</b> High power for 60s after start.</li>
+            </ul>
+        </li>
+    </ul>
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
     <ul>
@@ -318,6 +333,91 @@ const char* htmlIMU = R"rawliteral(
     </div>
 
     <a href='/' class='btn'>Back to Main</a>
+</body>
+</html>
+)rawliteral";
+
+const char* htmlAuxConfig = R"rawliteral(
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Aux Config</title>
+    <style>
+        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
+        h2{text-align:center;color:#333}
+        h3{color:#555;margin-top:20px}
+        form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+        table{width:100%;border-collapse:collapse}
+        td{padding:10px 5px;border-bottom:1px solid #eee}
+        input, select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
+        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
+        .note{font-size:0.9em;color:#666;margin-top:5px}
+    </style>
+    <script>
+        function toggleFields() {
+            var mode = document.getElementById('mode').value;
+            var grips = document.getElementById('grips_settings');
+            if (mode == '2') { // Heated Grips
+                grips.style.display = 'block';
+            } else {
+                grips.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body onload="toggleFields()">
+    <h2>Aux Port Configuration</h2>
+    <form action='/save_aux' method='POST'>
+        <h3>Mode Selection</h3>
+        <table>
+            <tr>
+                <td>Mode</td>
+                <td>
+                    <select id='mode' name='mode' onchange="toggleFields()">
+                        <option value='0' %MODE_OFF%>OFF</option>
+                        <option value='1' %MODE_SMART%>Smart Power (Engine Run)</option>
+                        <option value='2' %MODE_GRIPS%>Heated Grips (Auto)</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        
+        <div id='grips_settings' style='display:none'>
+            <h3>Heated Grips Logic</h3>
+            <div class='note'>PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost</div>
+            <table>
+                <tr>
+                    <td>Base Level (%)</td>
+                    <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
+                </tr>
+                <tr>
+                    <td>Speed Factor (% per km/h)</td>
+                    <td><input type='number' name='speedF' value='%SPEEDF%' step='0.1'></td>
+                </tr>
+                <tr>
+                    <td>Temp Factor (% per &deg;C < 20)</td>
+                    <td><input type='number' name='tempF' value='%TEMPF%' step='0.1'></td>
+                </tr>
+                <tr>
+                    <td>Rain Boost (%)</td>
+                    <td><input type='number' name='rainB' value='%RAINB%' min='0' max='100'></td>
+                </tr>
+                <tr>
+                    <td>Startup Boost Level (%)</td>
+                    <td><input type='number' name='startL' value='%STARTL%' min='0' max='100'></td>
+                </tr>
+                <tr>
+                    <td>Startup Boost Time (sec)</td>
+                    <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
+                </tr>
+            </table>
+        </div>
+        
+        <input type='submit' value='Save Configuration' class='btn'>
+    </form>
+    <br>
+    <a href='/' class='btn' style='background:#6c757d;text-align:center;display:block;text-decoration:none'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
