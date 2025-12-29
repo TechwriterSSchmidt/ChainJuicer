@@ -65,10 +65,13 @@ const char* htmlFooter = R"rawliteral(
         <h3>General</h3>
         <table>
             <tr><td>Rain Mode (x2)</td><td><input type='checkbox' name='rain_mode' %RAIN_CHECKED%></td></tr>
-            <tr><td>Rain Flush (Auto-Clean)</td><td><input type='checkbox' name='rain_flush' %RAIN_FLUSH_CHECKED%></td></tr>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Cross-Country Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
+            <tr><td colspan='2'><b>Turbo / Cleaning Mode:</b></td></tr>
+            <tr><td>Events (Total)</td><td><input type='number' name='turbo_ev' value='%TURBO_EV%' class='num-input'></td></tr>
+            <tr><td>Pulses per Event</td><td><input type='number' name='turbo_pls' value='%TURBO_PLS%' class='num-input'></td></tr>
+            <tr><td>Interval (Seconds)</td><td><input type='number' name='turbo_int' value='%TURBO_INT%' class='num-input'></td></tr>
         </table>
         <h3>LED Settings (Day)</h3>
         <table>
@@ -132,7 +135,6 @@ const char* htmlHelp = R"rawliteral(
             <ul>
                 <li>Doubles oil amount.</li>
                 <li>Turns off automatically after 30 min or on reboot.</li>
-                <li><b>Rain Flush:</b> Triggers 6 cleaning pulses when turning Rain Mode OFF (only if moving). Can be disabled in settings.</li>
             </ul>
         </li>
         <li><b>Turbo Mode:</b>
@@ -187,7 +189,7 @@ const char* htmlHelp = R"rawliteral(
     </ul>
     <h3>Button Functions</h3>
     <ul>
-        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay). Turning OFF triggers 'Rain Flush' (if enabled & moving).</li>
+        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay).</li>
         <li><b>3x Click:</b> Toggle 'Turbo Mode' (15 min @ 1km).</li>
         <li><b>6x Click:</b> Toggle 'Cross-Country Mode' (Time based oiling).</li>
         <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>

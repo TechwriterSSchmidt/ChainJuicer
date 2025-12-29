@@ -54,7 +54,6 @@ public:
     // Mode Getters & Setters
     bool isRainMode() { return rainMode; }
     void setRainMode(bool mode);
-    bool rainFlushEnabled; // Configurable setting
 
     bool isTurboMode() { return turboMode; }
     void setTurboMode(bool mode);
@@ -137,9 +136,19 @@ public:
     int crossCountryIntervalMin;
     unsigned long lastCrossCountryOilTime;
 
+    // Turbo / Cleaning Mode Settings
+    int turboConfigEvents;      // Total events to run
+    int turboConfigPulses;      // Pulses per event
+    int turboConfigIntervalSec; // Interval in seconds
+    int turboEventsRemaining;   // Counter
+    unsigned long lastTurboOilTime;
+
     // Startup Delay
     float startupDelayKm;
     float currentStartupDistance;
+
+    // Turn Safety
+    bool oilingDelayed; // Flag to indicate oiling is pending due to lean angle
 
 private:
     void processDistance(double distKm, float speedKmh);
@@ -205,7 +214,6 @@ private:
 
     // Non-blocking oiling state
     bool isOiling;
-    bool isRainFlush; // State for Rain Flush sequence
     unsigned long oilingStartTime;
     unsigned long pumpActivityStartTime; // Safety Cutoff
     int oilingPulsesRemaining;

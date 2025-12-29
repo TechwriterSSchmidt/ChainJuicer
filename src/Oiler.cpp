@@ -58,7 +58,6 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 
     // Button & Modes Init
     rainMode = false;
-    rainFlushEnabled = RAIN_FLUSH_ENABLED_DEFAULT;
     rainModeStartTime = 0;
     emergencyMode = false;
     wifiActive = false;
@@ -67,6 +66,12 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     bleedingStartTime = 0;
     turboMode = false;
     turboModeStartTime = 0;
+    turboConfigEvents = TURBO_DEFAULT_EVENTS;
+    turboConfigPulses = TURBO_DEFAULT_PULSES;
+    turboConfigIntervalSec = TURBO_DEFAULT_INTERVAL_SEC;
+    turboEventsRemaining = 0;
+    lastTurboOilTime = 0;
+
     crossCountryMode = false;
     lastCrossCountryOilTime = 0;
     crossCountryIntervalMin = CROSS_COUNTRY_INTERVAL_MIN_DEFAULT;
@@ -87,7 +92,6 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
 
     // Oiling State Init
     isOiling = false;
-    isRainFlush = false;
     oilingStartTime = 0;
     pumpActivityStartTime = 0;
     oilingPulsesRemaining = 0;
@@ -227,6 +231,26 @@ void Oiler::loop() {
             if (currentSpeed >= 7.0) {
                 triggerOil(ranges[0].pulses); // Use pulses from first range
                 lastCrossCountryOilTime = now;
+            }
+        }
+    }
+
+    // Turbo / Cleaning Mode Logic (Time Based)
+    if (turboMode) {
+        unsigned long now = millis();
+        unsigned long intervalMs = (unsigned long)turboConfigIntervalSec * 1000;
+
+        if (now - lastTurboOilTime > intervalMs) {
+            // SAFETY: Only oil if moving!
+            // Similar to Cross-Country, we require movement to avoid puddles.
+            if (currentSpeed >= 2.0) {
+                triggerOil(turboConfigPulses);
+                lastTurboOilTime = now;
+                turboEventsRemaining--;
+
+                if (turboEventsRemaining <= 0) {
+                    setTurboMode(false); // Done
+                }
             }
         }
     }
@@ -539,13 +563,17 @@ void Oiler::loadConfig() {
     
     // Restore Rain Mode
     rainMode = false; // Always start with Rain Mode OFF
-    rainFlushEnabled = preferences.getBool("rain_flush", RAIN_FLUSH_ENABLED_DEFAULT);
     
     emergencyMode = preferences.getBool("emerg_mode", false);
 
     // Load Cross Country & Startup
     crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
     startupDelayKm = preferences.getFloat("start_dly", STARTUP_DELAY_KM_DEFAULT);
+
+    // Load Turbo / Cleaning Mode
+    turboConfigEvents = preferences.getInt("tb_evt", TURBO_DEFAULT_EVENTS);
+    turboConfigPulses = preferences.getInt("tb_pls", TURBO_DEFAULT_PULSES);
+    turboConfigIntervalSec = preferences.getInt("tb_int", TURBO_DEFAULT_INTERVAL_SEC);
 
     // Load Stats
     totalDistance = preferences.getDouble("totalDist", 0.0);
@@ -627,12 +655,16 @@ void Oiler::saveConfig() {
     
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
-    preferences.putBool("rain_flush", rainFlushEnabled);
     preferences.putBool("emerg_mode", emergencyMode);
 
     // Save Cross Country & Startup
     preferences.putInt("cc_int", crossCountryIntervalMin);
     preferences.putFloat("start_dly", startupDelayKm);
+
+    // Save Turbo / Cleaning Mode
+    preferences.putInt("tb_evt", turboConfigEvents);
+    preferences.putInt("tb_pls", turboConfigPulses);
+    preferences.putInt("tb_int", turboConfigIntervalSec);
 
     // Save Tank Monitor
     preferences.putBool("tank_en", tankMonitorEnabled);
@@ -925,17 +957,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
     // Check Turbo Mode
     if (turboMode) {
-        // Check Timeout
-        if (millis() - turboModeStartTime > TURBO_MODE_DURATION_MS) {
-            setTurboMode(false);
-            // Fallback to normal LUT
-            int lutIndex = (int)(speedKmh / LUT_STEP);
-            if (lutIndex < 0) lutIndex = 0;
-            if (lutIndex >= LUT_SIZE) lutIndex = LUT_SIZE - 1;
-            targetInterval = intervalLUT[lutIndex];
-        } else {
-            targetInterval = TURBO_MODE_INTERVAL_KM;
-        }
+        return; // Handled in loop()
     } else {
         // 1. Get Target Interval from LUT (Linear Interpolation)
         int lutIndex = (int)(speedKmh / LUT_STEP);
@@ -1088,8 +1110,7 @@ void Oiler::processPump() {
     // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
     
     // Bleeding Mode: Fast pumping (80ms Pulse / 250ms Pause)
-    // Rain Flush: 1.5x Pause duration for better distribution
-    unsigned long effectivePause = bleedingMode ? 250 : (isRainFlush ? (unsigned long)(dynamicPauseMs * 1.5) : dynamicPauseMs);
+    unsigned long effectivePause = bleedingMode ? 250 : dynamicPauseMs;
     unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
@@ -1097,7 +1118,7 @@ void Oiler::processPump() {
         // Turn Safety Check (Inter-Pulse)
         // If we are in a multi-pulse sequence and suddenly lean into a turn, we should pause.
         // We check this BEFORE executing the next pulse.
-        if (!bleedingMode && !isRainFlush) { // Don't interrupt bleeding or flush
+        if (!bleedingMode) { // Don't interrupt bleeding
              if (imu.isLeaningOnChainSide(20.0)) {
                  // Unsafe! Delay this pulse.
                  // We simply return here. The 'lastPulseTime' is NOT updated, so we will try again next loop.
@@ -1117,7 +1138,6 @@ void Oiler::processPump() {
             oilingPulsesRemaining--;
             if (oilingPulsesRemaining == 0) {
                 isOiling = false;
-                isRainFlush = false; // Reset flush state
 #ifdef GPS_DEBUG
                 Serial.println("OILING DONE");
 #endif
@@ -1199,18 +1219,9 @@ void Oiler::setRainMode(bool mode) {
         Serial.println("Rain Mode: ON");
 #endif
     } else if (!mode && rainMode) {
-        // Rain Mode turned OFF -> Flush Chain (Only if moving AND enabled)
-        if (rainFlushEnabled && currentSpeed > MIN_SPEED_KMH) {
 #ifdef GPS_DEBUG
-            Serial.println("Rain Mode: OFF -> Flushing Chain");
+        Serial.println("Rain Mode: OFF");
 #endif
-            isRainFlush = true; // Mark as flush sequence
-            triggerOil(RAIN_FLUSH_PULSES);
-        } else {
-#ifdef GPS_DEBUG
-            Serial.println("Rain Mode: OFF -> Flush skipped (Standstill or Disabled)");
-#endif
-        }
     }
     
     rainMode = mode;
@@ -1224,6 +1235,8 @@ void Oiler::setRainMode(bool mode) {
 void Oiler::setTurboMode(bool mode) {
     if (mode && !turboMode) {
         turboModeStartTime = millis();
+        lastTurboOilTime = millis(); // Reset interval timer
+        turboEventsRemaining = turboConfigEvents; // Reset counter
 #ifdef GPS_DEBUG
         Serial.println("Turbo Mode ACTIVATED");
 #endif

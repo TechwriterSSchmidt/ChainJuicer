@@ -269,10 +269,13 @@ void handleRoot() {
     footer.replace("%LED_HIGH%", String(map(oiler.ledBrightnessHigh, 2, 202, 0, 100)));
     
     footer.replace("%RAIN_CHECKED%", oiler.isRainMode() ? "checked" : "");
-    footer.replace("%RAIN_FLUSH_CHECKED%", oiler.rainFlushEnabled ? "checked" : "");
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
     footer.replace("%START_DLY%", String(oiler.startupDelayKm, 1));
     footer.replace("%CC_INT%", String(oiler.crossCountryIntervalMin));
+    
+    footer.replace("%TURBO_EV%", String(oiler.turboConfigEvents));
+    footer.replace("%TURBO_PLS%", String(oiler.turboConfigPulses));
+    footer.replace("%TURBO_INT%", String(oiler.turboConfigIntervalSec));
     
     footer.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
     footer.replace("%NIGHT_START%", String(oiler.nightStartHour));
@@ -328,11 +331,14 @@ void handleSave() {
     
     // Rain Mode Checkbox handling
     oiler.setRainMode(server.hasArg("rain_mode"));
-    oiler.rainFlushEnabled = server.hasArg("rain_flush");
     oiler.setEmergencyModeForced(server.hasArg("emerg_mode"));
     
     if(server.hasArg("start_dly")) oiler.startupDelayKm = server.arg("start_dly").toFloat();
     if(server.hasArg("cc_int")) oiler.crossCountryIntervalMin = server.arg("cc_int").toInt();
+    
+    if(server.hasArg("turbo_ev")) oiler.turboConfigEvents = server.arg("turbo_ev").toInt();
+    if(server.hasArg("turbo_pls")) oiler.turboConfigPulses = server.arg("turbo_pls").toInt();
+    if(server.hasArg("turbo_int")) oiler.turboConfigIntervalSec = server.arg("turbo_int").toInt();
     
     oiler.nightModeEnabled = server.hasArg("night_en");
     if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();

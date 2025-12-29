@@ -80,8 +80,10 @@
 #define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
 #define BLEEDING_DURATION_MS 15000 // Pumping time in ms for bleeding
-#define TURBO_MODE_DURATION_MS 900000 // 15 Minutes
-#define TURBO_MODE_INTERVAL_KM 1.0    // 1 km Interval
+// Turbo / Cleaning Mode Defaults
+#define TURBO_DEFAULT_EVENTS 15       // Run 15 times
+#define TURBO_DEFAULT_PULSES 2        // 2 Pulses per event
+#define TURBO_DEFAULT_INTERVAL_SEC 60 // Every 60 seconds
 #define TURBO_PRESS_COUNT 3           // 3 Clicks
 #define TURBO_PRESS_WINDOW_MS 2000    // 2 Seconds window
 #define RAIN_FLUSH_PULSES 6           // Pulses to flush chain after Rain Mode ends
