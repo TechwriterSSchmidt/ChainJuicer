@@ -6,7 +6,7 @@ An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Po
 
 **Easy to Build:** Designed around a widely available standard ESP32 Relay Board (LCTECH), this project requires **no custom PCB** and minimal soldering skills. It's the perfect entry point for DIY motorcycle electronics.
 
-**Easy to Install:** No coding skills required! Use the [Web Installer](#option-a-web-installer-recommended) to flash your ESP32 directly from the browser. Future updates can be done wirelessly via OTA (Over-The-Air).
+**Easy to Install:** No coding skills required! Use the [Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer/) to flash your ESP32 directly from the browser. Future updates can be done wirelessly via OTA (Over-The-Air) using the [latest firmware file](https://TechwriterSSchmidt.github.io/ChainJuicer/firmware.bin).
 
 ## Support my projects
 
