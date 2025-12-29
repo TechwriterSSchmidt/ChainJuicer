@@ -1,6 +1,6 @@
 # 🍋 Chain Juicer (ESP32)
 
-**The Swiss Army Knife for your Motorcycle.**
+**The Swiss Army Knife for your Motorcycle Chain.**
 
 An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Power Manager for accessories, and an automated Heated Grips Controller. It combines intelligent maintenance with modern convenience and safety features like IMU-based crash detection.
 
@@ -13,6 +13,19 @@ An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Po
 If you like this project, consider a tip. Your tip motivates me to continue developing cool stuff for the DIY community. Thank you very much for your support!
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D01HVT9A)
+
+## Table of Contents
+* [Features](#-features)
+* [Optional IMU Features](#-optional-imu-features)
+* [Optional SD Card Logging](#-optional-sd-card-logging)
+* [Hardware & Functionality Matrix](#-hardware--functionality-matrix)
+* [Automatic Temperature Compensation](#-automatic-temperature-compensation)
+* [Aux Port Manager](#-aux-port-manager-gpio-17)
+* [Hardware](#-hardware)
+* [Operation](#-operation)
+* [Web Interface](#-web-interface)
+* [Installation](#-installation)
+* [BOM & Costs](#-bom--costs-approx-2025)
 
 ## 🚀 Features
 
