@@ -1,6 +1,8 @@
 # 🍋 Chain Juicer (ESP32)
 
-An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The system dynamically adjusts oiling intervals based on the driven speed and offers extensive configuration options via a web interface.
+**The Swiss Army Knife for your Motorcycle.**
+
+An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Power Manager for accessories, and an automated Heated Grips Controller. Designed around a cheap and widely available standard ESP32 Relay Board (LCTECH), this project requires **no custom PCB** and minimal soldering skills. It's the perfect entry point for DIY motorcycle electronics. It combines intelligent maintenance with modern convenience and safety features like the optional IMU-based crash detection.
 
 ## Support my projects
 
