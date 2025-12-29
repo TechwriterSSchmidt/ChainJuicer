@@ -222,9 +222,8 @@ void Oiler::loop() {
         
         if (now - lastCrossCountryOilTime > intervalMs) {
             // SAFETY: Only oil if moving! 
-            // We use MIN_ODOMETER_SPEED_KMH (2.0 km/h) to allow slow offroad crawling,
-            // but prevent oiling while standing still with engine running.
-            if (currentSpeed > MIN_ODOMETER_SPEED_KMH) {
+            // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
+            if (currentSpeed >= 7.0) {
                 triggerOil(ranges[0].pulses); // Use pulses from first range
                 lastCrossCountryOilTime = now;
             }
