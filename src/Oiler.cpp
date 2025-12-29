@@ -884,7 +884,13 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 void Oiler::processDistance(double distKm, float speedKmh) {
     // IMU Safety Checks
     if (imu.isCrashed()) return; // Crash detected!
-    if (imu.isParked()) return;  // Garage Guard: Parked on side stand. Ignore GPS drift.
+    
+    // Garage Guard: Only relevant if speed is low (e.g. < 10 km/h) to prevent GPS drift oiling.
+    // If we are riding fast, we don't want "isParked" (which triggers at >10 deg lean) to stop oiling.
+    if (speedKmh < 10.0 && imu.isParked()) return;
+
+    // Turn Safety: Don't oil in significant turns towards the chain side (> 20 deg) to avoid oil on tire sidewall.
+    if (imu.isLeaningOnChainSide(20.0)) return;
 
     // 1. Add to Total Odometer
     totalDistance += distKm;

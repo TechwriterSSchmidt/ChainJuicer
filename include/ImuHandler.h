@@ -32,6 +32,11 @@ public:
     bool isParked(); // Garage Guard (Side stand or Center stand)
     bool isCrashed(); // Lean > 60
     bool isMotionDetected(); // Smart Stop helper
+    bool isLeaningOnChainSide(float thresholdDeg); // Returns true if leaning towards the chain side
+
+    // Configuration
+    void setChainSide(bool isRight); // false = Left (Default), true = Right
+    bool isChainOnRight() const { return _chainOnRight; }
 
 private:
     Adafruit_BNO08x _bno;
@@ -50,6 +55,9 @@ private:
     // Side Stand Calibration (Target angles)
     float _sideStandRoll = 0.0; // If 0, use default threshold
     bool _sideStandCalibrated = false;
+    
+    // Chain Configuration
+    bool _chainOnRight = false; // Default: Left side
 
     Preferences _prefs;
     

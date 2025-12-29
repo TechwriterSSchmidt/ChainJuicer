@@ -125,6 +125,7 @@ void ImuHandler::saveCalibration() {
     _prefs.putFloat("off_p", _offsetPitch);
     _prefs.putFloat("side_r", _sideStandRoll);
     _prefs.putBool("side_cal", _sideStandCalibrated);
+    _prefs.putBool("chain_r", _chainOnRight);
     _prefs.end();
 }
 
@@ -134,7 +135,15 @@ void ImuHandler::loadCalibration() {
     _offsetPitch = _prefs.getFloat("off_p", 0.0);
     _sideStandRoll = _prefs.getFloat("side_r", 0.0);
     _sideStandCalibrated = _prefs.getBool("side_cal", false);
+    _chainOnRight = _prefs.getBool("chain_r", false);
     _prefs.end();
+}
+
+void ImuHandler::setChainSide(bool isRight) {
+    if (_chainOnRight != isRight) {
+        _chainOnRight = isRight;
+        saveCalibration();
+    }
 }
 
 bool ImuHandler::isParked() {
@@ -164,4 +173,45 @@ bool ImuHandler::isMotionDetected() {
     if (!_available) return true; // Default to true if no IMU, so we rely on GPS
     // TODO: Implement Linear Accel check
     return true; 
+}
+
+bool ImuHandler::isLeaningOnChainSide(float thresholdDeg) {
+    if (!_available) return false;
+    
+    // Determine Left direction based on Side Stand Calibration
+    // Side Stand is almost always on the Left.
+    // If Side Stand Roll is Negative (e.g. -12), then Left is Negative.
+    // If Side Stand Roll is Positive (e.g. +12), then Left is Positive.
+    // Default (if not calibrated or 0): Assume Standard (Left = Negative).
+    
+    float leftSign = -1.0; // Default Left = Negative
+    if (abs(_sideStandRoll) > 1.0) {
+        leftSign = (_sideStandRoll > 0) ? 1.0 : -1.0;
+    }
+    
+    bool isLeaningLeft = false;
+    if (leftSign < 0) {
+        // Left is Negative
+        isLeaningLeft = (_roll < -thresholdDeg);
+    } else {
+        // Left is Positive
+        isLeaningLeft = (_roll > thresholdDeg);
+    }
+
+    // If Chain is on Right, we check for Right Lean (which is !Left)
+    // Wait, Right Lean is opposite of Left Lean.
+    
+    if (_chainOnRight) {
+        // Check for Right Lean
+        if (leftSign < 0) {
+            // Left is Negative, so Right is Positive
+            return (_roll > thresholdDeg);
+        } else {
+            // Left is Positive, so Right is Negative
+            return (_roll < -thresholdDeg);
+        }
+    } else {
+        // Chain is on Left (Default)
+        return isLeaningLeft;
+    }
 }

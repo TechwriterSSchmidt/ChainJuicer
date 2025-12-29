@@ -368,7 +368,26 @@ void handleIMU() {
     html.replace("%PITCH%", String(oiler.imu.getPitch(), 1));
     html.replace("%ROLL%", String(oiler.imu.getRoll(), 1));
     
+    // Chain Side Config
+    if (oiler.imu.isChainOnRight()) {
+        html.replace("%CHAIN_LEFT%", "");
+        html.replace("%CHAIN_RIGHT%", "selected");
+    } else {
+        html.replace("%CHAIN_LEFT%", "selected");
+        html.replace("%CHAIN_RIGHT%", "");
+    }
+
     server.send(200, "text/html", html);
+}
+
+void handleIMUConfig() {
+    resetWifiTimer();
+    if (server.hasArg("chain_side")) {
+        bool isRight = (server.arg("chain_side").toInt() == 1);
+        oiler.imu.setChainSide(isRight);
+    }
+    server.sendHeader("Location", "/imu");
+    server.send(303);
 }
 
 void handleIMUZero() {
@@ -428,6 +447,11 @@ void setup() {
     server.on("/imu_zero", handleIMUZero);
     server.on("/imu_side", handleIMUSide);
     server.on("/help", handleHelp);
+    server.on("/imu", handleIMU);
+    server.on("/imu_zero", HTTP_POST, handleIMUZero);
+    server.on("/imu_side", HTTP_POST, handleIMUSide);
+    server.on("/imu_config", HTTP_POST, handleIMUConfig);
+    
     server.on("/reset_stats", handleResetStats);
     server.on("/reset_time_stats", handleResetTimeStats);
     server.on("/refill", handleRefill);

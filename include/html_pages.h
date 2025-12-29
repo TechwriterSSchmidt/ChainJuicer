@@ -288,11 +288,30 @@ const char* htmlIMU = R"rawliteral(
     </div>
 
     <div class='card'>
+        <h3>Configuration</h3>
+        <form action='/imu_config' method='POST'>
+            <table>
+                <tr>
+                    <td>Chain Side:</td>
+                    <td>
+                        <select name='chain_side'>
+                            <option value='0' %CHAIN_LEFT%>Left (Standard)</option>
+                            <option value='1' %CHAIN_RIGHT%>Right</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+            <input type='submit' value='Save Config' class='btn'>
+        </form>
+    </div>
+
+    <div class='card'>
         <h3>Features</h3>
         <ul>
             <li><b>Garage Guard:</b> Prevents oiling if lean angle > 10&deg; (Side Stand).</li>
             <li><b>Crash Detect:</b> Stops pump if lean angle > 60&deg;.</li>
             <li><b>Smart Stop:</b> Detects stops faster than GPS.</li>
+            <li><b>Turn Safety:</b> Stops oiling in turns towards the chain side (> 20&deg;).</li>
         </ul>
     </div>
 
