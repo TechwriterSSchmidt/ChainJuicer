@@ -35,8 +35,9 @@ jobs:
           cp web-installer/* public/
           cp .pio/build/esp32dev/bootloader.bin public/
           cp .pio/build/esp32dev/partitions.bin public/
-          cp .pio/build/esp32dev/boot_app0.bin public/
           cp .pio/build/esp32dev/firmware.bin public/
+          # boot_app0.bin is part of the framework, not the build output. Find and copy it.
+          find ~/.platformio/packages/framework-arduinoespressif32 -name boot_app0.bin -exec cp {} public/ \;
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
