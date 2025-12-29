@@ -83,6 +83,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Startup Delay
     startupDelayKm = STARTUP_DELAY_KM_DEFAULT;
     currentStartupDistance = 0.0;
+    oilingDelayed = false;
 
     // Oiling State Init
     isOiling = false;
@@ -889,9 +890,6 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     // If we are riding fast, we don't want "isParked" (which triggers at >10 deg lean) to stop oiling.
     if (speedKmh < 10.0 && imu.isParked()) return;
 
-    // Turn Safety: Don't oil in significant turns towards the chain side (> 20 deg) to avoid oil on tire sidewall.
-    if (imu.isLeaningOnChainSide(20.0)) return;
-
     // 1. Add to Total Odometer
     totalDistance += distKm;
 
@@ -967,6 +965,37 @@ void Oiler::processDistance(double distKm, float speedKmh) {
         // Changed to 100% (1.0) to ensure accurate intervals
         // We subtract 1.0 instead of resetting to 0.0 to carry over any remainder
         if (currentProgress >= 1.0) {
+            
+            // Turn Safety Logic (Delayed Oiling)
+            // If we are leaning significantly on the chain side, we delay the oiling.
+            // We only release the oiling if we are upright or leaning away.
+            
+            bool unsafeToOil = false;
+            
+            if (oilingDelayed) {
+                // We are already delayed. Wait until we are strictly upright or leaning away.
+                // Threshold 5.0 deg allows for slight wobble but ensures we are out of the turn.
+                if (imu.isLeaningOnChainSide(5.0)) {
+                    unsafeToOil = true; // Still unsafe
+                } else {
+                    unsafeToOil = false; // Safe now!
+                    oilingDelayed = false;
+                }
+            } else {
+                // New trigger. Check if we are currently in a turn.
+                // Threshold 20.0 deg is for significant turns.
+                if (imu.isLeaningOnChainSide(20.0)) {
+                    unsafeToOil = true;
+                    oilingDelayed = true;
+                }
+            }
+
+            if (unsafeToOil) {
+                // Skip oiling for now. 
+                // currentProgress remains >= 1.0, so we will check again on next update.
+                return;
+            }
+
             // Update History BEFORE resetting currentIntervalTime
             int head = history.head;
             history.oilingRange[head] = activeRangeIndex;
@@ -1064,6 +1093,19 @@ void Oiler::processPump() {
     unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
+        
+        // Turn Safety Check (Inter-Pulse)
+        // If we are in a multi-pulse sequence and suddenly lean into a turn, we should pause.
+        // We check this BEFORE executing the next pulse.
+        if (!bleedingMode && !isRainFlush) { // Don't interrupt bleeding or flush
+             if (imu.isLeaningOnChainSide(20.0)) {
+                 // Unsafe! Delay this pulse.
+                 // We simply return here. The 'lastPulseTime' is NOT updated, so we will try again next loop.
+                 // This effectively "pauses" the sequence until the bike is upright again.
+                 return;
+             }
+        }
+
         // Execute Blocking Pulse (Soft-Start/Stop)
         pumpPulse(effectivePulse);
         
