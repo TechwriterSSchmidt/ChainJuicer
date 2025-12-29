@@ -556,7 +556,36 @@ void Oiler::updateLED() {
     }
 
     for(int i=0; i<NUM_LEDS; i++) {
-        strip.setPixelColor(i, color);
+        // LED 0: Main Status LED (Logic above)
+        if (i == 0) {
+            strip.setPixelColor(i, color);
+        } 
+        // LED 1: Aux Status LED (Heated Grips / Smart Power)
+        else if (i == 1) {
+            uint32_t auxColor = 0;
+            
+            if (auxMode == 0 || auxPwm == 0) {
+                auxColor = 0; // OFF
+            } else if (auxMode == 1) {
+                // Smart Power Active -> Green Static
+                strip.setBrightness(currentDimBrightness);
+                auxColor = strip.Color(0, 255, 0);
+            } else if (auxMode == 2) {
+                // Heated Grips -> Gradient Blue to Red
+                strip.setBrightness(currentDimBrightness); // Use dim brightness for constant light
+                
+                if (auxPwm < 30) {
+                    auxColor = strip.Color(0, 0, 255); // Blue (Low)
+                } else if (auxPwm < 60) {
+                    auxColor = strip.Color(255, 255, 0); // Yellow (Med-Low)
+                } else if (auxPwm < 80) {
+                    auxColor = strip.Color(255, 140, 0); // Orange (Med-High)
+                } else {
+                    auxColor = strip.Color(255, 0, 0); // Red (High)
+                }
+            }
+            strip.setPixelColor(i, auxColor);
+        }
     }
     strip.show();
 }

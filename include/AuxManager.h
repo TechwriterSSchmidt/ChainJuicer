@@ -29,6 +29,10 @@ public:
     // Status
     int getCurrentPwm() const { return _currentPwm; }
     bool isPowered() const { return _isPowered; }
+    
+    // Manual Control
+    void toggleManualOverride();
+    bool isManualOverrideActive() const { return _manualOverride; }
 
 private:
     ImuHandler* _imu;
@@ -39,6 +43,7 @@ private:
     int _currentPwm = 0;
     float _smoothedPwm = 0.0;
     bool _isPowered = false;
+    bool _manualOverride = true; // Default ON (Auto)
     
     // Smart Power Logic
     unsigned long _lastMotionTime = 0;

@@ -607,6 +607,9 @@ void loop() {
     
     // Run Aux Manager Loop
     auxManager.loop(oiler.getSmoothedSpeed(), oiler.lastTemp, oiler.isRainMode());
+    
+    // Pass Aux Status to Oiler for LED
+    oiler.setAuxStatus(auxManager.getCurrentPwm(), (int)auxManager.getMode());
 
 #ifdef SD_LOGGING_ACTIVE
     if (millis() - lastLogTime > LOG_INTERVAL_MS) {
@@ -615,7 +618,7 @@ void loop() {
     }
 #endif
 
-    // --- WiFi Management ---
+    // --- WiFi Management & Aux Toggle ---
     unsigned long currentMillis = millis();
 
     // 1. Activation: Standstill + Button pressed
@@ -629,7 +632,7 @@ void loop() {
                 wifiButtonPressStart = currentMillis;
                 wifiButtonHeld = true;
             } else {
-                // Check duration
+                // Check duration for WiFi (> 3s)
                 if (currentMillis - wifiButtonPressStart > WIFI_PRESS_MS) {
                     // Button held
                     wifiStartTime = currentMillis; // Reset timeout timer
@@ -649,6 +652,20 @@ void loop() {
             }
         }
     } else {
+        // Button Released
+        if (wifiButtonHeld) {
+            unsigned long duration = currentMillis - wifiButtonPressStart;
+            
+            // Check for Aux Toggle (1.5s - 3.0s)
+            // RAIN_TOGGLE_MS is 1500, WIFI_PRESS_MS is 3000
+            if (duration >= RAIN_TOGGLE_MS && duration < WIFI_PRESS_MS) {
+                auxManager.toggleManualOverride();
+#ifdef GPS_DEBUG
+                Serial.print("Aux Manual Override Toggled: ");
+                Serial.println(auxManager.isManualOverrideActive() ? "ON" : "OFF");
+#endif
+            }
+        }
         wifiButtonHeld = false;
     }
 

@@ -30,11 +30,19 @@ void AuxManager::begin(ImuHandler* imu) {
     _rainBoost = _prefs.getInt("rainB", 10);
     _startupBoostLevel = _prefs.getInt("startL", 100);
     _startupBoostSec = _prefs.getInt("startS", 75);
+    
+    // Safety: Heated Grips always start OFF. Smart Power respects saved state.
+    if (_mode == AUX_MODE_HEATED_GRIPS) {
+        _manualOverride = false;
+    } else {
+        _manualOverride = _prefs.getBool("man_ovr", true);
+    }
+    
     _prefs.end();
 }
 
 void AuxManager::loop(float currentSpeedKmh, float currentTempC, bool isRainMode) {
-    if (_mode == AUX_MODE_OFF) {
+    if (_mode == AUX_MODE_OFF || !_manualOverride) {
         setPwm(0);
         return;
     }
@@ -44,6 +52,13 @@ void AuxManager::loop(float currentSpeedKmh, float currentTempC, bool isRainMode
     } else if (_mode == AUX_MODE_HEATED_GRIPS) {
         handleHeatedGrips(currentSpeedKmh, currentTempC, isRainMode);
     }
+}
+
+void AuxManager::toggleManualOverride() {
+    _manualOverride = !_manualOverride;
+    _prefs.begin("aux", false);
+    _prefs.putBool("man_ovr", _manualOverride);
+    _prefs.end();
 }
 
 void AuxManager::handleSmartPower() {
