@@ -45,6 +45,44 @@ By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" a
 *   **Calibration:** A dedicated Web Interface page allows zeroing the sensor and calibrating the "Parked" positions.
 *   **Logging:** All IMU data will be logged to the SD card (if active) for analysis.
 
+## 💾 Optional SD Card Logging
+
+For advanced users and data analysis, you can connect a standard **MicroSD Card Module** (SPI). The system automatically detects the card at boot and starts logging telemetry data.
+
+*   **File Format:** CSV (Comma Separated Values)
+*   **Interval:** 1 Second
+*   **Files:** `log_X.csv` (Increments automatically)
+
+### Wiring (VSPI Default)
+
+| Pin | ESP32 GPIO |
+| :--- | :--- |
+| **CS** | GPIO 5 |
+| **MOSI** | GPIO 23 |
+| **MISO** | GPIO 19 |
+| **CLK** | GPIO 18 |
+| **VCC** | 5V |
+| **GND** | GND |
+
+### Logged Data
+
+| Column | Description |
+| :--- | :--- |
+| **Type** | Event type (DATA = Periodic, EVENT = System Event) |
+| **Time_ms** | System uptime in milliseconds |
+| **Speed_GPS** | Raw GPS speed (km/h) |
+| **Speed_Smooth** | Smoothed speed used for calculation (km/h) |
+| **Odo_Total** | Total odometer reading (km) |
+| **Dist_Accum** | Distance accumulated towards next oiling (km) |
+| **Target_Int** | Current target interval (km) |
+| **Pump_State** | 1 = Pump running, 0 = Idle |
+| **Rain_Mode** | 1 = Active, 0 = Inactive |
+| **Temp_C** | Current temperature (°C) |
+| **Sats** | Number of satellites |
+| **HDOP** | GPS Precision (Lower is better) |
+| **Message** | System messages or debug info |
+| **Turbo_Mode** | 1 = Active, 0 = Inactive |
+
 ## 🌡️ Automatic Temperature Compensation
 
 This system uses a **DS18B20** temperature sensor to adjust the pump mechanics based on the viscosity of the oil.
@@ -189,7 +227,7 @@ Flash the firmware directly from your browser (Chrome/Edge) without installing a
 
 ### Option B: PlatformIO (For Developers)
 
-**⚠️ Important:** The recommended ESP32-32E board usually does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the firmware!
+**⚠️ Important:** The recommended ESP32-32E board does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the firmware!
 *   **Connections:** TX->RX, RX->TX, GND->GND, 3.3V->3.3V (or 5V->5V).
 *   **Boot Mode:** You might need to bridge GPIO0 to GND during power-up to enter bootloader mode.
 
