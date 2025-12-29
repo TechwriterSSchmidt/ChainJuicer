@@ -4,7 +4,7 @@ An advanced, GPS-controlled chain oiler for motorcycles based on the ESP32. The 
 
 ## Support my projects
 
-Your tip motivates me to continue developing cool stuff for the DIY community. Thank you very much for your support!
+If you like this project, consider a tip. Your tip motivates me to continue developing cool stuff for the DIY community. Thank you very much for your support!
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D01HVT9A)
 
@@ -253,19 +253,27 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
     *   **Juices:** Counter for oilings per range.
     *   **Reset:** Reset stats or refill tank.
 
-## 💡 Usage Scenarios
+## 💡 Usage Scenarios & LED Status
 
-| Scenario | Trigger / Action | System Behavior |
-| :--- | :--- | :--- |
-| **Normal Ride** | GPS Fix, Speed > 7 km/h | **LED: Green.** System oils automatically based on speed and configured distance intervals. |
-| **Tunnel / Signal Loss** | No GPS signal > 3 min | **LED: Cyan.** Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
-| **Rain Ride** | Short Press (< 1.5s) | **LED: Blue.** **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
-| **Dust / Flushing** | 3x Click | **LED: Cyan Blink.** **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
-| **Offroad / Enduro** | 6x Click | **LED: Magenta Blink.** **Cross-Country Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
-| **Refill / Bleeding** | Hold > 10s (Standstill) | **LED: Red Blink.** **Bleeding Mode**. Pump runs continuously for 15s to fill the line. |
-| **Configuration** | Hold > 3s (Standstill) | **LED: White Pulse.** Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
-| **Tank Empty** | Reserve reached | **LED: Orange 2x Blink.** **Tank Warning**. Refill tank and reset counter via Web Interface. |
-| **Hardware Debug** | Pump runs at boot | **Check Wiring!** Ensure 10k Pull-Down resistor is installed between Gate and GND. |
+The system uses two LEDs to communicate its status.
+*   **LED 1 (Main):** System Status, Oiling, Warnings.
+*   **LED 2 (Aux):** Status of the Auxiliary Port (Heated Grips / Smart Power).
+
+| Scenario | Trigger / Action | LED 1 (Main) | LED 2 (Aux) | System Behavior |
+| :--- | :--- | :--- | :--- | :--- |
+| **Normal Ride** | GPS Fix, Speed > 7 km/h | **Green** | *State dependent* | System oils automatically based on speed and configured distance intervals. |
+| **Oiling Event** | Distance reached | **Yellow Breathing** | *State dependent* | Pump releases oil pulse. |
+| **Tunnel / Signal Loss** | No GPS signal > 3 min | **Cyan** | *State dependent* | Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
+| **Rain Ride** | Short Press (< 1.5s) | **Blue** | *State dependent* | **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
+| **Dust / Flushing** | 3x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
+| **Offroad / Enduro** | 6x Click | **Magenta Blink** | *State dependent* | **Cross-Country Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
+| **Refill / Bleeding** | Hold > 10s (Standstill) | **Red Blink** | *State dependent* | **Bleeding Mode**. Pump runs continuously for 15s to fill the line. |
+| **Configuration** | Hold > 3s (Standstill) | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
+| **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |
+| **Aux: Smart Power** | Engine Running (IMU) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
+| **Aux: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
+| **Aux: Manual Toggle** | Hold 2s (1.5s - 3.0s) | *State dependent* | **Off / On** | Manually toggles the Aux Port (Override). |
+| **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
 ### Pin Assignment (Current Config)
 

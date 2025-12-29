@@ -135,7 +135,7 @@ void ImuHandler::loadCalibration() {
     _offsetPitch = _prefs.getFloat("off_p", 0.0);
     _sideStandRoll = _prefs.getFloat("side_r", 0.0);
     _sideStandCalibrated = _prefs.getBool("side_cal", false);
-    _chainOnRight = _prefs.getBool("chain_r", false);
+    _chainOnRight = _prefs.getBool("chain_r", true);
     _prefs.end();
 }
 
