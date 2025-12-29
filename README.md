@@ -1,8 +1,12 @@
 # 🍋 Chain Juicer (ESP32)
 
-**The Swiss Army Knife for your Motorcycle Chain.**
+**The Swiss Army Knife for your Motorcycle.**
 
-An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Power Manager for accessories, and an automated Heated Grips Controller. Designed around a cheap and widely available standard ESP32 Relay Board (LCTECH), this project requires **no custom PCB** and minimal soldering skills. It's the perfect entry point for DIY motorcycle electronics. It combines intelligent maintenance with modern convenience and safety features like the optional IMU-based crash detection.
+An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Power Manager for accessories, and an automated Heated Grips Controller. It combines intelligent maintenance with modern convenience and safety features like IMU-based crash detection.
+
+**Easy to Build:** Designed around a widely available standard ESP32 Relay Board (LCTECH), this project requires **no custom PCB** and minimal soldering skills. It's the perfect entry point for DIY motorcycle electronics.
+
+**Easy to Install:** No coding skills required! Use the [Web Installer](#option-a-web-installer-recommended) to flash your ESP32 directly from the browser. Future updates can be done wirelessly via OTA (Over-The-Air).
 
 ## Support my projects
 
