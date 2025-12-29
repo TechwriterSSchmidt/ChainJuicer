@@ -252,6 +252,8 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
     *   **Juices:** Counter for oilings per range.
     *   **Reset:** Reset stats or refill tank.
 
+👀 **Screenshots:** Check out the [web-ui examples](web-ui%20examples/) folder to see what the interface looks like.
+
 ## 💡 Usage Scenarios & LED Status
 
 The system uses two LEDs to communicate its status.

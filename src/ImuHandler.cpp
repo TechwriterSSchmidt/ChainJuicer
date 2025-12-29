@@ -1,6 +1,7 @@
 #include "ImuHandler.h"
 
 ImuHandler::ImuHandler() {
+    _lastMotionTime = 0;
 }
 
 bool ImuHandler::begin(int sda, int scl) {
@@ -24,8 +25,10 @@ bool ImuHandler::begin(int sda, int scl) {
         Serial.println("IMU: Could not enable Rotation Vector");
     }
     
-    // Linear Acceleration for Motion Detection (100ms)
-    if (!_bno.enableReport(SH2_LINEAR_ACCELERATION, 100000)) {
+    // Linear Acceleration for Motion Detection
+    // 800 RPM (Idle) = ~13Hz. We need >26Hz sampling to detect it reliably.
+    // Setting to 20ms (50Hz) to capture engine vibrations.
+    if (!_bno.enableReport(SH2_LINEAR_ACCELERATION, 20000)) {
         Serial.println("IMU: Could not enable Linear Accel");
     }
 
@@ -50,7 +53,16 @@ void ImuHandler::update() {
                 processOrientation();
                 break;
             case SH2_LINEAR_ACCELERATION:
-                // Process motion
+                _linAccelX = _sensorValue.un.linearAcceleration.x;
+                _linAccelY = _sensorValue.un.linearAcceleration.y;
+                _linAccelZ = _sensorValue.un.linearAcceleration.z;
+                
+                // Simple motion check: Magnitude > threshold
+                // Gravity is removed in Linear Acceleration
+                // 0.5 m/s^2 is a reasonable threshold for engine vibration or movement
+                if ((_linAccelX*_linAccelX + _linAccelY*_linAccelY + _linAccelZ*_linAccelZ) > (0.5 * 0.5)) { 
+                    _lastMotionTime = millis();
+                }
                 break;
         }
     }
@@ -171,8 +183,12 @@ bool ImuHandler::isCrashed() {
 
 bool ImuHandler::isMotionDetected() {
     if (!_available) return true; // Default to true if no IMU, so we rely on GPS
-    // TODO: Implement Linear Accel check
-    return true; 
+    
+    // Check if we had motion in the last 5 seconds
+    // This covers engine vibration (continuous updates) or stop-and-go
+    if (millis() - _lastMotionTime < 5000) return true;
+    
+    return false; 
 }
 
 bool ImuHandler::isLeaningOnChainSide(float thresholdDeg) {

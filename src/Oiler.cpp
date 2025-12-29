@@ -880,6 +880,12 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
         if (emergencyModeForced || autoEmergencyActive) {
             // We are in Emergency Mode (either Forced or Auto Timeout)
+
+            // IMU Check: If we have an IMU, pause Emergency Mode if no motion/vibration is detected
+            if (!imu.isMotionDetected()) {
+                lastSimStep = now; // Keep timer fresh so we don't jump
+                return;
+            }
             
             if (!emergencyMode) {
                 // Just entered Emergency Mode

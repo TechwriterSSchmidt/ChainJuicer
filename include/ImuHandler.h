@@ -59,6 +59,12 @@ private:
     // Chain Configuration
     bool _chainOnRight = false; // Default: Left side
 
+    // Motion Detection
+    float _linAccelX = 0.0;
+    float _linAccelY = 0.0;
+    float _linAccelZ = 0.0;
+    unsigned long _lastMotionTime = 0;
+
     Preferences _prefs;
     
     void processOrientation();

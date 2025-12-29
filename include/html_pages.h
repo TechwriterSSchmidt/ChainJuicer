@@ -358,10 +358,13 @@ const char* htmlAuxConfig = R"rawliteral(
         function toggleFields() {
             var mode = document.getElementById('mode').value;
             var grips = document.getElementById('grips_settings');
+            var desc = document.getElementById('grips_desc');
             if (mode == '2') { // Heated Grips
                 grips.style.display = 'block';
+                desc.style.display = 'block';
             } else {
                 grips.style.display = 'none';
+                desc.style.display = 'none';
             }
         }
     </script>
@@ -387,18 +390,7 @@ const char* htmlAuxConfig = R"rawliteral(
         
         <div id='grips_settings' style='display:none'>
             <div class='card'>
-                <h3>Heated Grips Logic</h3>
-                <div class='note' style='margin-bottom:15px; line-height:1.4'>
-                    <b>Feature Description:</b><br>
-                    The Heated Grips mode automatically adjusts the power (PWM) based on speed and temperature.<br>
-                    The power changes smoothly (approx. 5 sec lag) to prevent rapid fluctuations.<br><br>
-                    <b>Example Calculation:</b><br>
-                    <i>Base (25%) + 100km/h * 0.5 (50%) + 10&deg;C Cold * 2.0 (20%) = 95% Power</i>
-                </div>
-                <div class='note' style='font-family:monospace; background:#eee; padding:5px; border-radius:4px'>
-                    PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost
-                </div>
-                <br>
+                <h3>Heated Grips Settings</h3>
                 <table>
                     <tr>
                         <td>Base Level (%)</td>
@@ -430,8 +422,21 @@ const char* htmlAuxConfig = R"rawliteral(
         
         <input type='submit' value='Save Configuration' class='btn'>
     </form>
-    <br>
-    <a href='/' class='btn' style='background:#6c757d;text-align:center;display:block;text-decoration:none'>Back to Main</a>
+
+    <div id='grips_desc' class='card' style='display:none; margin-top:15px'>
+        <h3>Feature Description</h3>
+        <div class='note' style='margin-bottom:15px; line-height:1.4'>
+            The Heated Grips mode automatically adjusts the power (PWM) based on speed and temperature.<br>
+            The power changes smoothly (approx. 5 sec lag) to prevent rapid fluctuations.<br><br>
+            <b>Example Calculation:</b><br>
+            <i>Base (25%) + 100km/h * 0.5 (50%) + 10&deg;C Cold * 2.0 (20%) = 95% Power</i>
+        </div>
+        <div class='note' style='font-family:monospace; background:#eee; padding:5px; border-radius:4px'>
+            PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost
+        </div>
+    </div>
+
+    <a href='/' class='btn'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
