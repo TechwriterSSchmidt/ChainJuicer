@@ -153,7 +153,14 @@ public:
     // Turn Safety
     bool oilingDelayed; // Flag to indicate oiling is pending due to lean angle
 
+    // Aux Status Setter
+    void setAuxStatus(int pwm, int mode) { auxPwm = pwm; auxMode = mode; }
+
 private:
+    // Aux Status for LED
+    int auxPwm = 0;
+    int auxMode = 0; // 0=OFF, 1=SMART, 2=GRIPS
+
     void processDistance(double distKm, float speedKmh);
     
     int pumpPin;
@@ -235,11 +242,6 @@ private:
 
     // Safety & UX
     unsigned long ledOilingEndTimestamp;
-
-    // Aux Status for LED
-    int auxPwm = 0;
-    int auxMode = 0; // 0=OFF, 1=SMART, 2=GRIPS
-    void setAuxStatus(int pwm, int mode) { auxPwm = pwm; auxMode = mode; }
 
     // Emergency Mode Settings
     bool emergencyModeForced; // Manually enabled via WebUI
