@@ -191,7 +191,7 @@ All parameters (Base %, Speed Factor, Temp Factor, Boosts) are fully configurabl
 
 ### MOSFET Wiring (Direct Drive)
 
-To prevent the pump from triggering briefly during boot (floating pin), use a Logic Level MOSFET (e.g., NCE6020AK) and a Pull-Down resistor. Do **not** use an NPN driver stage (Emitter Follower) as it may cause threshold voltage issues with 3.3V logic.
+To prevent the pump from triggering briefly during boot, desolder the little driver transistor of one output MOSFET (NCE6020AK) and connect the Gate of the MOSFET via a 220 Ohm resistor directly to the GPIO of the ESP. Add a Pull-Down resistor to stabilize the MOSFET. This modification may not be necessary for the Aux Port - your choice!
 
 **Recommended Fuses:**
 *   **Main Fuse (Battery):** 15A (Blue) - Protects the entire system.
@@ -227,18 +227,17 @@ ESP32 GPIO (the one that switches the MOSFET
 
 ### LED Status Codes
 
-*   🟢 **Green:** Normal Operation (GPS Fix available)
-*   🔵 **Blue:** Rain Mode Active
-*   🔵 **Cyan (blinking):** Chain Flush Mode Active
-*   🟣 **Magenta (blinking):** Cross-Country Mode Active
-*   🟣 **Magenta:** No GPS Signal (Searching...)
-*   🔵 **Cyan:** Emergency Mode (Auto: No GPS > 3 min)
-*   🟠 **Orange (pulsing):** Emergency Mode (Forced: GPS available)
-*   🟡 **Yellow:** Oiling in progress (lit for 3s, breathes 3x)
-*   ⚪ **White (pulsing):** WiFi Configuration Mode active
-*   🟠 **Orange (2x blink):** Tank Warning (Reserve reached)
-*   🔴 **Red (blinking):** Bleeding Mode active
-*   🔵 **Cyan (fast blink):** Firmware Update in progress
+| Color / Pattern | LED 1 (Main System) | LED 2 (Aux Port) |
+| :--- | :--- | :--- |
+| 🟢 **Green** | Normal Operation (GPS Fix) | Smart Power: **ON** (12V Active) |
+| 🔵 **Blue** | Rain Mode Active | Heated Grips: **Level 1** (Low) |
+| 🟡 **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
+| 🟠 **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
+| 🔴 **Red** | Bleeding Mode (Blink) | Heated Grips: **Level 4** (Max) |
+| 🟣 **Magenta** | No GPS (Solid) / Cross-Country (Blink) | - |
+| 🔵 **Cyan** | Emergency Mode (Solid) / Flush (Blink) | - |
+| ⚪ **White** | WiFi Config Mode (Pulse) | - |
+| ⚫ **Off** | - | Aux Port: **OFF** |
 
 ## 📱 Web Interface
 
