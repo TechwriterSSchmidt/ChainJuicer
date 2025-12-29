@@ -74,7 +74,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 
 ## 🛠 Hardware
 
-*   **MCU:** ESP32-32E Board (with MOSFET & Wide Range Input).
+*   **MCU:** [ESP32-32E Board](https://de.aliexpress.com/item/1005007481509548.html?spm=a2g0o.detail.pcDetailTopMoreOtherSeller.1.7ee51GVe1GVen4&gps-id=pcDetailTopMoreOtherSeller&scm=1007.40050.354490.0&scm_id=1007.40050.354490.0&scm-url=1007.40050.354490.0&pvid=7a27ce65-0636-4528-ad57-32ebfd2405a5&_t=gps-id:pcDetailTopMoreOtherSeller,scm-url:1007.40050.354490.0,pvid:7a27ce65-0636-4528-ad57-32ebfd2405a5,tpp_buckets:668%232846%238109%231935&pdp_ext_f=%7B%22order%22%3A%2233%22%2C%22eval%22%3A%221%22%2C%22sceneId%22%3A%2230050%22%2C%22fromPage%22%3A%22recommend%22%7D&pdp_npi=6%40dis%21CHF%212.32%212.09%21%21%2120.23%2118.21%21%402103867617669674178075350e6907%2112000043231287453%21rec%21CH%211702792198%21X%211%210%21n_tag%3A-29919%3Bd%3A94cdc6e3%3Bm03_new_user%3A-29895&utparam-url=scene%3ApcDetailTopMoreOtherSeller%7Cquery_from%3A%7Cx_object_id%3A1005007481509548%7C_p_origin_prod%3A) (with MOSFET & Wide Range Input).
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** [12V Dosing Pump](https://de.aliexpress.com/item/1005010375479436.html).
     *   *Durability:* Tested with 2 pumps, each > 100,000 strokes without failure.
