@@ -149,6 +149,7 @@ Turns on your accessories (Navigation, USB, Lights) only when the engine is runn
 
 ### 2. Automated Heated Grips
 Advanced PWM control for heated grips, far superior to simple "Low/High" switches.
+*   **Hardware Recommendation:** [Coolride Heating Cartridges](https://www.coolride.de/Neue-Heizpatronen-Paar-einzeln-ohne-Schalter) (52W).
 *   **Base Level:** Set your preferred minimum heat.
 *   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor).
 *   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor).
@@ -160,7 +161,8 @@ All parameters (Base %, Speed Factor, Temp Factor, Boosts) are fully configurabl
 
 ## 🛠 Hardware
 
-*   **MCU:** [ESP32-32E Board](https://de.aliexpress.com/item/1005007481509548.html?spm=a2g0o.detail.pcDetailTopMoreOtherSeller.1.7ee51GVe1GVen4&gps-id=pcDetailTopMoreOtherSeller&scm=1007.40050.354490.0&scm_id=1007.40050.354490.0&scm-url=1007.40050.354490.0&pvid=7a27ce65-0636-4528-ad57-32ebfd2405a5&_t=gps-id:pcDetailTopMoreOtherSeller,scm-url:1007.40050.354490.0,pvid:7a27ce65-0636-4528-ad57-32ebfd2405a5,tpp_buckets:668%232846%238109%231935&pdp_ext_f=%7B%22order%22%3A%2233%22%2C%22eval%22%3A%221%22%2C%22sceneId%22%3A%2230050%22%2C%22fromPage%22%3A%22recommend%22%7D&pdp_npi=6%40dis%21CHF%212.32%212.09%21%21%2120.23%2118.21%21%402103867617669674178075350e6907%2112000043231287453%21rec%21CH%211702792198%21X%211%210%21n_tag%3A-29919%3Bd%3A94cdc6e3%3Bm03_new_user%3A-29895&utparam-url=scene%3ApcDetailTopMoreOtherSeller%7Cquery_from%3A%7Cx_object_id%3A1005007481509548%7C_p_origin_prod%3A) (with MOSFET & Wide Range Input).
+*   **MCU:** [LCTECH ESP32 Relay X1](http://www.chinalctech.com/cpzx/Programmer/Relay_Module/866.html).
+    *   *Specs:* ESP32-WROOM-32E, Wide Range Input (7-30V), Onboard MOSFET (**NCE6020AK**).
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** [12V Dosing Pump](https://de.aliexpress.com/item/1005010375479436.html).
     *   *Durability:* Tested with 2 pumps, each > 100,000 strokes without failure.
@@ -189,6 +191,11 @@ All parameters (Base %, Speed Factor, Temp Factor, Boosts) are fully configurabl
 ### MOSFET Wiring (Direct Drive)
 
 To prevent the pump from triggering briefly during boot (floating pin), use a Logic Level MOSFET (e.g., NCE6020AK) and a Pull-Down resistor. Do **not** use an NPN driver stage (Emitter Follower) as it may cause threshold voltage issues with 3.3V logic.
+
+**Recommended Fuses:**
+*   **Main Fuse (Battery):** 15A (Blue) - Protects the entire system.
+*   **Aux Circuit (Grips):** 7.5A (Brown) - Protects the heated grips wiring (Load ~5.2A).
+*   **Pump Circuit:** 5A (Tan) - Protects the pump and its MOSFET (Load ~4A Peak).
 
 **Important:** The 200Ω series resistor and 10kΩ Pull-Down resistor are **mandatory** to prevent the pump from running uncontrollably during the ESP32 boot sequence.
 
@@ -306,7 +313,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
 
 | Component | Description | Link (Example) | Approx. Price |
 | :--- | :--- | :--- | :--- |
-| **ESP32 Board** | ESP32-32E (MOSFET & Wide Range) | Generic | ~ 6.00 € |
+| **ESP32 Board** | LCTECH Relay X1 (NCE6020AK) | [Manufacturer](http://www.chinalctech.com/cpzx/Programmer/Relay_Module/866.html) | ~ 6.00 € |
 | **GPS Module** | ATGM336H (Small & Fast) | [AliExpress](https://de.aliexpress.com/item/1005007759554488.html) | ~ 4.50 € |
 | **Dosing Pump** | 12V Pulse Pump | [AliExpress](https://de.aliexpress.com/item/1005010375479436.html) | ~ 12.00 € |
 | **Oil Tank** | 120cc RC Tank | [AliExpress](https://de.aliexpress.com/item/1588019770.html) | ~ 4.00 € |
@@ -315,7 +322,8 @@ The total project cost is very low compared to commercial alternatives (~150€+
 | **TPU Hose** | 2m Oil/Fuel Line | [AliExpress](https://de.aliexpress.com/item/1005005390968147.html) | ~ 3.00 € |
 | **Button** | Waterproof Button | [AliExpress](https://de.aliexpress.com/item/1005009185830140.html) | ~ 0.70 € |
 | **LED** | WS2812B (Code supports up to 2x) | Generic | ~ 1.00 € |
-| **Small Parts** | Automotive Connectors (2x 2pin, 1x 4pin), Wires, Fuse | Generic | ~ 15.00 € |
+| **Fuses** | KFZ-Flachsicherungen (15A, 7.5A, 5A) | Generic | ~ 2.00 € |
+| **Small Parts** | Automotive Connectors (2x 2pin, 1x 4pin), Wires | Generic | ~ 13.00 € |
 | **Housing** | 3D Printed (PETG/ASA) | DIY | ~ 2.00 € |
 | **Flasher** | USB-to-UART Adapter (CP2102/CH340) | Generic | ~ 3.00 € |
 | **Total (Basic)** | | | **~ 52.50 €** |
