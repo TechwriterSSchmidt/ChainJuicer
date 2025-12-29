@@ -244,6 +244,18 @@ The total project cost is very low compared to commercial alternatives (~150€+
 *   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the status display in the cockpit and a second one (optional) near the tank or pump for debugging/tank warning.
 *   **Resistors:** Don't forget the **200R** (Series) and **10k** (Pull-Down) for the MOSFET gate if your board doesn't have them integrated!
 
+## ⚠️ Disclaimer & Safety
+
+**READ CAREFULLY BEFORE BUILDING OR USING THIS SYSTEM!**
+
+*   **DIY Project:** This is a Do-It-Yourself project. You are solely responsible for the assembly, installation, and operation of the system.
+*   **No Liability:** The author accepts **no liability** for any damage to your motorcycle, property, or person, nor for any accidents caused by the use or failure of this system.
+*   **Oil on Tires:** Chain oilers involve liquids near moving parts. **Oil on the tire significantly reduces traction and can lead to crashes.**
+    *   Ensure the dosing needle is positioned correctly so oil drips ONLY on the chain/sprocket, never on the tire or brake disc.
+    *   Regularly check the system for leaks.
+    *   **IMMEDIATELY clean any oil off the tire** if a spill occurs. Do not ride with oil on your tires.
+*   **Road Safety:** Do not operate the configuration interface while riding. Focus on the road.
+
 
 
 
