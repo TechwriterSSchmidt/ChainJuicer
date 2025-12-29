@@ -147,6 +147,9 @@ public:
     float startupDelayKm;
     float currentStartupDistance;
 
+    // Crash Latch
+    bool crashTripped;
+
     // Turn Safety
     bool oilingDelayed; // Flag to indicate oiling is pending due to lean angle
 

@@ -37,7 +37,7 @@ By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" a
 | Feature | Description | Benefit |
 | :--- | :--- | :--- |
 | **Garage Guard** | Detects if the bike is on the **Side Stand** (> 10° lean) or **Center Stand** (Calibrated position). | Prevents accidental oiling in the garage, even if the motor is running or GPS drifts. |
-| **Crash Detection** | Detects tip-overs (> 60° lean) or accidents. | Immediate safety cutoff for the pump. |
+| **Crash Detection** | Detects tip-overs (> 70° lean) or accidents. | Immediate safety cutoff for the pump. **Requires restart to reset.** |
 | **Smart Stop** | Detects standstill via accelerometer before GPS reacts. | More precise oiling stops at traffic lights. |
 | **Telemetry Logger** | Records max lean angles (L/R), max acceleration, and braking G-forces. | Fun stats for the web interface ("How deep was I in that corner?"). |
 | **Dynamic Intervals** | Analyzes riding style (Cruising vs. Racing). | Reduces oiling intervals during aggressive riding (high load on chain). |
@@ -157,7 +157,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 | **Button** | GPIO 4 | Switched against GND |
 | **Boot Button** | GPIO 0 | Onboard Button (Parallel function) |
 | **LED** | GPIO 32 | WS2812B Data In |
-| **Temp Sensor** | GPIO 15 | DS18B20 Data |
+| **Temp Sensor** | GPIO 15 | DS18B20 Data (with 4k7 resistor between VCC and Data!) |
 | **IMU SDA** | GPIO 21 | I2C Data |
 | **IMU SCL** | GPIO 22 | I2C Clock |
 
@@ -229,7 +229,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 | **Normal Ride** | GPS Fix, Speed > 7 km/h | **LED: Green.** System oils automatically based on speed and configured distance intervals. |
 | **Tunnel / Signal Loss** | No GPS signal > 3 min | **LED: Cyan.** Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
 | **Rain Ride** | Short Press (< 1.5s) | **LED: Blue.** **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
-| **Dust / Cleaning** | 3x Click | **LED: Cyan Blink.** **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
+| **Dust / Flushing** | 3x Click | **LED: Cyan Blink.** **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
 | **Offroad / Enduro** | 6x Click | **LED: Magenta Blink.** **Cross-Country Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
 | **Refill / Bleeding** | Hold > 10s (Standstill) | **LED: Red Blink.** **Bleeding Mode**. Pump runs continuously for 15s to fill the line. |
 | **Configuration** | Hold > 3s (Standstill) | **LED: White Pulse.** Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |

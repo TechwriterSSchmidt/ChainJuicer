@@ -163,9 +163,9 @@ bool ImuHandler::isParked() {
 
 bool ImuHandler::isCrashed() {
     if (!_available) return false;
-    // Crash Logic: Lean > 60 degrees
-    if (abs(_roll) > 60.0) return true;
-    if (abs(_pitch) > 60.0) return true; // Wheelie fail or nose dive
+    // Crash Logic: Lean > 70 degrees
+    if (abs(_roll) > 70.0) return true;
+    if (abs(_pitch) > 70.0) return true; // Wheelie fail or nose dive
     return false;
 }
 

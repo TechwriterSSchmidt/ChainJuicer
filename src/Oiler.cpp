@@ -89,6 +89,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     startupDelayKm = STARTUP_DELAY_KM_DEFAULT;
     currentStartupDistance = 0.0;
     oilingDelayed = false;
+    crashTripped = false;
 
     // Oiling State Init
     isOiling = false;
@@ -217,6 +218,12 @@ void Oiler::checkFactoryReset() {
 
 void Oiler::loop() {
     imu.loop(); // Update IMU data
+    
+    // Check for Crash (Latch)
+    if (imu.isCrashed()) {
+        crashTripped = true;
+    }
+
     handleButton();
     processPump(); // Unified pump logic
     
@@ -419,6 +426,15 @@ void Oiler::updateLED() {
             color = strip.Color(0, 255, 255); // Cyan
         } else {
             color = 0; // Off
+        }
+    }
+    // 0.1 Crash Detected (Latch) -> RED/WHITE Fast Alternating
+    else if (crashTripped) {
+        strip.setBrightness(currentHighBrightness);
+        if ((now / 100) % 2 == 0) {
+            color = strip.Color(255, 0, 0); // Red
+        } else {
+            color = strip.Color(255, 255, 255); // White
         }
     }
     // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
@@ -916,7 +932,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
 void Oiler::processDistance(double distKm, float speedKmh) {
     // IMU Safety Checks
-    if (imu.isCrashed()) return; // Crash detected!
+    if (crashTripped) return; // Crash detected (Latched)!
     
     // Garage Guard: Only relevant if speed is low (e.g. < 10 km/h) to prevent GPS drift oiling.
     // If we are riding fast, we don't want "isParked" (which triggers at >10 deg lean) to stop oiling.
@@ -1069,8 +1085,8 @@ void Oiler::triggerOil(int pulses) {
 void Oiler::processPump() {
     unsigned long now = millis();
 
-    // IMU Safety Cutoff
-    if (imu.isCrashed()) {
+    // IMU Safety Cutoff (Latch)
+    if (crashTripped) {
         if (PUMP_USE_PWM) ledcWrite(PUMP_PWM_CHANNEL, 0);
         digitalWrite(pumpPin, PUMP_OFF);
         isOiling = false;

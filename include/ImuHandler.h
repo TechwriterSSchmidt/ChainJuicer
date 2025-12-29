@@ -30,7 +30,7 @@ public:
     
     // Features
     bool isParked(); // Garage Guard (Side stand or Center stand)
-    bool isCrashed(); // Lean > 60
+    bool isCrashed(); // Lean > 70
     bool isMotionDetected(); // Smart Stop helper
     bool isLeaningOnChainSide(float thresholdDeg); // Returns true if leaning towards the chain side
 
