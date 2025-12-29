@@ -24,12 +24,12 @@ void AuxManager::begin(ImuHandler* imu) {
     _prefs.begin("aux", false);
     _mode = (AuxMode)_prefs.getInt("mode", AUX_MODE_OFF);
     
-    _baseLevel = _prefs.getInt("base", 30);
+    _baseLevel = _prefs.getInt("base", 25);
     _speedFactor = _prefs.getFloat("speedF", 0.5);
     _tempFactor = _prefs.getFloat("tempF", 2.0);
     _rainBoost = _prefs.getInt("rainB", 10);
-    _startupBoostLevel = _prefs.getInt("startL", 80);
-    _startupBoostSec = _prefs.getInt("startS", 60);
+    _startupBoostLevel = _prefs.getInt("startL", 100);
+    _startupBoostSec = _prefs.getInt("startS", 75);
     _prefs.end();
 }
 
@@ -95,7 +95,12 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     if (target > 100) target = 100;
     if (target < 0) target = 0;
     
-    setPwm((int)target);
+    // Smoothing (Low Pass Filter) to prevent rapid PWM changes
+    // This acts as a hysteresis/damping mechanism
+    // Factor 0.002 with ~10ms loop time gives approx 5 seconds smoothing
+    _smoothedPwm = (_smoothedPwm * 0.998) + (target * 0.002);
+    
+    setPwm((int)_smoothedPwm);
 }
 
 void AuxManager::setPwm(int percent) {

@@ -102,12 +102,13 @@ This table shows which features are available depending on the connected hardwar
 | **Crash Detection** | ❌ | ❌ | ✅ | ✅ |
 | **Garage Guard** | ❌ | ❌ | ✅ | ✅ |
 | **Smart Stop** | ❌ | ❌ | ✅ | ✅ |
-| **Aux Port Manager** | ✅ | ✅ | ✅ | ✅ |
+| **Aux: Smart Power** | ❌ | ❌ | ✅ | ✅ |
+| **Aux: Heated Grips** | ❌ | ✅ | ✅ | ✅ |
 | **Data Logging** | ❌ | ❌ | ❌ | ✅ |
 
 *   **Basic Setup:** ESP32, GPS Module, Pump, Button, LED.
 *   **Temp Sensor:** DS18B20 (OneWire).
-*   **IMU:** MPU6050 or BMI160 (I2C).
+*   **IMU:** BNO085 (I2C).
 *   **SD Card:** MicroSD Module (SPI).
 
 ## 🌡️ Automatic Temperature Compensation

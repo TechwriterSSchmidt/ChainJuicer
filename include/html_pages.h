@@ -347,7 +347,7 @@ const char* htmlAuxConfig = R"rawliteral(
         body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
         h2{text-align:center;color:#333}
         h3{color:#555;margin-top:20px}
-        form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+        .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:10px 5px;border-bottom:1px solid #eee}
         input, select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
@@ -369,49 +369,63 @@ const char* htmlAuxConfig = R"rawliteral(
 <body onload="toggleFields()">
     <h2>Aux Port Configuration</h2>
     <form action='/save_aux' method='POST'>
-        <h3>Mode Selection</h3>
-        <table>
-            <tr>
-                <td>Mode</td>
-                <td>
-                    <select id='mode' name='mode' onchange="toggleFields()">
-                        <option value='0' %MODE_OFF%>OFF</option>
-                        <option value='1' %MODE_SMART%>Smart Power (Engine Run)</option>
-                        <option value='2' %MODE_GRIPS%>Heated Grips (Auto)</option>
-                    </select>
-                </td>
-            </tr>
-        </table>
-        
-        <div id='grips_settings' style='display:none'>
-            <h3>Heated Grips Logic</h3>
-            <div class='note'>PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost</div>
+        <div class='card'>
+            <h3>Mode Selection</h3>
             <table>
                 <tr>
-                    <td>Base Level (%)</td>
-                    <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
-                </tr>
-                <tr>
-                    <td>Speed Factor (% per km/h)</td>
-                    <td><input type='number' name='speedF' value='%SPEEDF%' step='0.1'></td>
-                </tr>
-                <tr>
-                    <td>Temp Factor (% per &deg;C < 20)</td>
-                    <td><input type='number' name='tempF' value='%TEMPF%' step='0.1'></td>
-                </tr>
-                <tr>
-                    <td>Rain Boost (%)</td>
-                    <td><input type='number' name='rainB' value='%RAINB%' min='0' max='100'></td>
-                </tr>
-                <tr>
-                    <td>Startup Boost Level (%)</td>
-                    <td><input type='number' name='startL' value='%STARTL%' min='0' max='100'></td>
-                </tr>
-                <tr>
-                    <td>Startup Boost Time (sec)</td>
-                    <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
+                    <td>Mode</td>
+                    <td>
+                        <select id='mode' name='mode' onchange="toggleFields()">
+                            <option value='0' %MODE_OFF%>OFF</option>
+                            <option value='1' %MODE_SMART%>Smart Power (Engine Run)</option>
+                            <option value='2' %MODE_GRIPS%>Heated Grips (Auto)</option>
+                        </select>
+                    </td>
                 </tr>
             </table>
+        </div>
+        
+        <div id='grips_settings' style='display:none'>
+            <div class='card'>
+                <h3>Heated Grips Logic</h3>
+                <div class='note' style='margin-bottom:15px; line-height:1.4'>
+                    <b>Feature Description:</b><br>
+                    The Heated Grips mode automatically adjusts the power (PWM) based on speed and temperature.<br>
+                    The power changes smoothly (approx. 5 sec lag) to prevent rapid fluctuations.<br><br>
+                    <b>Example Calculation:</b><br>
+                    <i>Base (25%) + 100km/h * 0.5 (50%) + 10&deg;C Cold * 2.0 (20%) = 95% Power</i>
+                </div>
+                <div class='note' style='font-family:monospace; background:#eee; padding:5px; border-radius:4px'>
+                    PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost
+                </div>
+                <br>
+                <table>
+                    <tr>
+                        <td>Base Level (%)</td>
+                        <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
+                    </tr>
+                    <tr>
+                        <td>Speed Factor (% per km/h)</td>
+                        <td><input type='number' name='speedF' value='%SPEEDF%' step='0.1'></td>
+                    </tr>
+                    <tr>
+                        <td>Temp Factor (% per &deg;C < 20)</td>
+                        <td><input type='number' name='tempF' value='%TEMPF%' step='0.1'></td>
+                    </tr>
+                    <tr>
+                        <td>Rain Boost (%)</td>
+                        <td><input type='number' name='rainB' value='%RAINB%' min='0' max='100'></td>
+                    </tr>
+                    <tr>
+                        <td>Startup Boost Level (%)</td>
+                        <td><input type='number' name='startL' value='%STARTL%' min='0' max='100'></td>
+                    </tr>
+                    <tr>
+                        <td>Startup Boost Time (sec)</td>
+                        <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
+                    </tr>
+                </table>
+            </div>
         </div>
         
         <input type='submit' value='Save Configuration' class='btn'>

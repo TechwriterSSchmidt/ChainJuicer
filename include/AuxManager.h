@@ -37,6 +37,7 @@ private:
     
     // Pin State
     int _currentPwm = 0;
+    float _smoothedPwm = 0.0;
     bool _isPowered = false;
     
     // Smart Power Logic
