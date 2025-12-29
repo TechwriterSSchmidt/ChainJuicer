@@ -68,14 +68,13 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **Sensor Detection:** If no sensor is connected, the system defaults to 25°C.
 
 **Wiring:**
-*   **VCC:** 3.3V
+*   **VCC:** Board dependent (e.g. 5V-12V for Wide Range boards, or 3.3V/5V for standard)
 *   **GND:** GND
 *   **Data:** GPIO 15 (Default) - Requires 4.7kΩ Pull-Up Resistor to VCC.
 
 ## 🛠 Hardware
 
-*   **MCU:** [ESP32-S3-TINY](https://de.aliexpress.com/item/1005009961593556.html) (or compatible ESP32 board).
-    *   *Note:* On this specific board, you **must** desolder the small transistor (RGB LED driver) if it interferes with the pump pin, or choose a different pin.
+*   **MCU:** ESP32-32E Board (with MOSFET & Wide Range Input).
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** [12V Dosing Pump](https://de.aliexpress.com/item/1005010375479436.html).
     *   *Durability:* Tested with 2 pumps, each > 100,000 strokes without failure.
@@ -199,6 +198,10 @@ If your pump runs immediately when powering on the ESP32:
 
 ## 💻 Installation (PlatformIO)
 
+**⚠️ Important:** The recommended ESP32-32E board usually does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the firmware!
+*   **Connections:** TX->RX, RX->TX, GND->GND, 3.3V->3.3V (or 5V->5V).
+*   **Boot Mode:** You might need to bridge GPIO0 to GND during power-up to enter bootloader mode.
+
 1.  Clone or download the repository.
 2.  Open in VS Code with installed **PlatformIO** Extension.
 3.  Adjust Upload Port in `platformio.ini` if necessary.
@@ -211,7 +214,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
 
 | Component | Description | Link (Example) | Approx. Price |
 | :--- | :--- | :--- | :--- |
-| **ESP32 Board** | ESP32-S3-TINY (Integrated MOS) | [AliExpress](https://de.aliexpress.com/item/1005009961593556.html) | ~ 4.00 € |
+| **ESP32 Board** | ESP32-32E (MOSFET & Wide Range) | Generic | ~ 6.00 € |
 | **GPS Module** | ATGM336H (Small & Fast) | [AliExpress](https://de.aliexpress.com/item/1005007759554488.html) | ~ 4.50 € |
 | **Dosing Pump** | 12V Pulse Pump | [AliExpress](https://de.aliexpress.com/item/1005010375479436.html) | ~ 12.00 € |
 | **Oil Tank** | 120cc RC Tank | [AliExpress](https://de.aliexpress.com/item/1588019770.html) | ~ 4.00 € |
@@ -223,17 +226,17 @@ The total project cost is very low compared to commercial alternatives (~150€+
 | **LED** | WS2812B (Code supports up to 2x) | Generic | ~ 1.00 € |
 | **Small Parts** | Automotive Connectors (2x 2pin, 1x 4pin), Wires, Fuse | Generic | ~ 15.00 € |
 | **Housing** | 3D Printed (PETG/ASA) | DIY | ~ 2.00 € |
-| **Total (Basic)** | | | **~ 51.00 €** |
+| **Flasher** | USB-to-UART Adapter (CP2102/CH340) | Generic | ~ 3.00 € |
+| **Total (Basic)** | | | **~ 54.00 €** |
 | | | | |
 | **IMU (Optional)** | BNO085 (9-Axis) | [AliExpress](https://de.aliexpress.com/item/1005009898088463.html) | ~ 15.00 € |
-| **Total (Full)** | | | **~ 66.00 €** |
+| **Total (Full)** | | | **~ 69.00 €** |
 
 *Note: Prices vary by shipping location and seller.*
 
 ### Hardware Notes
 *   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the status display in the cockpit and a second one (optional) near the tank or pump for debugging/tank warning.
-*   **ESP32 Mod:** On the linked S3-TINY board, you might need to desolder the small RGB-Driver transistor if it interferes with the pump pin.
-*   **Resistors:** Don't forget the **200R** (Series) and **10k** (Pull-Down) for the MOSFET gate!
+*   **Resistors:** Don't forget the **200R** (Series) and **10k** (Pull-Down) for the MOSFET gate if your board doesn't have them integrated!
 
 
 

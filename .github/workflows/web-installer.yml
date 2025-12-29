@@ -1,0 +1,45 @@
+name: Web Installer
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install platformio
+
+      - name: Build Firmware
+        run: pio run -e esp32dev
+
+      - name: Prepare Web Installer
+        run: |
+          mkdir public
+          cp web-installer/* public/
+          cp .pio/build/esp32dev/bootloader.bin public/
+          cp .pio/build/esp32dev/partitions.bin public/
+          cp .pio/build/esp32dev/boot_app0.bin public/
+          cp .pio/build/esp32dev/firmware.bin public/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
