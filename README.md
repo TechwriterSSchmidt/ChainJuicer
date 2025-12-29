@@ -161,32 +161,17 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 
 ## 💡 Usage Scenarios
 
-### Scenario 1: Tunnel / Signal Loss
-You enter a long tunnel. The GPS signal is lost.
-1.  **0-3 Min:** LED turns Magenta (Searching). No oiling occurs yet.
-2.  **> 3 Min:** System enters **Auto Emergency Mode**. LED turns Cyan.
-    *   The system assumes a speed of 50 km/h for the Odometer and Oiling.
-    *   Rain Mode is automatically disabled if it was on.
-3.  **Exit Tunnel:** GPS signal returns. System switches back to Green (Normal). Odometer continues with real data.
-
-### Scenario 2: Rain Ride
-It starts raining.
-1.  **Action:** Short press the button.
-2.  **Feedback:** LED turns Blue.
-3.  **Effect:** Oiling amount is doubled (or interval halved) for the current speed.
-4.  **End:** Press button again, or wait 30 minutes (Auto-Off), or turn off ignition (Reset).
-
-### Scenario 3: Maintenance (Bleeding)
-You installed a new oil line and need to fill it.
-1.  **Condition:** Bike must be standing still (< 7 km/h).
-2.  **Action:** Hold button for > 10 seconds.
-3.  **Feedback:** LED blinks Red. Pump runs continuously for 10 seconds.
-4.  **Repeat:** If line is not full, repeat the process.
-
-### Scenario 4: Hardware Debugging (Pump runs at boot)
-If your pump runs immediately when powering on the ESP32:
-1.  Check wiring: Ensure the 10k Pull-Down resistor is present between Gate and GND.
-2.  Check MOSFET: Ensure you are using a Logic Level MOSFET (Vgs(th) < 2.5V) and not a standard MOSFET or BJT Darlington without proper bias.
+| Scenario | Trigger / Action | System Behavior |
+| :--- | :--- | :--- |
+| **Normal Ride** | GPS Fix, Speed > 7 km/h | **LED: Green.** System oils automatically based on speed and configured distance intervals. |
+| **Tunnel / Signal Loss** | No GPS signal > 3 min | **LED: Cyan.** Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
+| **Rain Ride** | Short Press (< 1.5s) | **LED: Blue.** **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
+| **Dust / Cleaning** | 3x Click | **LED: Cyan Blink.** **Turbo Mode** active. Oils every 1 km for 15 minutes. Good for flushing dust or after cleaning. |
+| **Offroad / Enduro** | 6x Click | **LED: Magenta Blink.** **Cross-Country Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
+| **Refill / Bleeding** | Hold > 10s (Standstill) | **LED: Red Blink.** **Bleeding Mode**. Pump runs continuously for 15s to fill the line. |
+| **Configuration** | Hold > 3s (Standstill) | **LED: White Pulse.** Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
+| **Tank Empty** | Reserve reached | **LED: Orange 2x Blink.** **Tank Warning**. Refill tank and reset counter via Web Interface. |
+| **Hardware Debug** | Pump runs at boot | **Check Wiring!** Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
 ## ⚙️ Technical Details
 
