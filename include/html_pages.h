@@ -69,9 +69,9 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Cross-Country Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
-            <tr><td>Events (Total)</td><td><input type='number' name='turbo_ev' value='%TURBO_EV%' class='num-input'></td></tr>
-            <tr><td>Pulses per Event</td><td><input type='number' name='turbo_pls' value='%TURBO_PLS%' class='num-input'></td></tr>
-            <tr><td>Interval (Seconds)</td><td><input type='number' name='turbo_int' value='%TURBO_INT%' class='num-input'></td></tr>
+            <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
+            <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
+            <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
         </table>
         <h3>LED Settings (Day)</h3>
         <table>

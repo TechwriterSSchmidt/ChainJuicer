@@ -156,7 +156,7 @@ void initSD() {
     logFile = SD.open(currentLogFileName, FILE_WRITE);
     if (logFile) {
         // Write Header
-        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Turbo_Mode");
+        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Flush_Mode");
         
         // Dump Config
         logFile.println("EVENT,0,,,,,,,,,,CONFIG DUMP START");
@@ -199,7 +199,7 @@ void writeLogLine(String type, String message = "") {
             gps.satellites.value(),
             gps.hdop.hdop(),
             message.c_str(),
-            oiler.isTurboMode()
+            oiler.isFlushMode()
         );
         f.close();
     }
@@ -273,9 +273,9 @@ void handleRoot() {
     footer.replace("%START_DLY%", String(oiler.startupDelayKm, 1));
     footer.replace("%CC_INT%", String(oiler.crossCountryIntervalMin));
     
-    footer.replace("%TURBO_EV%", String(oiler.turboConfigEvents));
-    footer.replace("%TURBO_PLS%", String(oiler.turboConfigPulses));
-    footer.replace("%TURBO_INT%", String(oiler.turboConfigIntervalSec));
+    footer.replace("%FLUSH_EV%", String(oiler.flushConfigEvents));
+    footer.replace("%FLUSH_PLS%", String(oiler.flushConfigPulses));
+    footer.replace("%FLUSH_INT%", String(oiler.flushConfigIntervalSec));
     
     footer.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
     footer.replace("%NIGHT_START%", String(oiler.nightStartHour));
@@ -336,9 +336,9 @@ void handleSave() {
     if(server.hasArg("start_dly")) oiler.startupDelayKm = server.arg("start_dly").toFloat();
     if(server.hasArg("cc_int")) oiler.crossCountryIntervalMin = server.arg("cc_int").toInt();
     
-    if(server.hasArg("turbo_ev")) oiler.turboConfigEvents = server.arg("turbo_ev").toInt();
-    if(server.hasArg("turbo_pls")) oiler.turboConfigPulses = server.arg("turbo_pls").toInt();
-    if(server.hasArg("turbo_int")) oiler.turboConfigIntervalSec = server.arg("turbo_int").toInt();
+    if(server.hasArg("flush_ev")) oiler.flushConfigEvents = server.arg("flush_ev").toInt();
+    if(server.hasArg("flush_pls")) oiler.flushConfigPulses = server.arg("flush_pls").toInt();
+    if(server.hasArg("flush_int")) oiler.flushConfigIntervalSec = server.arg("flush_int").toInt();
     
     oiler.nightModeEnabled = server.hasArg("night_en");
     if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();

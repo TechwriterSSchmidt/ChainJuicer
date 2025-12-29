@@ -81,7 +81,7 @@ For advanced users and data analysis, you can connect a standard **MicroSD Card 
 | **Sats** | Number of satellites |
 | **HDOP** | GPS Precision (Lower is better) |
 | **Message** | System messages or debug info |
-| **Turbo_Mode** | 1 = Active, 0 = Inactive |
+| **Flush_Mode** | 1 = Active, 0 = Inactive |
 
 ## 🛠️ Hardware & Functionality Matrix
 
@@ -188,7 +188,7 @@ ESP32 GPIO (the one that switches the MOSFET
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
 | **Short Press** | < 1.5s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 400ms delay. Turning OFF triggers **Rain Flush** (6 pulses) if enabled and moving. |
-| **3x Click** | < 2s | Always | **Turbo Mode** On/Off (LED: Cyan Blink). 15 min @ 1km. |
+| **3x Click** | < 2s | Always | **Chain Flush Mode** On/Off (LED: Cyan Blink). Time-based (Configurable). |
 | **6x Click** | < 3s | Always | **Cross-Country Mode** On/Off (LED: Magenta Blink). Time based oiling. |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Long Hold** | > 10s | At Standstill (< 7 km/h) & No Emergency | Start **Bleeding Mode** (LED: Red blinking, pump runs 15s @ 80ms/250ms) |
@@ -198,7 +198,7 @@ ESP32 GPIO (the one that switches the MOSFET
 
 *   🟢 **Green:** Normal Operation (GPS Fix available)
 *   🔵 **Blue:** Rain Mode Active
-*   🔵 **Cyan (blinking):** Turbo Mode Active
+*   🔵 **Cyan (blinking):** Chain Flush Mode Active
 *   🟣 **Magenta (blinking):** Cross-Country Mode Active
 *   🟣 **Magenta:** No GPS Signal (Searching...)
 *   🔵 **Cyan:** Emergency Mode (Auto: No GPS > 3 min)
@@ -229,7 +229,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 | **Normal Ride** | GPS Fix, Speed > 7 km/h | **LED: Green.** System oils automatically based on speed and configured distance intervals. |
 | **Tunnel / Signal Loss** | No GPS signal > 3 min | **LED: Cyan.** Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
 | **Rain Ride** | Short Press (< 1.5s) | **LED: Blue.** **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
-| **Dust / Cleaning** | 3x Click | **LED: Cyan Blink.** **Turbo Mode** active. Oils every 1 km for 15 minutes. Good for flushing dust or after cleaning. |
+| **Dust / Cleaning** | 3x Click | **LED: Cyan Blink.** **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
 | **Offroad / Enduro** | 6x Click | **LED: Magenta Blink.** **Cross-Country Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
 | **Refill / Bleeding** | Hold > 10s (Standstill) | **LED: Red Blink.** **Bleeding Mode**. Pump runs continuously for 15s to fill the line. |
 | **Configuration** | Hold > 3s (Standstill) | **LED: White Pulse.** Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
@@ -275,16 +275,17 @@ The total project cost is very low compared to commercial alternatives (~150€+
 | **Dosing Needle** | 14G Needle (100mm) | [AliExpress](https://de.aliexpress.com/item/1005010382140407.html) | ~ 2.00 € |
 | **Luer Lock Adapter** | Adapter for Needle | [AliExpress](https://de.aliexpress.com/item/1005003777344843.html) | ~ 1.00 € |
 | **TPU Hose** | 2m Oil/Fuel Line | [AliExpress](https://de.aliexpress.com/item/1005005390968147.html) | ~ 3.00 € |
-| **Temp Sensor** | DS18B20 (Waterproof) | [AliExpress](https://de.aliexpress.com/item/1005006090368473.html) | ~ 1.50 € |
 | **Button** | Waterproof Button | [AliExpress](https://de.aliexpress.com/item/1005009185830140.html) | ~ 0.70 € |
 | **LED** | WS2812B (Code supports up to 2x) | Generic | ~ 1.00 € |
 | **Small Parts** | Automotive Connectors (2x 2pin, 1x 4pin), Wires, Fuse | Generic | ~ 15.00 € |
 | **Housing** | 3D Printed (PETG/ASA) | DIY | ~ 2.00 € |
 | **Flasher** | USB-to-UART Adapter (CP2102/CH340) | Generic | ~ 3.00 € |
-| **Total (Basic)** | | | **~ 54.00 €** |
+| **Total (Basic)** | | | **~ 52.50 €** |
 | | | | |
+| **Temp Sensor (Optional)** | DS18B20 (Waterproof) | [AliExpress](https://de.aliexpress.com/item/1005006090368473.html) | ~ 1.50 € |
 | **IMU (Optional)** | BNO085 (9-Axis) | [AliExpress](https://de.aliexpress.com/item/1005009898088463.html) | ~ 15.00 € |
-| **Total (Full)** | | | **~ 69.00 €** |
+| **SD Card (Optional)** | MicroSD SPI Module | [AliExpress](https://de.aliexpress.com/item/1005005302035188.html) | ~ 1.00 € |
+| **Total (Full)** | | | **~ 70.00 €** |
 
 *Note: Prices vary by shipping location and seller.*
 

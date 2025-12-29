@@ -64,13 +64,13 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     updateMode = false;
     bleedingMode = false;
     bleedingStartTime = 0;
-    turboMode = false;
-    turboModeStartTime = 0;
-    turboConfigEvents = TURBO_DEFAULT_EVENTS;
-    turboConfigPulses = TURBO_DEFAULT_PULSES;
-    turboConfigIntervalSec = TURBO_DEFAULT_INTERVAL_SEC;
-    turboEventsRemaining = 0;
-    lastTurboOilTime = 0;
+    flushMode = false;
+    flushModeStartTime = 0;
+    flushConfigEvents = FLUSH_DEFAULT_EVENTS;
+    flushConfigPulses = FLUSH_DEFAULT_PULSES;
+    flushConfigIntervalSec = FLUSH_DEFAULT_INTERVAL_SEC;
+    flushEventsRemaining = 0;
+    lastFlushOilTime = 0;
 
     crossCountryMode = false;
     lastCrossCountryOilTime = 0;
@@ -235,21 +235,21 @@ void Oiler::loop() {
         }
     }
 
-    // Turbo / Cleaning Mode Logic (Time Based)
-    if (turboMode) {
+    // Chain Flush Mode Logic (Time Based)
+    if (flushMode) {
         unsigned long now = millis();
-        unsigned long intervalMs = (unsigned long)turboConfigIntervalSec * 1000;
+        unsigned long intervalMs = (unsigned long)flushConfigIntervalSec * 1000;
 
-        if (now - lastTurboOilTime > intervalMs) {
+        if (now - lastFlushOilTime > intervalMs) {
             // SAFETY: Only oil if moving!
             // Similar to Cross-Country, we require movement to avoid puddles.
             if (currentSpeed >= 2.0) {
-                triggerOil(turboConfigPulses);
-                lastTurboOilTime = now;
-                turboEventsRemaining--;
+                triggerOil(flushConfigPulses);
+                lastFlushOilTime = now;
+                flushEventsRemaining--;
 
-                if (turboEventsRemaining <= 0) {
-                    setTurboMode(false); // Done
+                if (flushEventsRemaining <= 0) {
+                    setFlushMode(false); // Done
                 }
             }
         }
@@ -298,7 +298,7 @@ void Oiler::handleButton() {
                 
                 // Short Press: Rain Mode Toggle
                 if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
-                    // Multi-Click Detection for Turbo Mode
+                    // Multi-Click Detection for Chain Flush Mode
                     buttonClickCount++;
                     lastClickTime = millis();
                     
@@ -306,12 +306,12 @@ void Oiler::handleButton() {
                         // 6 Clicks -> Toggle Cross Country Mode
                         setCrossCountryMode(!crossCountryMode);
                         buttonClickCount = 0; // Reset
-                    } else if (buttonClickCount == TURBO_PRESS_COUNT) {
-                        // 3 Clicks -> Toggle Turbo Mode
+                    } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
+                        // 3 Clicks -> Toggle Chain Flush Mode
                         // Wait a bit to see if it becomes 6 clicks?
-                        // No, immediate action for Turbo is better UX.
+                        // No, immediate action for Flush is better UX.
                         // But this conflicts with 6 clicks.
-                        // Solution: We only trigger Turbo if NO more clicks follow.
+                        // Solution: We only trigger Flush if NO more clicks follow.
                         // Moved to Delayed Action Handler.
                     }
                 }
@@ -327,9 +327,9 @@ void Oiler::handleButton() {
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
             }
-        } else if (buttonClickCount == TURBO_PRESS_COUNT) {
-             // 3 Clicks -> Toggle Turbo Mode
-             setTurboMode(!turboMode);
+        } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
+             // 3 Clicks -> Toggle Chain Flush Mode
+             setFlushMode(!flushMode);
         } else if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
              // 6 Clicks -> Toggle Cross Country Mode
              setCrossCountryMode(!crossCountryMode);
@@ -430,10 +430,10 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     } 
-    // 1.5 Turbo Mode (High Priority) -> CYAN Blinking
-    else if (turboMode) {
+    // 1.5 Chain Flush Mode (High Priority) -> CYAN Blinking
+    else if (flushMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_PERIOD_TURBO) % 2 == 0) {
+        if ((now / LED_PERIOD_FLUSH) % 2 == 0) {
             color = strip.Color(0, 255, 255); // Cyan
         } else {
             color = 0; // Off
@@ -570,10 +570,10 @@ void Oiler::loadConfig() {
     crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
     startupDelayKm = preferences.getFloat("start_dly", STARTUP_DELAY_KM_DEFAULT);
 
-    // Load Turbo / Cleaning Mode
-    turboConfigEvents = preferences.getInt("tb_evt", TURBO_DEFAULT_EVENTS);
-    turboConfigPulses = preferences.getInt("tb_pls", TURBO_DEFAULT_PULSES);
-    turboConfigIntervalSec = preferences.getInt("tb_int", TURBO_DEFAULT_INTERVAL_SEC);
+    // Load Chain Flush Mode
+    flushConfigEvents = preferences.getInt("tb_evt", FLUSH_DEFAULT_EVENTS);
+    flushConfigPulses = preferences.getInt("tb_pls", FLUSH_DEFAULT_PULSES);
+    flushConfigIntervalSec = preferences.getInt("tb_int", FLUSH_DEFAULT_INTERVAL_SEC);
 
     // Load Stats
     totalDistance = preferences.getDouble("totalDist", 0.0);
@@ -661,10 +661,10 @@ void Oiler::saveConfig() {
     preferences.putInt("cc_int", crossCountryIntervalMin);
     preferences.putFloat("start_dly", startupDelayKm);
 
-    // Save Turbo / Cleaning Mode
-    preferences.putInt("tb_evt", turboConfigEvents);
-    preferences.putInt("tb_pls", turboConfigPulses);
-    preferences.putInt("tb_int", turboConfigIntervalSec);
+    // Save Chain Flush Mode
+    preferences.putInt("tb_evt", flushConfigEvents);
+    preferences.putInt("tb_pls", flushConfigPulses);
+    preferences.putInt("tb_int", flushConfigIntervalSec);
 
     // Save Tank Monitor
     preferences.putBool("tank_en", tankMonitorEnabled);
@@ -955,8 +955,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
     float targetInterval;
 
-    // Check Turbo Mode
-    if (turboMode) {
+    // Check Chain Flush Mode
+    if (flushMode) {
         return; // Handled in loop()
     } else {
         // 1. Get Target Interval from LUT (Linear Interpolation)
@@ -1232,20 +1232,20 @@ void Oiler::setRainMode(bool mode) {
     saveConfig();
 }
 
-void Oiler::setTurboMode(bool mode) {
-    if (mode && !turboMode) {
-        turboModeStartTime = millis();
-        lastTurboOilTime = millis(); // Reset interval timer
-        turboEventsRemaining = turboConfigEvents; // Reset counter
+void Oiler::setFlushMode(bool mode) {
+    if (mode && !flushMode) {
+        flushModeStartTime = millis();
+        lastFlushOilTime = millis(); // Reset interval timer
+        flushEventsRemaining = flushConfigEvents; // Reset counter
 #ifdef GPS_DEBUG
-        Serial.println("Turbo Mode ACTIVATED");
+        Serial.println("Chain Flush Mode ACTIVATED");
 #endif
-    } else if (!mode && turboMode) {
+    } else if (!mode && flushMode) {
 #ifdef GPS_DEBUG
-        Serial.println("Turbo Mode DEACTIVATED");
+        Serial.println("Chain Flush Mode DEACTIVATED");
 #endif
     }
-    turboMode = mode;
+    flushMode = mode;
 }
 
 void Oiler::setCrossCountryMode(bool mode) {

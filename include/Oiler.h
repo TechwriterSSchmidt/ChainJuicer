@@ -55,8 +55,8 @@ public:
     bool isRainMode() { return rainMode; }
     void setRainMode(bool mode);
 
-    bool isTurboMode() { return turboMode; }
-    void setTurboMode(bool mode);
+    bool isFlushMode() { return flushMode; }
+    void setFlushMode(bool mode);
 
     bool isCrossCountryMode() { return crossCountryMode; }
     void setCrossCountryMode(bool mode);
@@ -136,12 +136,12 @@ public:
     int crossCountryIntervalMin;
     unsigned long lastCrossCountryOilTime;
 
-    // Turbo / Cleaning Mode Settings
-    int turboConfigEvents;      // Total events to run
-    int turboConfigPulses;      // Pulses per event
-    int turboConfigIntervalSec; // Interval in seconds
-    int turboEventsRemaining;   // Counter
-    unsigned long lastTurboOilTime;
+    // Chain Flush Mode Settings
+    int flushConfigEvents;      // Total events to run
+    int flushConfigPulses;      // Pulses per event
+    int flushConfigIntervalSec; // Interval in seconds
+    int flushEventsRemaining;   // Counter
+    unsigned long lastFlushOilTime;
 
     // Startup Delay
     float startupDelayKm;
@@ -179,8 +179,8 @@ private:
     // Button & Modes
     bool rainMode;
     unsigned long rainModeStartTime;
-    bool turboMode;
-    unsigned long turboModeStartTime;
+    bool flushMode;
+    unsigned long flushModeStartTime;
     int buttonClickCount;
     unsigned long lastClickTime;
     bool emergencyMode;

@@ -70,7 +70,7 @@
 #define LED_PERIOD_GPS 1000         // Pulse cycle for GPS Search
 #define LED_BLINK_FAST 100          // Fast blink (Bleeding/Reset)
 #define LED_BLINK_TANK 2000         // Tank warning cycle
-#define LED_PERIOD_TURBO 500        // Fast blink for Turbo Mode
+#define LED_PERIOD_FLUSH 500        // Fast blink for Chain Flush Mode
 #define LED_WIFI_SHOW_DURATION 10000 // How long to show WiFi LED after activation
 
 // Default Values
@@ -80,14 +80,12 @@
 #define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
 #define BLEEDING_DURATION_MS 15000 // Pumping time in ms for bleeding
-// Turbo / Cleaning Mode Defaults
-#define TURBO_DEFAULT_EVENTS 15       // Run 15 times
-#define TURBO_DEFAULT_PULSES 2        // 2 Pulses per event
-#define TURBO_DEFAULT_INTERVAL_SEC 60 // Every 60 seconds
-#define TURBO_PRESS_COUNT 3           // 3 Clicks
-#define TURBO_PRESS_WINDOW_MS 2000    // 2 Seconds window
-#define RAIN_FLUSH_PULSES 6           // Pulses to flush chain after Rain Mode ends
-#define RAIN_FLUSH_ENABLED_DEFAULT true // Default state for Rain Flush
+// Chain Flush Mode Defaults
+#define FLUSH_DEFAULT_EVENTS 15       // Run 15 times
+#define FLUSH_DEFAULT_PULSES 2        // 2 Pulses per event
+#define FLUSH_DEFAULT_INTERVAL_SEC 60 // Every 60 seconds
+#define FLUSH_PRESS_COUNT 3           // 3 Clicks
+#define FLUSH_PRESS_WINDOW_MS 2000    // 2 Seconds window
 
 #define STARTUP_DELAY_KM_DEFAULT 2.0  // Default startup delay in km
 #define CROSS_COUNTRY_INTERVAL_MIN_DEFAULT 5 // Default Cross-Country interval in minutes
