@@ -196,7 +196,13 @@ If your pump runs immediately when powering on the ESP32:
 *   **Auto-Save:** The odometer is saved intelligently (at standstill < 7 km/h, but max. every 2 minutes).
 *   **Timezone:** Automatic calculation of Central European Time (CET/CEST).
 
-## 💻 Installation (PlatformIO)
+## 💻 Installation
+
+### Option A: Web Installer (Recommended)
+Flash the firmware directly from your browser (Chrome/Edge) without installing any software.
+👉 **[Open Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer-light/)**
+
+### Option B: PlatformIO (For Developers)
 
 **⚠️ Important:** The recommended ESP32-32E board usually does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the firmware!
 *   **Connections:** TX->RX, RX->TX, GND->GND, 3.3V->3.3V (or 5V->5V).

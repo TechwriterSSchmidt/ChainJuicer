@@ -28,6 +28,21 @@
             font-size: 0.8rem;
             color: #666;
         }
+        /* Style for the button slot */
+        button[slot="activate"] {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button[slot="activate"]:hover {
+            background-color: #d35400;
+        }
+        .unsupported { color: #c0392b; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -38,13 +53,16 @@
             Click the button below to install the latest firmware.
         </p>
         
-        <esp-web-install-button 
-            manifest="manifest.json"
-        ></esp-web-install-button>
+        <esp-web-install-button manifest="manifest.json">
+            <button slot="activate">Connect & Install</button>
+            <div slot="unsupported" class="unsupported">
+                ⚠️ Your browser does not support Web Serial.<br>
+                Please use <b>Google Chrome</b>, <b>Microsoft Edge</b>, or <b>Opera</b> on Desktop or Android.
+            </div>
+        </esp-web-install-button>
 
         <div class="footer">
             <p>
-                Supported Browsers: Chrome, Edge, Opera.<br>
                 Make sure to close any other software using the serial port (e.g. VS Code, Cura).
             </p>
             <p>
