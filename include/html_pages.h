@@ -200,7 +200,6 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><b>Activate:</b> Hold button (> 3s) at standstill.</li>
         <li><b>Deactivate:</b> Auto-off when driving (> 10 km/h) or after 5 min inactivity.</li>
-        <li><b>Update:</b> Upload new firmware (.bin) via the web interface.</li>
     </ul>
     <h3>Button Functions</h3>
     <ul>
@@ -256,6 +255,7 @@ const char* htmlIMU = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>IMU Calibration</title>
     <style>

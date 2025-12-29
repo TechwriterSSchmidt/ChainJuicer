@@ -30,23 +30,21 @@
         }
         /* Style for the button slot */
         button[slot="activate"] {
-            background-color: #e67e22 !important;
-            color: white !important;
+            background-color: #e67e22;
+            color: white;
             border: none;
             padding: 10px 20px;
             font-size: 1.2rem;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            display: inline-block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
+            display: inline-block;
         }
         button[slot="activate"]:hover {
-            background-color: #d35400 !important;
+            background-color: #d35400;
         }
         .unsupported { color: #c0392b; font-weight: bold; }
-        #debug-info {
+        #error-info {
             margin-top: 1rem;
             padding: 1rem;
             background-color: #fee;
@@ -55,17 +53,32 @@
             border-radius: 4px;
             display: none;
             font-size: 0.9rem;
+            text-align: left;
         }
     </style>
     <script>
         window.addEventListener('load', () => {
+            // Check for file protocol
+            if (window.location.protocol === 'file:') {
+                const err = document.getElementById('error-info');
+                err.style.display = 'block';
+                err.innerHTML = '⚠️ <b>Warning:</b> You are opening this file directly from your computer.<br>' +
+                                'The Web Installer requires a web server (HTTPS or localhost) to work.<br>' +
+                                'Please upload this folder to GitHub Pages or run a local server (e.g. <code>python -m http.server</code>).';
+            }
+
+            // Check if component loaded
             setTimeout(() => {
                 if (!customElements.get('esp-web-install-button')) {
-                    const debug = document.getElementById('debug-info');
-                    debug.style.display = 'block';
-                    debug.innerHTML = '⚠️ <b>Error:</b> The installer component failed to load.<br>Please check your internet connection or disable ad-blockers.<br>Ensure you are using Chrome or Edge.';
+                    const err = document.getElementById('error-info');
+                    if (err.style.display === 'none') {
+                        err.style.display = 'block';
+                        err.innerHTML = '⚠️ <b>Error:</b> The installer component failed to load.<br>' +
+                                        'Please check your internet connection or disable ad-blockers.<br>' +
+                                        'Ensure you are using Chrome, Edge, or Opera.';
+                    }
                 }
-            }, 1000);
+            }, 2000);
         });
     </script>
 </head>
@@ -85,14 +98,14 @@
             </div>
         </esp-web-install-button>
 
-        <div id="debug-info"></div>
+        <div id="error-info"></div>
 
         <div class="footer">
             <p>
                 Make sure to close any other software using the serial port (e.g. VS Code, Cura).
             </p>
             <p>
-                Installer Version: 1.1<br>
+                Installer Version: 1.2<br>
                 <a href="https://github.com/TechwriterSSchmidt/ChainJuicer-light">View on GitHub</a>
             </p>
         </div>
