@@ -303,7 +303,7 @@ The system uses two LEDs to communicate its status.
 
 ### Option A: Web Installer (Recommended)
 Flash the firmware directly from your browser (Chrome/Edge) without installing any software.
-👉 **[Open Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer-light/)**
+👉 **[Open Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer/)**
 
 ### Option B: PlatformIO (For Developers)
 
