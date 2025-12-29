@@ -10,6 +10,7 @@
 #include "Oiler.h"
 #include "AuxManager.h"
 #include "html_pages.h"
+#include "WebConsole.h"
 
 #ifdef SD_LOGGING_ACTIVE
     #include "FS.h"
@@ -74,6 +75,7 @@ void handleResetStats() {
 #ifdef GPS_DEBUG
     Serial.println("CMD: Reset Stats");
 #endif
+    webConsole.log("CMD: Reset Stats");
     oiler.resetStats();
     server.sendHeader("Location", "/");
     server.send(303);
@@ -83,6 +85,7 @@ void handleResetTimeStats() {
 #ifdef GPS_DEBUG
     Serial.println("CMD: Reset Time Stats");
 #endif
+    webConsole.log("CMD: Reset Time Stats");
     oiler.resetTimeStats();
     server.sendHeader("Location", "/");
     server.send(303);
@@ -92,6 +95,7 @@ void handleRefill() {
 #ifdef GPS_DEBUG
     Serial.println("CMD: Refill Tank");
 #endif
+    webConsole.log("CMD: Refill Tank");
     oiler.resetTankToFull();
     server.sendHeader("Location", "/");
     server.send(303);
@@ -114,8 +118,10 @@ void handleUpdateProcess() {
     HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) {
         Serial.printf("Update: %s\n", upload.filename.c_str());
+        webConsole.logf("Update Start: %s", upload.filename.c_str());
         if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
             Update.printError(Serial);
+            webConsole.log("Update Begin Error");
         }
     } else if (upload.status == UPLOAD_FILE_WRITE) {
         /* flashing firmware to ESP*/
@@ -125,8 +131,10 @@ void handleUpdateProcess() {
     } else if (upload.status == UPLOAD_FILE_END) {
         if (Update.end(true)) { //true to set the size to the current progress
             Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+            webConsole.logf("Update Success: %u bytes", upload.totalSize);
         } else {
             Update.printError(Serial);
+            webConsole.log("Update End Error");
         }
     }
 }
@@ -421,6 +429,23 @@ void handleAuxConfig() {
     server.send(200, "text/html", html);
 }
 
+void handleConsole() {
+    resetWifiTimer();
+    server.send(200, "text/html", htmlConsole);
+}
+
+void handleConsoleData() {
+    resetWifiTimer();
+    server.send(200, "text/plain", webConsole.getLogs());
+}
+
+void handleConsoleClear() {
+    resetWifiTimer();
+    webConsole.clear();
+    server.sendHeader("Location", "/console");
+    server.send(303);
+}
+
 void handleSaveAux() {
     resetWifiTimer();
     
@@ -507,6 +532,11 @@ void setup() {
     server.on("/aux", handleAuxConfig);
     server.on("/save_aux", HTTP_POST, handleSaveAux);
     
+    // Console Routes
+    server.on("/console", handleConsole);
+    server.on("/console/data", handleConsoleData);
+    server.on("/console/clear", HTTP_POST, handleConsoleClear);
+    
     server.on("/reset_stats", handleResetStats);
     server.on("/reset_time_stats", handleResetTimeStats);
     server.on("/refill", handleRefill);
@@ -570,6 +600,12 @@ void loop() {
     static unsigned long lastGpsDebug = 0;
     if (millis() - lastGpsDebug > 2000) {
         lastGpsDebug = millis();
+        
+        String logMsg = String("GPS: Fix=") + (gps.location.isValid() ? "OK" : "NO") + 
+                        ", Sats=" + String(gps.satellites.value()) + 
+                        ", Spd=" + String(currentSpeed, 1);
+        webConsole.log(logMsg);
+
         Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, HDOP=%.1f %s\n", 
             gps.location.isValid() ? "OK" : "NO", 
             gps.satellites.value(), 

@@ -1,4 +1,5 @@
 #include "Oiler.h"
+#include "WebConsole.h"
 #include <Preferences.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -367,6 +368,7 @@ void Oiler::handleButton() {
                 pumpActivityStartTime = millis(); // Safety Cutoff Start
 #ifdef GPS_DEBUG
                 Serial.println("Bleeding Mode STARTED");
+                webConsole.log("Bleeding Mode STARTED");
 #endif
                 
                 // Init Pump State for immediate start
@@ -759,6 +761,7 @@ void Oiler::saveProgress() {
 
         progressChanged = false;
 #ifdef GPS_DEBUG
+        webConsole.log("Stats Saved");
         Serial.println("Progress & Stats saved.");
 #endif
     }
@@ -899,6 +902,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                 }
 #ifdef GPS_DEBUG
                 Serial.println("Emergency Mode ACTIVATED (50km/h Sim)");
+                webConsole.log("Emergency Mode ACTIVATED");
 #endif
             } else {
                 // Already in Emergency Mode
@@ -1098,6 +1102,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 void Oiler::triggerOil(int pulses) {
 #ifdef GPS_DEBUG
     Serial.println("OILING START (Non-Blocking)");
+    webConsole.log("OILING START");
 #endif
     
     pumpCycles++; // Stats
@@ -1199,6 +1204,7 @@ void Oiler::processPump() {
                 isOiling = false;
 #ifdef GPS_DEBUG
                 Serial.println("OILING DONE");
+                webConsole.log("OILING DONE");
 #endif
             }
         } else {
@@ -1275,10 +1281,12 @@ void Oiler::setRainMode(bool mode) {
     if (mode && !rainMode) {
         rainModeStartTime = millis();
 #ifdef GPS_DEBUG
+        webConsole.log("Rain Mode: ON");
         Serial.println("Rain Mode: ON");
 #endif
     } else if (!mode && rainMode) {
 #ifdef GPS_DEBUG
+        webConsole.log("Rain Mode: OFF");
         Serial.println("Rain Mode: OFF");
 #endif
     }

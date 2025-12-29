@@ -33,7 +33,8 @@ const char* htmlHeader = R"rawliteral(
     <div class='help-link'>
         <a href='/help'>Help & Manual</a> | 
         <a href='/imu'>IMU Calibration</a> |
-        <a href='/aux'>Aux Config</a>
+        <a href='/aux'>Aux Config</a> |
+        <a href='/console'>Console</a>
     </div>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
@@ -437,6 +438,49 @@ const char* htmlAuxConfig = R"rawliteral(
     </div>
 
     <a href='/' class='btn'>Back to Main</a>
+</body>
+</html>
+)rawliteral";
+
+const char* htmlConsole = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Serial Console</title>
+    <style>
+        body{font-family:monospace;margin:0;padding:10px;background:#222;color:#0f0}
+        h2{text-align:center;color:#fff;font-family:sans-serif}
+        #console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box}
+        .btn{background:#444;color:white;padding:10px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-family:sans-serif}
+        .btn:hover{background:#666}
+    </style>
+    <script>
+        function fetchLogs() {
+            fetch('/console/data')
+                .then(response => response.text())
+                .then(data => {
+                    var consoleDiv = document.getElementById('console');
+                    var isScrolledToBottom = consoleDiv.scrollHeight - consoleDiv.clientHeight <= consoleDiv.scrollTop + 1;
+                    
+                    consoleDiv.innerText = data;
+                    
+                    if(isScrolledToBottom){
+                        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+                    }
+                });
+        }
+        setInterval(fetchLogs, 1000);
+    </script>
+</head>
+<body>
+    <h2>📟 Serial Console</h2>
+    <div id='console'>Loading...</div>
+    <form action='/console/clear' method='POST'>
+        <input type='submit' value='Clear Log' class='btn'>
+    </form>
+    <a href='/' class='btn' style='display:block;text-align:center;text-decoration:none;margin-top:10px'>Back to Main</a>
 </body>
 </html>
 )rawliteral";

@@ -313,7 +313,8 @@ Flash the firmware directly from your browser (Chrome/Edge) without installing a
 
 ### Option B: PlatformIO (For Developers)
 
-**⚠️ Important:** The recommended ESP32-32E board does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the firmware!
+**⚠️ Important:** The recommended ESP32-32E board does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the initial firmware once. For updates, you can use the OTA page to upload new firmware via the webinterface.
+
 *   **Connections:** TX->RX, RX->TX, GND->GND, 3.3V->3.3V (or 5V->5V).
 *   **Boot Mode:** You might need to bridge GPIO0 to GND during power-up to enter bootloader mode.
 
