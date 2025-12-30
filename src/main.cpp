@@ -416,8 +416,8 @@ void handleAuxConfig() {
     html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
     
     int base, rainB, startL, startS;
-    float speedF, tempF, tempO;
-    auxManager.getGripSettings(base, speedF, tempF, tempO, rainB, startL, startS);
+    float speedF, tempF, tempO, startT;
+    auxManager.getGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS);
     
     html.replace("%BASE%", String(base));
     
@@ -432,6 +432,7 @@ void handleAuxConfig() {
     html.replace("%TEMP_HIGH%", (abs(tempF - 3.0) < 0.1) ? "selected" : "");
 
     html.replace("%TEMPO%", String(tempO, 1));
+    html.replace("%STARTT%", String(startT, 0));
     html.replace("%RAINB%", String(rainB));
     html.replace("%STARTL%", String(startL));
     html.replace("%STARTS%", String(startS));
@@ -467,11 +468,12 @@ void handleSaveAux() {
     float speedF = server.arg("speedF").toFloat();
     float tempF = server.arg("tempF").toFloat();
     float tempO = server.arg("tempO").toFloat();
+    float startT = server.arg("startT").toFloat();
     int rainB = server.arg("rainB").toInt();
     int startL = server.arg("startL").toInt();
     int startS = server.arg("startS").toInt();
     
-    auxManager.setGripSettings(base, speedF, tempF, tempO, rainB, startL, startS);
+    auxManager.setGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS);
     
     server.sendHeader("Location", "/aux");
     server.send(303);

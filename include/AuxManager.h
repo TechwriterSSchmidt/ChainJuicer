@@ -23,8 +23,8 @@ public:
     AuxMode getMode() const { return _mode; }
     
     // Heated Grips Settings
-    void setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, int rainBoost, int startupBoostLevel, int startupBoostSec);
-    void getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, int &rainBoost, int &startupBoostLevel, int &startupBoostSec);
+    void setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec);
+    void getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec);
     
     // Status
     int getCurrentPwm() const { return _currentPwm; }
@@ -54,6 +54,7 @@ private:
     float _speedFactor = 0.5;   // % per km/h
     float _tempFactor = 2.0;    // % per degree below 20C
     float _tempOffset = 0.0;    // Correction for sensor placement
+    float _startTemp = 20.0;    // Temperature below which compensation starts
     int _rainBoost = 10;        // % boost in rain mode
     int _startupBoostLevel = 80;// % for startup
     int _startupBoostSec = 60;  // Seconds for startup boost

@@ -426,6 +426,10 @@ const char* htmlAuxConfig = R"rawliteral(
                         </td>
                     </tr>
                     <tr>
+                        <td>Start Temp (&deg;C)</td>
+                        <td><input type='number' name='startT' value='%STARTT%' step='1'></td>
+                    </tr>
+                    <tr>
                         <td>Temp Sensor Offset (&deg;C)</td>
                         <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>

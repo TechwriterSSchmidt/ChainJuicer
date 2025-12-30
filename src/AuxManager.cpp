@@ -28,6 +28,7 @@ void AuxManager::begin(ImuHandler* imu) {
     _speedFactor = _prefs.getFloat("speedF", 0.5);
     _tempFactor = _prefs.getFloat("tempF", 2.0);
     _tempOffset = _prefs.getFloat("tempO", 0.0);
+    _startTemp = _prefs.getFloat("startT", 20.0);
     _rainBoost = _prefs.getInt("rainB", 10);
     _startupBoostLevel = _prefs.getInt("startL", 100);
     _startupBoostSec = _prefs.getInt("startS", 75);
@@ -88,13 +89,13 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
         target += (speed * _speedFactor);
     }
     
-    // 3. Temperature Compensation (only if below 20C)
+    // 3. Temperature Compensation (only if below startTemp)
     // If temp is invalid (-127), ignore this factor or assume cold? 
     // Let's assume 10C if invalid to be safe, or just ignore.
     if (temp > -50) {
         float effectiveTemp = temp + _tempOffset;
-        if (effectiveTemp < 20) {
-            target += ((20.0 - effectiveTemp) * _tempFactor);
+        if (effectiveTemp < _startTemp) {
+            target += ((_startTemp - effectiveTemp) * _tempFactor);
         }
     }
     
@@ -138,11 +139,12 @@ void AuxManager::setMode(AuxMode mode) {
     _prefs.end();
 }
 
-void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, int rainBoost, int startupBoostLevel, int startupBoostSec) {
+void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec) {
     _baseLevel = baseLevel;
     _speedFactor = speedFactor;
     _tempFactor = tempFactor;
     _tempOffset = tempOffset;
+    _startTemp = startTemp;
     _rainBoost = rainBoost;
     _startupBoostLevel = startupBoostLevel;
     _startupBoostSec = startupBoostSec;
@@ -152,17 +154,19 @@ void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFac
     _prefs.putFloat("speedF", _speedFactor);
     _prefs.putFloat("tempF", _tempFactor);
     _prefs.putFloat("tempO", _tempOffset);
+    _prefs.putFloat("startT", _startTemp);
     _prefs.putInt("rainB", _rainBoost);
     _prefs.putInt("startL", _startupBoostLevel);
     _prefs.putInt("startS", _startupBoostSec);
     _prefs.end();
 }
 
-void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, int &rainBoost, int &startupBoostLevel, int &startupBoostSec) {
+void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec) {
     baseLevel = _baseLevel;
     speedFactor = _speedFactor;
     tempFactor = _tempFactor;
     tempOffset = _tempOffset;
+    startTemp = _startTemp;
     rainBoost = _rainBoost;
     startupBoostLevel = _startupBoostLevel;
     startupBoostSec = _startupBoostSec;
