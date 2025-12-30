@@ -398,12 +398,28 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
                     </tr>
                     <tr>
-                        <td>Speed Factor (% per km/h)</td>
-                        <td><input type='number' name='speedF' value='%SPEEDF%' step='0.1'></td>
+                        <td>Speed Factor</td>
+                        <td>
+                            <select name='speedF'>
+                                <option value='0.2' %SPEED_LOW%>Low (1% / 5kmh)</option>
+                                <option value='0.5' %SPEED_MED%>Medium (2.5% / 5kmh)</option>
+                                <option value='1.0' %SPEED_HIGH%>High (5% / 5kmh)</option>
+                            </select>
+                        </td>
                     </tr>
                     <tr>
-                        <td>Temp Factor (% per &deg;C < 20)</td>
-                        <td><input type='number' name='tempF' value='%TEMPF%' step='0.1'></td>
+                        <td>Temp Factor</td>
+                        <td>
+                            <select name='tempF'>
+                                <option value='1.0' %TEMP_LOW%>Low (1% / &deg;C)</option>
+                                <option value='2.0' %TEMP_MED%>Medium (2% / &deg;C)</option>
+                                <option value='3.0' %TEMP_HIGH%>High (3% / &deg;C)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Temp Offset (&deg;C)</td>
+                        <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
                         <td>Rain Boost (%)</td>

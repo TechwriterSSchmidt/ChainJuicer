@@ -416,12 +416,22 @@ void handleAuxConfig() {
     html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
     
     int base, rainB, startL, startS;
-    float speedF, tempF;
-    auxManager.getGripSettings(base, speedF, tempF, rainB, startL, startS);
+    float speedF, tempF, tempO;
+    auxManager.getGripSettings(base, speedF, tempF, tempO, rainB, startL, startS);
     
     html.replace("%BASE%", String(base));
-    html.replace("%SPEEDF%", String(speedF, 1));
-    html.replace("%TEMPF%", String(tempF, 1));
+    
+    // Speed Factor Selection
+    html.replace("%SPEED_LOW%", (abs(speedF - 0.2) < 0.1) ? "selected" : "");
+    html.replace("%SPEED_MED%", (abs(speedF - 0.5) < 0.1) ? "selected" : "");
+    html.replace("%SPEED_HIGH%", (abs(speedF - 1.0) < 0.1) ? "selected" : "");
+    
+    // Temp Factor Selection
+    html.replace("%TEMP_LOW%", (abs(tempF - 1.0) < 0.1) ? "selected" : "");
+    html.replace("%TEMP_MED%", (abs(tempF - 2.0) < 0.1) ? "selected" : "");
+    html.replace("%TEMP_HIGH%", (abs(tempF - 3.0) < 0.1) ? "selected" : "");
+
+    html.replace("%TEMPO%", String(tempO, 1));
     html.replace("%RAINB%", String(rainB));
     html.replace("%STARTL%", String(startL));
     html.replace("%STARTS%", String(startS));
@@ -456,11 +466,12 @@ void handleSaveAux() {
     int base = server.arg("base").toInt();
     float speedF = server.arg("speedF").toFloat();
     float tempF = server.arg("tempF").toFloat();
+    float tempO = server.arg("tempO").toFloat();
     int rainB = server.arg("rainB").toInt();
     int startL = server.arg("startL").toInt();
     int startS = server.arg("startS").toInt();
     
-    auxManager.setGripSettings(base, speedF, tempF, rainB, startL, startS);
+    auxManager.setGripSettings(base, speedF, tempF, tempO, rainB, startL, startS);
     
     server.sendHeader("Location", "/aux");
     server.send(303);
@@ -603,7 +614,7 @@ void loop() {
         
         String logMsg = String("GPS: Fix=") + (gps.location.isValid() ? "OK" : "NO") + 
                         ", Sats=" + String(gps.satellites.value()) + 
-                        ", Spd=" + String(currentSpeed, 1);
+                        ", HDOP=" + String(gps.hdop.hdop(), 1);
         webConsole.log(logMsg);
 
         Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, HDOP=%.1f %s\n", 
