@@ -101,6 +101,15 @@ void handleRefill() {
     server.send(303);
 }
 
+void handleToggleEmerg() {
+    resetWifiTimer();
+    bool current = oiler.isEmergencyModeForced();
+    oiler.setEmergencyModeForced(!current);
+    oiler.saveConfig();
+    server.sendHeader("Location", "/");
+    server.send(303);
+}
+
 void handleUpdate() {
     resetWifiTimer();
     server.send(200, "text/html", htmlUpdate);
@@ -331,6 +340,10 @@ void handleRoot() {
     html.replace("%TOTAL_DIST%", String(oiler.getTotalDistance(), 1));
     html.replace("%PUMP_COUNT%", String(oiler.getPumpCycles()));
     
+    bool emerg = oiler.isEmergencyModeForced();
+    html.replace("%EMERG_CLASS%", emerg ? "btn-danger" : "btn-sec");
+    html.replace("%EMERG_STATUS%", emerg ? "ON" : "OFF");
+    
     server.send(200, "text/html", html);
 }
 
@@ -560,6 +573,7 @@ void setup() {
     server.on("/", handleRoot);
     server.on("/settings", handleSettings);
     server.on("/save", HTTP_POST, handleSave);
+    server.on("/toggle_emerg", handleToggleEmerg);
     server.on("/help", handleHelp);
     
     // IMU Routes

@@ -8,16 +8,19 @@ const char* htmlLanding = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Chain Juicer</title>
     <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9;text-align:center}
-        h2{color:#333;margin-bottom:5px}
-        .stat-box{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px;text-align:left}
-        .stat-row{display:flex;justify-content:space-between;margin-bottom:5px}
-        .val{font-weight:bold;color:#007bff}
-        .btn{display:block;background:#007bff;color:white;padding:15px;border:none;width:100%;font-size:18px;border-radius:8px;margin-bottom:10px;text-decoration:none;cursor:pointer}
-        .btn-sec{background:#6c757d}
-        .status-bar{font-size:0.9em;color:#666;margin-bottom:20px}
-        .tank-bar{width:100%;height:20px;background:#eee;border-radius:10px;overflow:hidden;margin-top:5px}
-        .tank-fill{height:100%;background:#28a745;transition:width 0.3s}
+        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0;text-align:center}
+        h2{color:#ffc107;margin-bottom:5px}
+        h3{color:#ffc107;border-bottom:1px solid #333;padding-bottom:5px}
+        .stat-box{background:#1e1e1e;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.5);margin-bottom:15px;text-align:left}
+        .stat-row{display:flex;justify-content:space-between;margin-bottom:5px;border-bottom:1px solid #333;padding-bottom:5px}
+        .stat-row:last-child{border-bottom:none}
+        .val{font-weight:bold;color:#ffc107}
+        .btn{display:block;background:#ffc107;color:#000;padding:15px;border:none;width:100%;font-size:18px;border-radius:8px;margin-bottom:10px;text-decoration:none;cursor:pointer;box-sizing:border-box;font-weight:bold}
+        .btn-sec{background:#333;color:#e0e0e0;border:1px solid #444}
+        .btn-danger{background:#d32f2f;color:#fff}
+        .status-bar{font-size:0.9em;color:#888;margin-bottom:20px}
+        .tank-bar{width:100%;height:20px;background:#333;border-radius:10px;overflow:hidden;margin-top:5px;border:1px solid #444}
+        .tank-fill{height:100%;background:#ffc107;transition:width 0.3s}
     </style>
 </head>
 <body>
@@ -28,7 +31,7 @@ const char* htmlLanding = R"rawliteral(
         <h3>🛢️ Tank Monitor</h3>
         <div class='stat-row'><span>Level:</span> <span class='val'>%TANK_LEVEL% / %TANK_CAP% ml</span></div>
         <div class='tank-bar'><div class='tank-fill' style='width:%TANK_PCT%%'></div></div>
-        <div style='text-align:right;margin-top:5px'><a href='/refill' style='color:green;font-size:0.9em'>[Refill]</a></div>
+        <div style='text-align:right;margin-top:5px'><a href='/refill' style='color:#28a745;font-size:0.9em'>[Refill]</a></div>
     </div>
 
     <div class='stat-box'>
@@ -37,11 +40,12 @@ const char* htmlLanding = R"rawliteral(
         <div class='stat-row'><span>Juice Events:</span> <span class='val'>%PUMP_COUNT%</span></div>
     </div>
 
+    <a href='/toggle_emerg' class='btn %EMERG_CLASS%'>⚠️ Emergency Mode: %EMERG_STATUS%</a>
     <a href='/settings' class='btn'>⚙️ Settings</a>
     <a href='/aux' class='btn btn-sec'>🔌 Aux Port</a>
     <a href='/imu' class='btn btn-sec'>🧭 IMU Config</a>
     <a href='/console' class='btn btn-sec'>💻 Console</a>
-    <a href='/help' class='btn btn-sec'>❓ Manual</a>
+    <a href='/help' class='btn btn-sec'>Manual</a>
 </body>
 </html>
 )rawliteral";
@@ -53,23 +57,23 @@ const char* htmlHeader = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Chain Juicer Settings</title>
     <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
-        h2{text-align:center;color:#333}
-        h3{color:#555;margin-top:20px}
-        form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
+        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
+        h2{text-align:center;color:#ffc107}
+        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px}
+        form{background:#1e1e1e;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.5)}
         table{width:100%;border-collapse:collapse}
-        th{text-align:left;color:#666;font-size:0.9em}
-        td{padding:10px 5px;border-bottom:1px solid #eee}
-        input{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
-        input[type=checkbox]{width:20px;height:20px}
+        th{text-align:left;color:#888;font-size:0.9em}
+        td{padding:10px 5px;border-bottom:1px solid #333}
+        input{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:4px;font-size:16px;box-sizing:border-box}
+        input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
         .num-input{width:80px;text-align:center}
         .km-input{width:70px;text-align:center}
         .pulse-input{width:50px;text-align:center}
-        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
-        .progress{text-align:center;margin-top:15px;color:#555}
+        .btn{background:#ffc107;color:#000;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;font-weight:bold}
+        .progress{text-align:center;margin-top:15px;color:#888}
         .time{text-align:center;color:#888;font-size:0.9em;margin-bottom:10px}
         .disabled{opacity:0.5;pointer-events:none}
-        .back-btn{display:block;background:#6c757d;color:white;text-align:center;padding:10px;text-decoration:none;border-radius:4px;margin-bottom:15px}
+        .back-btn{display:block;background:#333;color:#e0e0e0;text-align:center;padding:10px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444}
     </style>
 </head>
 <body>
@@ -101,7 +105,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
             <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. Mineral Oil 80w90)</td></tr>
             <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Gear Oil SAE 90)</td></tr>
-            <tr><td colspan='2' style='font-size:0.8em;color:#666'>Current Temp: %TEMP_C% &deg;C</td></tr>
+            <tr><td colspan='2' style='font-size:0.8em;color:#888'>Current Temp: %TEMP_C% &deg;C</td></tr>
         </table>
         <h3>General</h3>
         <table>
@@ -136,16 +140,16 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Warning at (%)</td><td><input type='number' name='tank_warn' value='%TANK_WARN%' class='num-input'></td></tr>
             <tr><td>Current Level</td><td>%TANK_LEVEL% ml (%TANK_PCT%%)</td></tr>
         </table>
-        <div style='margin-top:10px'><a href='/refill' style='color:green;text-decoration:none;font-size:0.9em'>[Refill Tank]</a></div>
+        <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:0.9em'>[Refill Tank]</a></div>
         <h3>Statistics</h3>
         <table>
             <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
             <tr><td>Total Juices</td><td>%PUMP_COUNT%</td></tr>
         </table>
-        <div style='margin-top:10px'><a href='/reset_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
+        <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
         <div class='progress'>Current Progress: %PROGRESS%%</div>
         <input type='submit' value='Save' class='btn'>
-        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#999;text-decoration:none;font-size:0.8em'>[Firmware Update]</a></div>
+        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:0.8em'>[Firmware Update]</a></div>
     </form>
 </body>
 </html>
@@ -158,12 +162,12 @@ const char* htmlHelp = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Help</title>
     <style>
-        body{font-family:sans-serif;margin:0;padding:15px;background:#fff;line-height:1.6}
-        h2{color:#333}
-        h3{color:#007bff;border-bottom:1px solid #eee;padding-bottom:5px}
+        body{font-family:sans-serif;margin:0;padding:15px;background:#121212;color:#e0e0e0;line-height:1.6}
+        h2{color:#ffc107}
+        h3{color:#ffc107;border-bottom:1px solid #333;padding-bottom:5px}
         ul{padding-left:20px}
         .color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
-        .btn{display:block;background:#6c757d;color:white;text-align:center;padding:10px;text-decoration:none;border-radius:4px;margin-top:20px}
+        .btn{display:block;background:#333;color:#e0e0e0;text-align:center;padding:10px;text-decoration:none;border-radius:4px;margin-top:20px;border:1px solid #444}
     </style>
 </head>
 <body>
@@ -274,11 +278,11 @@ const char* htmlUpdate = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Firmware Update</title>
     <style>
-        body{font-family:sans-serif;margin:0;padding:20px;background:#f4f4f9;text-align:center}
-        h2{color:#333}
-        form{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:inline-block}
-        input[type=file]{margin-bottom:15px}
-        input[type=submit]{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;font-size:16px}
+        body{font-family:sans-serif;margin:0;padding:20px;background:#121212;color:#e0e0e0;text-align:center}
+        h2{color:#ffc107}
+        form{background:#1e1e1e;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.5);display:inline-block}
+        input[type=file]{margin-bottom:15px;color:#e0e0e0}
+        input[type=submit]{background:#ffc107;color:#000;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;font-size:16px;font-weight:bold}
     </style>
 </head>
 <body>
@@ -300,16 +304,17 @@ const char* htmlIMU = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>IMU Calibration</title>
     <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
-        h2{text-align:center;color:#333}
-        h3{color:#555;margin-top:20px}
-        .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px}
+        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
+        h2{text-align:center;color:#ffc107}
+        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px}
+        .card{background:#1e1e1e;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.5);margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
-        td{padding:8px 5px;border-bottom:1px solid #eee}
-        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer}
-        .btn-cal{background:#28a745}
-        .val{font-weight:bold;font-family:monospace}
-        .note{font-size:0.9em;color:#666;margin-top:5px}
+        td{padding:8px 5px;border-bottom:1px solid #333}
+        select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px}
+        .btn{background:#ffc107;color:#000;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-weight:bold}
+        .btn-cal{background:#28a745;color:#fff}
+        .val{font-weight:bold;font-family:monospace;color:#ffc107}
+        .note{font-size:0.9em;color:#888;margin-top:5px}
     </style>
 </head>
 <body>
@@ -385,15 +390,15 @@ const char* htmlAuxConfig = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Aux Config</title>
     <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
-        h2{text-align:center;color:#333}
-        h3{color:#555;margin-top:20px}
-        .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px}
+        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
+        h2{text-align:center;color:#ffc107}
+        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px}
+        .card{background:#1e1e1e;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.5);margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
-        td{padding:10px 5px;border-bottom:1px solid #eee}
-        input, select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
-        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
-        .note{font-size:0.9em;color:#666;margin-top:5px}
+        td{padding:10px 5px;border-bottom:1px solid #333}
+        input, select{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:4px;font-size:16px;box-sizing:border-box}
+        .btn{background:#ffc107;color:#000;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;font-weight:bold}
+        .note{font-size:0.9em;color:#888;margin-top:5px}
     </style>
     <script>
         function toggleFields() {
@@ -532,11 +537,11 @@ const char* htmlConsole = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Serial Console</title>
     <style>
-        body{font-family:monospace;margin:0;padding:10px;background:#222;color:#0f0}
-        h2{text-align:center;color:#fff;font-family:sans-serif}
-        #console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box}
-        .btn{background:#444;color:white;padding:10px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-family:sans-serif}
-        .btn:hover{background:#666}
+        body{font-family:monospace;margin:0;padding:10px;background:#121212;color:#0f0}
+        h2{text-align:center;color:#ffc107;font-family:sans-serif}
+        #console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box;color:#0f0}
+        .btn{background:#333;color:#e0e0e0;padding:10px;border:1px solid #444;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-family:sans-serif}
+        .btn:hover{background:#444}
     </style>
     <script>
         function fetchLogs() {
