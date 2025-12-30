@@ -276,7 +276,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
     *   **Juices:** Counter for oilings per range.
     *   **Reset:** Reset stats or refill tank.
 
-👀 **Screenshots:** Check out the [web-ui examples](web-ui%20examples/) folder to see what the interface looks like.
+👀 **Screenshots:** Check out the [web-ui examples](web-ui%20screenshots/)  folder to see what the interface looks like.
 
 ## 💡 Usage Scenarios & LED Status
 
@@ -385,6 +385,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
     *   Regularly check the system for leaks.
     *   **IMMEDIATELY clean any oil off the tire** if a spill occurs. Do not ride with oil on your tires.
 *   **Road Safety:** Do not operate the configuration interface while riding. Focus on the road.
+
 
 
 
