@@ -77,7 +77,7 @@ void handleResetStats() {
 #endif
     webConsole.log("CMD: Reset Stats");
     oiler.resetStats();
-    server.sendHeader("Location", "/");
+    server.sendHeader("Location", "/settings");
     server.send(303);
 }
 
@@ -87,7 +87,7 @@ void handleResetTimeStats() {
 #endif
     webConsole.log("CMD: Reset Time Stats");
     oiler.resetTimeStats();
-    server.sendHeader("Location", "/");
+    server.sendHeader("Location", "/settings");
     server.send(303);
 }
 
@@ -216,10 +216,10 @@ void writeLogLine(String type, String message = "") {
 }
 #endif
 
-void handleRoot() {
+void handleSettings() {
     resetWifiTimer();
 #ifdef GPS_DEBUG
-    Serial.println("Serving Root Page"); 
+    Serial.println("Serving Settings Page"); 
 #endif
     String html = htmlHeader;
     html.replace("%TIME%", getZurichTime());
@@ -310,6 +310,30 @@ void handleRoot() {
     server.send(200, "text/html", html);
 }
 
+void handleRoot() {
+    resetWifiTimer();
+    String html = htmlLanding;
+    
+    html.replace("%TIME%", getZurichTime());
+    html.replace("%SATS%", String(gps.satellites.value()));
+    
+    String tempHeader = "--";
+    if (oiler.isTempSensorConnected()) {
+        tempHeader = String(oiler.getCurrentTempC(), 1);
+    }
+    html.replace("%TEMP%", tempHeader);
+    
+    html.replace("%TANK_LEVEL%", String(oiler.currentTankLevelMl, 0));
+    html.replace("%TANK_CAP%", String(oiler.tankCapacityMl, 0));
+    float pct = (oiler.tankCapacityMl > 0) ? (oiler.currentTankLevelMl / oiler.tankCapacityMl) * 100.0 : 0.0;
+    html.replace("%TANK_PCT%", String(pct, 0));
+    
+    html.replace("%TOTAL_DIST%", String(oiler.getTotalDistance(), 1));
+    html.replace("%PUMP_COUNT%", String(oiler.getPumpCycles()));
+    
+    server.send(200, "text/html", html);
+}
+
 void handleSave() {
     resetWifiTimer();
     for(int i=0; i<NUM_RANGES; i++) {
@@ -371,7 +395,7 @@ void handleSave() {
     if(server.hasArg("tank_warn")) oiler.tankWarningThresholdPercent = server.arg("tank_warn").toInt();
 
     oiler.saveConfig();
-    server.sendHeader("Location", "/");
+    server.sendHeader("Location", "/settings");
     server.send(303);
 }
 
@@ -534,6 +558,7 @@ void setup() {
 
     // Webserver Routes
     server.on("/", handleRoot);
+    server.on("/settings", handleSettings);
     server.on("/save", HTTP_POST, handleSave);
     server.on("/help", handleHelp);
     

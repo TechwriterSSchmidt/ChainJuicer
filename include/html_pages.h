@@ -1,12 +1,57 @@
 #ifndef HTML_PAGES_H
 #define HTML_PAGES_H
 
+const char* htmlLanding = R"rawliteral(
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Chain Juicer</title>
+    <style>
+        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9;text-align:center}
+        h2{color:#333;margin-bottom:5px}
+        .stat-box{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px;text-align:left}
+        .stat-row{display:flex;justify-content:space-between;margin-bottom:5px}
+        .val{font-weight:bold;color:#007bff}
+        .btn{display:block;background:#007bff;color:white;padding:15px;border:none;width:100%;font-size:18px;border-radius:8px;margin-bottom:10px;text-decoration:none;cursor:pointer}
+        .btn-sec{background:#6c757d}
+        .status-bar{font-size:0.9em;color:#666;margin-bottom:20px}
+        .tank-bar{width:100%;height:20px;background:#eee;border-radius:10px;overflow:hidden;margin-top:5px}
+        .tank-fill{height:100%;background:#28a745;transition:width 0.3s}
+    </style>
+</head>
+<body>
+    <h2>🍋 Chain Juicer</h2>
+    <div class='status-bar'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
+
+    <div class='stat-box'>
+        <h3>🛢️ Tank Monitor</h3>
+        <div class='stat-row'><span>Level:</span> <span class='val'>%TANK_LEVEL% / %TANK_CAP% ml</span></div>
+        <div class='tank-bar'><div class='tank-fill' style='width:%TANK_PCT%%'></div></div>
+        <div style='text-align:right;margin-top:5px'><a href='/refill' style='color:green;font-size:0.9em'>[Refill]</a></div>
+    </div>
+
+    <div class='stat-box'>
+        <h3>📊 Statistics</h3>
+        <div class='stat-row'><span>Odometer:</span> <span class='val'>%TOTAL_DIST% km</span></div>
+        <div class='stat-row'><span>Juice Events:</span> <span class='val'>%PUMP_COUNT%</span></div>
+    </div>
+
+    <a href='/settings' class='btn'>⚙️ Settings</a>
+    <a href='/aux' class='btn btn-sec'>🔌 Aux Port</a>
+    <a href='/imu' class='btn btn-sec'>🧭 IMU Config</a>
+    <a href='/console' class='btn btn-sec'>💻 Console</a>
+    <a href='/help' class='btn btn-sec'>❓ Manual</a>
+</body>
+</html>
+)rawliteral";
+
 const char* htmlHeader = R"rawliteral(
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Chain Juicer v0.9</title>
+    <title>Chain Juicer Settings</title>
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
         h2{text-align:center;color:#333}
@@ -23,19 +68,13 @@ const char* htmlHeader = R"rawliteral(
         .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
         .progress{text-align:center;margin-top:15px;color:#555}
         .time{text-align:center;color:#888;font-size:0.9em;margin-bottom:10px}
-        .help-link{text-align:center;margin-bottom:15px}
-        .help-link a{color:#007bff;text-decoration:none}
         .disabled{opacity:0.5;pointer-events:none}
+        .back-btn{display:block;background:#6c757d;color:white;text-align:center;padding:10px;text-decoration:none;border-radius:4px;margin-bottom:15px}
     </style>
 </head>
 <body>
-    <h2>🍋 Chain Juicer v1.0</h2>
-    <div class='help-link'>
-        <a href='/help'>Manual</a> | 
-        <a href='/imu'>IMU Config</a> |
-        <a href='/aux'>Aux Port</a> |
-        <a href='/console'>Console</a>
-    </div>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>⚙️ Settings</h2>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
         <h3>Driving Profile</h3>
