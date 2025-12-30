@@ -406,27 +406,27 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
                     </tr>
                     <tr>
-                        <td>Speed Factor</td>
+                        <td>Wind Chill Adaption</td>
                         <td>
                             <select name='speedF'>
-                                <option value='0.2' %SPEED_LOW%>Low (1% / 5kmh)</option>
-                                <option value='0.5' %SPEED_MED%>Medium (2.5% / 5kmh)</option>
-                                <option value='1.0' %SPEED_HIGH%>High (5% / 5kmh)</option>
+                                <option value='0.2' %SPEED_LOW%>Low</option>
+                                <option value='0.5' %SPEED_MED%>Medium</option>
+                                <option value='1.0' %SPEED_HIGH%>High</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
-                        <td>Temp Factor</td>
+                        <td>Temp Adaption</td>
                         <td>
                             <select name='tempF'>
-                                <option value='1.0' %TEMP_LOW%>Low (1% / &deg;C)</option>
-                                <option value='2.0' %TEMP_MED%>Medium (2% / &deg;C)</option>
-                                <option value='3.0' %TEMP_HIGH%>High (3% / &deg;C)</option>
+                                <option value='1.0' %TEMP_LOW%>Low</option>
+                                <option value='2.0' %TEMP_MED%>Medium</option>
+                                <option value='3.0' %TEMP_HIGH%>High</option>
                             </select>
                         </td>
                     </tr>
                     <tr>
-                        <td>Temp Offset (&deg;C)</td>
+                        <td>Temp Sensor Offset (&deg;C)</td>
                         <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
@@ -453,11 +453,6 @@ const char* htmlAuxConfig = R"rawliteral(
         <div class='note' style='margin-bottom:15px; line-height:1.4'>
             The Heated Grips mode automatically adjusts the power (PWM) based on speed and temperature.<br>
             The power changes smoothly (approx. 5 sec lag) to prevent rapid fluctuations.<br><br>
-            <b>Example Calculation:</b><br>
-            <i>Base (25%) + 100km/h * 0.5 (50%) + 10&deg;C Cold * 2.0 (20%) = 95% Power</i>
-        </div>
-        <div class='note' style='font-family:monospace; background:#eee; padding:5px; border-radius:4px'>
-            PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost
         </div>
     </div>
 
@@ -467,7 +462,7 @@ const char* htmlAuxConfig = R"rawliteral(
             <b>Smart Power</b> automatically turns on the Aux Port (12V) when the engine is running (detected via vibration/IMU).<br>
             It keeps the power ON for 10 seconds after the engine stops to prevent flickering.<br><br>
             <span style='color:red; font-weight:bold'>⚠️ WARNING:</span><br>
-            Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the MOSFET or traces.
+            Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the traces.
         </div>
     </div>
 
