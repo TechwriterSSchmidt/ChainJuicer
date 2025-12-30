@@ -31,9 +31,9 @@ const char* htmlHeader = R"rawliteral(
 <body>
     <h2>🍋 Chain Juicer v1.0</h2>
     <div class='help-link'>
-        <a href='/help'>Help & Manual</a> | 
-        <a href='/imu'>IMU Calibration</a> |
-        <a href='/aux'>Aux Config</a> |
+        <a href='/help'>Manual</a> | 
+        <a href='/imu'>IMU Config</a> |
+        <a href='/aux'>Aux Port</a> |
         <a href='/console'>Console</a>
     </div>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
@@ -193,6 +193,7 @@ const char* htmlHelp = R"rawliteral(
                 <li><b>Temp:</b> Increases heat with cold (requires Temp Sensor).</li>
                 <li><b>Rain:</b> Adds boost in Rain Mode.</li>
                 <li><b>Startup:</b> High power for 60s after start.</li>
+                <li><b>Offset:</b> Corrects sensor reading (e.g. if placed near hot engine).</li>
             </ul>
         </li>
     </ul>
@@ -406,7 +407,7 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
                     </tr>
                     <tr>
-                        <td>Wind Chill Adaption</td>
+                        <td>Wind Chill Compensation</td>
                         <td>
                             <select name='speedF'>
                                 <option value='0.2' %SPEED_LOW%>Low</option>
@@ -416,7 +417,7 @@ const char* htmlAuxConfig = R"rawliteral(
                         </td>
                     </tr>
                     <tr>
-                        <td>Temp Adaption</td>
+                        <td>Temp Compensation</td>
                         <td>
                             <select name='tempF'>
                                 <option value='1.0' %TEMP_LOW%>Low</option>
@@ -432,6 +433,11 @@ const char* htmlAuxConfig = R"rawliteral(
                     <tr>
                         <td>Temp Sensor Offset (&deg;C)</td>
                         <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="note" style="padding-bottom: 10px;">
+                            Correction for sensor placement. Use <b>negative values</b> (e.g. -5.0) if sensor is near a hot engine to lower the reading.
+                        </td>
                     </tr>
                     <tr>
                         <td>Rain Boost (%)</td>
