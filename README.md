@@ -174,12 +174,15 @@ Advanced PWM control for heated grips, far superior to simple "Low/High" switche
 *   **Base Level:** Set your preferred minimum heat.
 *   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor). Configurable: Low/Medium/High.
 *   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor). Configurable: Low/Medium/High.
+*   **Start Temp:** Configurable threshold (default 20°C) below which the grips start working.
 *   **Temp Offset:** Adjusts the sensor reading if placed near heat sources (e.g. engine).
 *   **Rain Boost:** Automatically adds extra heat when Rain Mode is active.
 *   **Startup Boost:** Heats up quickly (e.g. 80% for 60s) when you start the ride.
+*   **Start Delay:** Configurable delay (default 20s) after engine start before grips turn on to protect the battery.
+    *   *Note:* Without IMU, the system waits 60s after boot + the configured delay.
 
 **Configuration:**
-All parameters (Base %, Speed Factor, Temp Factor, Boosts) are fully configurable via the new "Aux Config" web page.
+All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays) are fully configurable via the new "Aux Config" web page.
 
 ## 🛠 Hardware
 

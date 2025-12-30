@@ -23,8 +23,8 @@ public:
     AuxMode getMode() const { return _mode; }
     
     // Heated Grips Settings
-    void setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec);
-    void getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec);
+    void setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec);
+    void getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec);
     
     // Status
     int getCurrentPwm() const { return _currentPwm; }
@@ -52,12 +52,13 @@ private:
     // Heated Grips Logic
     int _baseLevel = 30;        // 0-100%
     float _speedFactor = 0.5;   // % per km/h
-    float _tempFactor = 2.0;    // % per degree below 20C
+    float _tempFactor = 2.0;    // % per degree below startTemp
     float _tempOffset = 0.0;    // Correction for sensor placement
-    float _startTemp = 20.0;    // Temperature below which compensation starts
+    float _startTemp = 15.0;    // Temperature below which compensation starts
     int _rainBoost = 10;        // % boost in rain mode
-    int _startupBoostLevel = 80;// % for startup
-    int _startupBoostSec = 60;  // Seconds for startup boost
+    int _startupBoostLevel = 85;// % for startup
+    int _startupBoostSec = 75;  // Seconds for startup boost
+    int _startDelaySec = 20;    // Seconds delay after start
     
     unsigned long _startTime = 0;
     

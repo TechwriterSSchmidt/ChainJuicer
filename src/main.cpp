@@ -415,9 +415,9 @@ void handleAuxConfig() {
     html.replace("%MODE_SMART%", (mode == AUX_MODE_SMART_POWER) ? "selected" : "");
     html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
     
-    int base, rainB, startL, startS;
+    int base, rainB, startL, startS, startD;
     float speedF, tempF, tempO, startT;
-    auxManager.getGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS);
+    auxManager.getGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS, startD);
     
     html.replace("%BASE%", String(base));
     
@@ -436,6 +436,7 @@ void handleAuxConfig() {
     html.replace("%RAINB%", String(rainB));
     html.replace("%STARTL%", String(startL));
     html.replace("%STARTS%", String(startS));
+    html.replace("%STARTD%", String(startD));
     
     server.send(200, "text/html", html);
 }
@@ -472,8 +473,9 @@ void handleSaveAux() {
     int rainB = server.arg("rainB").toInt();
     int startL = server.arg("startL").toInt();
     int startS = server.arg("startS").toInt();
+    int startD = server.arg("startD").toInt();
     
-    auxManager.setGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS);
+    auxManager.setGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS, startD);
     
     server.sendHeader("Location", "/aux");
     server.send(303);

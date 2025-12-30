@@ -66,6 +66,21 @@ Sensor Data (Yellow/White)> ESP32 GPIO 15
   Data ---------------+
 
 -----------------------------------------------------------------------------
+[ AUX PORT (Heated Grips / Smart Power) ]
+-----------------------------------------------------------------------------
+ESP32 GPIO 17 ------------> Gate (G) of MOSFET (e.g., IRLZ44N)
+                            |
+                            [ 10k Resistor ] -> GND (Pull-Down)
+
+MOSFET Drain (D) ---------> Grips (-) / Accessory (-)
+MOSFET Source (S) --------> GND
+
+Battery (12V) (+) --------> Grips (+) / Accessory (+)
+
+* Note: For Heated Grips, ensure the MOSFET can handle the current (e.g. 5A).
+  Heatsink recommended.
+
+-----------------------------------------------------------------------------
 [ SD CARD MODULE (Optional) ]
 -----------------------------------------------------------------------------
 SD VCC -------------------> ESP32 5V (VIN) or 3.3V
@@ -83,6 +98,7 @@ GPIO 04  : Button (Input Pullup)
 GPIO 05  : SD Card CS
 GPIO 15  : DS18B20 Temp Sensor (Data)
 GPIO 16  : Pump MOSFET (Output)
+GPIO 17  : Aux Port (Heated Grips / Smart Power)
 GPIO 18  : SD Card SCK
 GPIO 19  : SD Card MISO
 GPIO 23  : SD Card MOSI

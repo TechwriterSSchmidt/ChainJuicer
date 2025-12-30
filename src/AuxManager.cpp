@@ -9,7 +9,7 @@ AuxManager::AuxManager() {
 
 void AuxManager::begin(ImuHandler* imu) {
     _imu = imu;
-    _startTime = millis();
+    _startTime = 0; // Wait for engine start
     
     // Initialize Pin
     pinMode(AUX_PIN, OUTPUT);
@@ -32,6 +32,7 @@ void AuxManager::begin(ImuHandler* imu) {
     _rainBoost = _prefs.getInt("rainB", 10);
     _startupBoostLevel = _prefs.getInt("startL", 100);
     _startupBoostSec = _prefs.getInt("startS", 75);
+    _startDelaySec = _prefs.getInt("startD", 20);
     
     // Safety: Heated Grips always start OFF. Smart Power respects saved state.
     if (_mode == AUX_MODE_HEATED_GRIPS) {
@@ -81,6 +82,33 @@ void AuxManager::handleSmartPower() {
 }
 
 void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
+    // 0. Check Start Condition (Engine Running + Delay)
+    if (_startTime == 0) {
+        bool engineRunning = false;
+        if (_imu && _imu->isAvailable()) {
+            if (_imu->isMotionDetected()) engineRunning = true;
+        } else {
+            // Fallback if no IMU: Wait 60 seconds from boot
+            if (millis() > 60000) {
+                engineRunning = true;
+            }
+        }
+        
+        if (engineRunning) {
+            _startTime = millis();
+        } else {
+            setPwm(0);
+            return;
+        }
+    }
+    
+    // Check Delay
+    unsigned long elapsed = millis() - _startTime;
+    if (elapsed < ((unsigned long)_startDelaySec * 1000)) {
+        setPwm(0);
+        return;
+    }
+
     // 1. Base Level
     float target = _baseLevel;
     
@@ -105,7 +133,8 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     }
     
     // 5. Startup Boost
-    if (millis() - _startTime < (_startupBoostSec * 1000)) {
+    unsigned long boostElapsed = elapsed - ((unsigned long)_startDelaySec * 1000);
+    if (boostElapsed < ((unsigned long)_startupBoostSec * 1000)) {
         if (target < _startupBoostLevel) {
             target = _startupBoostLevel;
         }
@@ -139,7 +168,7 @@ void AuxManager::setMode(AuxMode mode) {
     _prefs.end();
 }
 
-void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec) {
+void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec) {
     _baseLevel = baseLevel;
     _speedFactor = speedFactor;
     _tempFactor = tempFactor;
@@ -148,6 +177,7 @@ void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFac
     _rainBoost = rainBoost;
     _startupBoostLevel = startupBoostLevel;
     _startupBoostSec = startupBoostSec;
+    _startDelaySec = startDelaySec;
     
     _prefs.begin("aux", false);
     _prefs.putInt("base", _baseLevel);
@@ -158,10 +188,11 @@ void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFac
     _prefs.putInt("rainB", _rainBoost);
     _prefs.putInt("startL", _startupBoostLevel);
     _prefs.putInt("startS", _startupBoostSec);
+    _prefs.putInt("startD", _startDelaySec);
     _prefs.end();
 }
 
-void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec) {
+void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec) {
     baseLevel = _baseLevel;
     speedFactor = _speedFactor;
     tempFactor = _tempFactor;
@@ -170,4 +201,5 @@ void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &temp
     rainBoost = _rainBoost;
     startupBoostLevel = _startupBoostLevel;
     startupBoostSec = _startupBoostSec;
+    startDelaySec = _startDelaySec;
 }

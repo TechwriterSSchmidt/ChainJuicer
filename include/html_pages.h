@@ -445,6 +445,10 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td>Startup Boost Time (sec)</td>
                         <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
                     </tr>
+                    <tr>
+                        <td>Start Delay (sec)</td>
+                        <td><input type='number' name='startD' value='%STARTD%' min='0'></td>
+                    </tr>
                 </table>
             </div>
         </div>
