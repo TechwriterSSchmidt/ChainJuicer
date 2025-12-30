@@ -645,7 +645,7 @@ void Oiler::loadConfig() {
     }
 
     // Load Tank Monitor
-    tankMonitorEnabled = preferences.getBool("tank_en", false);
+    tankMonitorEnabled = preferences.getBool("tank_en", true);
     tankCapacityMl = preferences.getFloat("tank_cap", 100.0);
     currentTankLevelMl = preferences.getFloat("tank_lvl", 100.0);
     dropsPerMl = preferences.getInt("drop_ml", 50);
