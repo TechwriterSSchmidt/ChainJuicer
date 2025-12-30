@@ -46,6 +46,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Bleeding Mode** | Continuous pumping for maintenance. | Fills oil line. |
 | **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
 | **Aux Port Manager** | Smart control for accessories. | **Smart Power:** Auto-ON when engine runs (IMU). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. |
+| **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
 | **Factory Reset** | Reset to defaults. | Hold button at boot. |
@@ -171,8 +172,9 @@ Turns on your accessories (Navigation, USB, Lights) only when the engine is runn
 Advanced PWM control for heated grips, far superior to simple "Low/High" switches.
 *   **Hardware Recommendation:** [Coolride Heating Cartridges](https://www.coolride.de/Neue-Heizpatronen-Paar-einzeln-ohne-Schalter) (52W).
 *   **Base Level:** Set your preferred minimum heat.
-*   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor).
-*   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor).
+*   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor). Configurable: Low/Medium/High.
+*   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor). Configurable: Low/Medium/High.
+*   **Temp Offset:** Adjusts the sensor reading if placed near heat sources (e.g. engine).
 *   **Rain Boost:** Automatically adds extra heat when Rain Mode is active.
 *   **Startup Boost:** Heats up quickly (e.g. 80% for 60s) when you start the ride.
 

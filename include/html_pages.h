@@ -360,12 +360,20 @@ const char* htmlAuxConfig = R"rawliteral(
             var mode = document.getElementById('mode').value;
             var grips = document.getElementById('grips_settings');
             var desc = document.getElementById('grips_desc');
+            var smart = document.getElementById('smart_desc');
+            
             if (mode == '2') { // Heated Grips
                 grips.style.display = 'block';
                 desc.style.display = 'block';
+                smart.style.display = 'none';
+            } else if (mode == '1') { // Smart Power
+                grips.style.display = 'none';
+                desc.style.display = 'none';
+                smart.style.display = 'block';
             } else {
                 grips.style.display = 'none';
                 desc.style.display = 'none';
+                smart.style.display = 'none';
             }
         }
     </script>
@@ -450,6 +458,16 @@ const char* htmlAuxConfig = R"rawliteral(
         </div>
         <div class='note' style='font-family:monospace; background:#eee; padding:5px; border-radius:4px'>
             PWM = Base + (Speed * Factor) + (Cold * Factor) + Rain + Boost
+        </div>
+    </div>
+
+    <div id='smart_desc' class='card' style='display:none; margin-top:15px'>
+        <h3>Smart Power Description</h3>
+        <div class='note' style='margin-bottom:15px; line-height:1.4'>
+            <b>Smart Power</b> automatically turns on the Aux Port (12V) when the engine is running (detected via vibration/IMU).<br>
+            It keeps the power ON for 10 seconds after the engine stops to prevent flickering.<br><br>
+            <span style='color:red; font-weight:bold'>⚠️ WARNING:</span><br>
+            Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the MOSFET or traces.
         </div>
     </div>
 
