@@ -110,9 +110,11 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     
     // 5. Startup Boost
     unsigned long boostElapsed = elapsed - ((unsigned long)_startDelaySec * 1000);
+    _isBoosting = false;
     if (boostElapsed < ((unsigned long)_startupBoostSec * 1000)) {
         if (target < _startupBoostLevel) {
             target = _startupBoostLevel;
+            _isBoosting = true;
         }
     }
     

@@ -560,7 +560,18 @@ void Oiler::updateLED() {
                 // Heated Grips -> Gradient Blue to Red
                 strip.setBrightness(currentDimBrightness); // Use dim brightness for constant light
                 
-                if (auxPwm < 30) {
+                if (auxBoost) {
+                    // Startup Boost -> Color Cycle (Blue -> Yellow -> Orange -> Red)
+                    // Simulates "Heating Up"
+                    strip.setBrightness(currentHighBrightness);
+                    int phase = (now / 500) % 4; 
+                    switch(phase) {
+                        case 0: auxColor = strip.Color(0, 0, 255); break;   // Blue
+                        case 1: auxColor = strip.Color(255, 255, 0); break; // Yellow
+                        case 2: auxColor = strip.Color(255, 140, 0); break; // Orange
+                        case 3: auxColor = strip.Color(255, 0, 0); break;   // Red
+                    }
+                } else if (auxPwm < 30) {
                     auxColor = strip.Color(0, 0, 255); // Blue (Low)
                 } else if (auxPwm < 60) {
                     auxColor = strip.Color(255, 255, 0); // Yellow (Med-Low)

@@ -257,6 +257,7 @@ ESP32 GPIO (the one that switches the MOSFET
 | 🟡 **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
 | 🟠 **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
 | 🔴 **Red** | Bleeding Mode (Blink) | Heated Grips: **Level 4** (Max) |
+| 🌈 **Cycle** | - | Heated Grips: **Boost** (Blue->Red) |
 | 🟣 **Magenta** | No GPS (Solid) / Offroad (Blink) | - |
 | 🔵 **Cyan** | Emergency Mode (Solid) / Flush (Blink) | - |
 | ⚪ **White** | WiFi Config Mode (Pulse) | - |

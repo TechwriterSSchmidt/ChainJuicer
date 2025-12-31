@@ -746,7 +746,7 @@ void loop() {
     auxManager.loop(oiler.getSmoothedSpeed(), oiler.lastTemp, oiler.isRainMode());
     
     // Pass Aux Status to Oiler for LED
-    oiler.setAuxStatus(auxManager.getCurrentPwm(), (int)auxManager.getMode());
+    oiler.setAuxStatus(auxManager.getCurrentPwm(), (int)auxManager.getMode(), auxManager.isBoostActive());
 
 #ifdef SD_LOGGING_ACTIVE
     if (millis() - lastLogTime > LOG_INTERVAL_MS) {

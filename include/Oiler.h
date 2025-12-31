@@ -160,12 +160,13 @@ public:
     bool oilingDelayed; // Flag to indicate oiling is pending due to lean angle
 
     // Aux Status Setter
-    void setAuxStatus(int pwm, int mode) { auxPwm = pwm; auxMode = mode; }
+    void setAuxStatus(int pwm, int mode, bool boost) { auxPwm = pwm; auxMode = mode; auxBoost = boost; }
 
 private:
     // Aux Status for LED
     int auxPwm = 0;
     int auxMode = 0; // 0=OFF, 1=SMART, 2=GRIPS
+    bool auxBoost = false;
 
     void processDistance(double distKm, float speedKmh);
     

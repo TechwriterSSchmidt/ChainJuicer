@@ -29,6 +29,7 @@ public:
     // Status
     int getCurrentPwm() const { return _currentPwm; }
     bool isPowered() const { return _isPowered; }
+    bool isBoostActive() const { return _isBoosting; }
     
     // Manual Control
     void toggleManualOverride();
@@ -43,6 +44,7 @@ private:
     int _currentPwm = 0;
     float _smoothedPwm = 0.0;
     bool _isPowered = false;
+    bool _isBoosting = false;
     bool _manualOverride = true; // Default ON (Auto)
     
     // Aux Power Logic
