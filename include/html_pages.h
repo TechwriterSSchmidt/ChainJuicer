@@ -1,28 +1,50 @@
 #ifndef HTML_PAGES_H
 #define HTML_PAGES_H
 
+const char* htmlCss = R"rawliteral(
+body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
+h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
+h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
+.card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;color:#ccc;font-size:0.9em}
+td{padding:10px 5px;border-bottom:1px solid #333}
+input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
+input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
+select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffc107%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 8px center;background-size:24px;padding-right:30px;width:100%;box-sizing:border-box}
+.num-input{width:80px;text-align:center}
+.km-input{width:70px;text-align:center}
+.pulse-input{width:50px;text-align:center}
+.btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center;text-decoration:none}
+.btn:active{background:#555}
+.btn-sec{background:#222;color:#aaa;border:1px solid #444}
+.btn-danger{background:#500;color:#fff;border:1px solid #800}
+.btn-cal{background:#28a745;color:#fff;border:none}
+.back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
+.stat-box{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px;text-align:left}
+.stat-row{display:flex;justify-content:space-between;margin-bottom:5px;border-bottom:1px solid #333;padding-bottom:5px}
+.stat-row:last-child{border-bottom:none}
+.val{font-weight:bold;color:#ffffff;font-family:monospace}
+.status-bar{font-size:0.9em;color:#ccc;margin-bottom:20px;text-align:center}
+.tank-bar{width:100%;height:10px;background:#333;border-radius:2px;overflow:hidden;margin-top:8px;border:1px solid #444}
+.tank-fill{height:100%;background:#ccc;transition:width 0.3s}
+.progress{text-align:center;margin-top:15px;color:#ccc}
+.time{text-align:center;color:#ccc;font-size:0.9em;margin-bottom:10px}
+.disabled{opacity:0.5;pointer-events:none}
+.note{font-size:0.9em;color:#ccc;margin-top:5px}
+.color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
+ul{padding-left:20px}
+#console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box;color:#0f0;font-family:monospace}
+)rawliteral";
+
 const char* htmlLanding = R"rawliteral(
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Chain Juicer</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0;text-align:center}
-        h2{color:#ffffff;margin-bottom:5px;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffc107;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
-        .stat-box{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px;text-align:left}
-        .stat-row{display:flex;justify-content:space-between;margin-bottom:5px;border-bottom:1px solid #333;padding-bottom:5px}
-        .stat-row:last-child{border-bottom:none}
-        .val{font-weight:bold;color:#ffffff}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-bottom:10px;text-decoration:none;cursor:pointer;text-align:center}
-        .btn:active{background:#555}
-        .btn-sec{background:#222;color:#aaa;border:1px solid #444}
-        .btn-danger{background:#500;color:#fff;border:1px solid #800}
-        .status-bar{font-size:0.9em;color:#ccc;margin-bottom:20px}
-        .tank-bar{width:100%;height:10px;background:#333;border-radius:2px;overflow:hidden;margin-top:8px;border:1px solid #444}
-        .tank-fill{height:100%;background:#ccc;transition:width 0.3s}
-    </style>
+    <link rel="stylesheet" href="/style.css">
+    <style>body{text-align:center} h2{margin-bottom:5px}</style>
 </head>
 <body>
     <h2>🍋 Chain Juicer</h2>
@@ -58,27 +80,7 @@ const char* htmlHeader = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Juicer Settings</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
-        h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
-        .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
-        table{width:100%;border-collapse:collapse}
-        th{text-align:left;color:#ccc;font-size:0.9em}
-        td{padding:10px 5px;border-bottom:1px solid #333}
-        input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
-        input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
-        .num-input{width:80px;text-align:center}
-        .km-input{width:70px;text-align:center}
-        .pulse-input{width:50px;text-align:center}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center}
-        .btn:active{background:#555}
-        .btn-danger{background:#500;color:#fff;border:1px solid #800}
-        .progress{text-align:center;margin-top:15px;color:#ccc}
-        .time{text-align:center;color:#ccc;font-size:0.9em;margin-bottom:10px}
-        .disabled{opacity:0.5;pointer-events:none}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
@@ -168,20 +170,7 @@ const char* htmlLEDSettings = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>LED Settings</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
-        h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
-        .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
-        table{width:100%;border-collapse:collapse}
-        td{padding:10px 5px;border-bottom:1px solid #333}
-        input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
-        input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
-        .num-input{width:80px;text-align:center}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center}
-        .btn:active{background:#555}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
@@ -216,16 +205,8 @@ const char* htmlHelp = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Help</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:15px;background:#121212;color:#e0e0e0;line-height:1.6}
-        h2{color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffc107;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
-        ul{padding-left:20px}
-        .color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-top:20px;border:1px solid #444;font-size:16px}
-        .btn:active{background:#555}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
+    <style>body{line-height:1.6}</style>
 </head>
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
@@ -343,15 +324,8 @@ const char* htmlUpdate = R"rawliteral(
 <head>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Firmware Update</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:20px;background:#121212;color:#e0e0e0;text-align:center}
-        h2{color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        form{background:#1e1e1e;padding:20px;border-radius:4px;border:1px solid #333;display:inline-block}
-        input[type=file]{margin-bottom:15px;color:#e0e0e0}
-        input[type=submit]{width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;border-radius:4px;cursor:pointer;font-size:16px}
-        input[type=submit]:active{background:#555}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
+    <style>body{text-align:center} form{display:inline-block}</style>
 </head>
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
@@ -372,21 +346,7 @@ const char* htmlIMU = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>IMU Calibration</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
-        h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
-        .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
-        table{width:100%;border-collapse:collapse}
-        td{padding:8px 5px;border-bottom:1px solid #333}
-        select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffc107%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 8px center;background-size:24px;padding-right:30px}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;text-align:center}
-        .btn:active{background:#555}
-        .btn-cal{background:#28a745;color:#fff;border:none}
-        .val{font-weight:bold;font-family:monospace;color:#ffffff}
-        .note{font-size:0.9em;color:#ccc;margin-top:5px}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
@@ -459,20 +419,7 @@ const char* htmlAuxConfig = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Aux Config</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
-        h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
-        .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
-        table{width:100%;border-collapse:collapse}
-        td{padding:10px 5px;border-bottom:1px solid #333}
-        input{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
-        select{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffc107%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 8px center;background-size:24px;padding-right:30px}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center}
-        .btn:active{background:#555}
-        .note{font-size:0.9em;color:#ccc;margin-top:5px}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
     <script>
         function toggleFields() {
             var mode = document.getElementById('mode').value;
@@ -612,14 +559,7 @@ const char* htmlConsole = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Serial Console</title>
-    <style>
-        body{font-family:monospace;margin:0;padding:10px;background:#121212;color:#0f0}
-        h2{text-align:center;color:#ffffff;font-family:sans-serif;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        #console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box;color:#0f0}
-        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#e0e0e0;padding:12px;border:1px solid #444;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-family:sans-serif;text-align:center}
-        .btn:hover{background:#444}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-family:sans-serif;font-size:16px;font-weight:bold}
-    </style>
+    <link rel="stylesheet" href="/style.css">
     <script>
         function fetchLogs() {
             fetch('/console/data')
@@ -650,3 +590,4 @@ const char* htmlConsole = R"rawliteral(
 )rawliteral";
 
 #endif
+

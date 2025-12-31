@@ -66,6 +66,11 @@ void resetWifiTimer() {
     wifiStartTime = millis();
 }
 
+void handleCss() {
+    server.sendHeader("Cache-Control", "public, max-age=86400");
+    server.send(200, "text/css", htmlCss);
+}
+
 void handleHelp() {
     resetWifiTimer();
     server.send(200, "text/html", htmlHelp);
@@ -596,6 +601,7 @@ void setup() {
     // Start DNS Server only when needed
 
     // Webserver Routes
+    server.on("/style.css", handleCss);
     server.on("/", handleRoot);
     server.on("/settings", handleSettings);
     server.on("/led_settings", handleLEDSettings);
