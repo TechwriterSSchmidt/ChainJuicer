@@ -74,7 +74,7 @@ void AuxManager::handleSmartPower() {
     }
     
     // 10 Second Timeout for "Engine Off" detection
-    if (millis() - _lastMotionTime > 10000) {
+    if (millis() - _lastMotionTime > 3000) {
         _engineRunning = false;
     }
     
