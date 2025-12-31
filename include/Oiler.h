@@ -58,8 +58,8 @@ public:
     bool isFlushMode() { return flushMode; }
     void setFlushMode(bool mode);
 
-    bool isCrossCountryMode() { return crossCountryMode; }
-    void setCrossCountryMode(bool mode);
+    bool isOffroadMode() { return offroadMode; }
+    void setOffroadMode(bool mode);
 
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
@@ -67,11 +67,17 @@ public:
     bool isEmergencyModeForced() { return emergencyModeForced; }
     void setEmergencyModeForced(bool forced);
 
+    // Manual Actions
+    void startBleeding();
+    void triggerOil(int pulses); // Made public for manual trigger
+
     // Factory Reset
     void checkFactoryReset();
 
     // WiFi Status
     void setWifiActive(bool active);
+    bool checkWifiToggleRequest(); // Returns true if WiFi toggle was requested via button
+    bool checkAuxToggleRequest();  // Returns true if Aux toggle was requested via button
 
     // Update Status
     void setUpdateMode(bool mode);
@@ -131,10 +137,10 @@ public:
     void setTankFill(float levelMl); // Manually set level (e.g. refill)
     void resetTankToFull();
 
-    // Cross Country Settings
-    bool crossCountryMode;
-    int crossCountryIntervalMin;
-    unsigned long lastCrossCountryOilTime;
+    // Offroad Settings
+    bool offroadMode;
+    int offroadIntervalMin;
+    unsigned long lastOffroadOilTime;
 
     // Chain Flush Mode Settings
     int flushConfigEvents;      // Total events to run
@@ -144,7 +150,7 @@ public:
     unsigned long lastFlushOilTime;
 
     // Startup Delay
-    float startupDelayKm;
+    float startupDelayMeters;
     float currentStartupDistance;
 
     // Crash Latch
@@ -195,12 +201,15 @@ private:
     unsigned long lastClickTime;
     bool emergencyMode;
     bool wifiActive; // WiFi Status
+    bool wifiToggleRequested; // Flag for main.cpp
+    bool auxToggleRequested;  // Flag for main.cpp
     bool bleedingMode;
     unsigned long bleedingStartTime;
     unsigned long wifiActivationTime;
     unsigned long buttonPressStartTime;
     bool buttonState;
     bool lastButtonState;
+    bool longPressHandled; // To prevent repeat triggers
     unsigned long lastDebounceTime; // Added for Debouncing
     float currentSpeed; // Added for logic suppression
     float smoothedInterval; // Low-Pass Filter for Interval
@@ -215,7 +224,7 @@ private:
     void loadConfig();
     void validateConfig();
     // saveProgress is public
-    void triggerOil(int pulses);
+    // triggerOil is public
 
     // Emergency update and standstill save time
     unsigned long lastEmergUpdate;

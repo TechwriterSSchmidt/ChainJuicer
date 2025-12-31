@@ -57,7 +57,7 @@ private:
     bool _sideStandCalibrated = false;
     
     // Chain Configuration
-    bool _chainOnRight = false; // Default: Left side
+    bool _chainOnRight = true; // Default: Right side
 
     // Motion Detection
     float _linAccelX = 0.0;

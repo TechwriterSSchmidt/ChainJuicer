@@ -8,7 +8,7 @@
 
 enum AuxMode {
     AUX_MODE_OFF = 0,
-    AUX_MODE_SMART_POWER = 1,
+    AUX_MODE_AUX_POWER = 1,
     AUX_MODE_HEATED_GRIPS = 2
 };
 
@@ -45,7 +45,7 @@ private:
     bool _isPowered = false;
     bool _manualOverride = true; // Default ON (Auto)
     
-    // Smart Power Logic
+    // Aux Power Logic
     unsigned long _lastMotionTime = 0;
     bool _engineRunning = false;
     
@@ -62,7 +62,7 @@ private:
     
     unsigned long _startTime = 0;
     
-    void handleSmartPower();
+    void handleAuxPower();
     void handleHeatedGrips(float speed, float temp, bool rain);
     void setPwm(int percent);
 };

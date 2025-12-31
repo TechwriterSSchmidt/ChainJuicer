@@ -1,59 +1,130 @@
 #ifndef HTML_PAGES_H
 #define HTML_PAGES_H
 
+const char* htmlCss = R"rawliteral(
+body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
+h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
+h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
+.card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;color:#ccc;font-size:1.1em}
+td{padding:10px 5px;border-bottom:1px solid #333}
+input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
+input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
+select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffc107%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 8px center;background-size:24px;padding-right:30px;width:100%;box-sizing:border-box}
+.num-input{width:80px;text-align:center}
+.km-input{width:70px;text-align:center}
+.pulse-input{width:50px;text-align:center}
+.btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center;text-decoration:none}
+.btn:active{background:#555}
+.btn-sec{background:#222;color:#aaa;border:1px solid #444}
+.btn-danger{background:#500;color:#fff;border:1px solid #800}
+.btn-cal{background:#28a745;color:#fff;border:none}
+.back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:20px;font-weight:bold}
+.stat-box{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px;text-align:left}
+.stat-row{display:flex;justify-content:space-between;margin-bottom:5px;border-bottom:1px solid #333;padding-bottom:5px}
+.stat-row:last-child{border-bottom:none}
+.val{font-weight:bold;color:#ffffff;font-family:monospace}
+.status-bar{font-size:1.1em;color:#ccc;margin-bottom:20px;text-align:center}
+.tank-bar{width:100%;height:10px;background:#333;border-radius:2px;overflow:hidden;margin-top:8px;border:1px solid #444}
+.tank-fill{height:100%;background:#ccc;transition:width 0.3s}
+.progress{text-align:center;margin-top:15px;color:#ccc}
+.time{text-align:center;color:#ccc;font-size:1.1em;margin-bottom:10px}
+.disabled{opacity:0.5;pointer-events:none}
+.note{font-size:1.1em;color:#ccc;margin-top:5px}
+.color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
+ul{padding-left:20px}
+#console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:14px;box-sizing:border-box;color:#0f0;font-family:monospace}
+)rawliteral";
+
+const char* htmlLanding = R"rawliteral(
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Chain Juicer</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>body{text-align:center} h2{margin-bottom:5px}</style>
+</head>
+<body>
+    <h2>🍋 Chain Juicer</h2>
+    <div class='status-bar'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
+
+    <div class='stat-box'>
+        <h3>Statistics</h3>
+        <div class='stat-row'><span>Odometer:</span> <span class='val'>%TOTAL_DIST% km</span></div>
+        <div class='stat-row'><span>Juice Events:</span> <span class='val'>%PUMP_COUNT%</span></div>
+        <div class='stat-row'><span>Progress:</span> <span class='val'>%PROGRESS%%</span></div>
+    </div>
+
+    <div class='stat-box'>
+        <h3>Tank Monitor</h3>
+        <div class='stat-row'><span>Level:</span> <span class='val'>%TANK_LEVEL% / %TANK_CAP% ml</span></div>
+        <div class='tank-bar'><div class='tank-fill' style='width:%TANK_PCT%%;background-color:%TANK_COLOR%'></div></div>
+    </div>
+
+    <a href='/toggle_emerg' class='btn %EMERG_CLASS%'>⚠️ Emergency Mode: %EMERG_STATUS%</a>
+    <a href='/settings' class='btn'>Juicer Settings</a>
+    <a href='/led_settings' class='btn btn-sec'>LED Settings</a>
+    <a href='/aux' class='btn btn-sec'>Aux Port</a>
+    <a href='/imu' class='btn btn-sec'>IMU Config</a>
+    <a href='/console' class='btn btn-sec'>Console</a>
+    <a href='/help' class='btn btn-sec'>Manual</a>
+</body>
+</html>
+)rawliteral";
+
 const char* htmlHeader = R"rawliteral(
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Chain Juicer v0.9</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
-        h2{text-align:center;color:#333}
-        h3{color:#555;margin-top:20px}
-        form{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}
-        table{width:100%;border-collapse:collapse}
-        th{text-align:left;color:#666;font-size:0.9em}
-        td{padding:10px 5px;border-bottom:1px solid #eee}
-        input{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
-        input[type=checkbox]{width:20px;height:20px}
-        .num-input{width:80px;text-align:center}
-        .km-input{width:70px;text-align:center}
-        .pulse-input{width:50px;text-align:center}
-        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
-        .progress{text-align:center;margin-top:15px;color:#555}
-        .time{text-align:center;color:#888;font-size:0.9em;margin-bottom:10px}
-        .help-link{text-align:center;margin-bottom:15px}
-        .help-link a{color:#007bff;text-decoration:none}
-        .disabled{opacity:0.5;pointer-events:none}
-    </style>
+    <title>Juicer Settings</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h2>🍋 Chain Juicer v1.0</h2>
-    <div class='help-link'>
-        <a href='/help'>Manual</a> | 
-        <a href='/imu'>IMU Config</a> |
-        <a href='/aux'>Aux Port</a> |
-        <a href='/console'>Console</a>
-    </div>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>Juicer Settings</h2>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
-        <h3>Driving Profile</h3>
-        <table>
-            <tr>
-                <th rowspan='2'>Speed</th>
-                <th rowspan='2'>km</th>
-                <th colspan='3' style='text-align:left'>(Last 20 juices only)</th>
-            </tr>
-            <tr>
-                <th style='text-align:center'>Usage %</th>
-                <th style='text-align:center'>Juices</th>
-                <th style='text-align:center'>Pulses</th>
-            </tr>
+        <div class='card'>
+            <h3>Driving Profile</h3>
+            <table>
+                <tr>
+                    <th rowspan='2'>Speed</th>
+                    <th rowspan='2'>km</th>
+                    <th colspan='3' style='text-align:left'>(Last 20 juices only)</th>
+                </tr>
+                <tr>
+                    <th style='text-align:center'>Usage %</th>
+                    <th style='text-align:center'>Juices</th>
+                    <th style='text-align:center'>Pulses</th>
+                </tr>
 )rawliteral";
 
 const char* htmlFooter = R"rawliteral(
         </table>
+        </div>
+        <div class='card'>
+        <h3>General</h3>
+        <table>
+            <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
+            <tr><td>Start Delay (m)</td><td><input type='number' step='1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
+            <tr><td>Offroad Interval (min)</td><td><input type='number' name='offroad_int' value='%OFFROAD_INT%' class='num-input'></td></tr>
+            <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
+            <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
+            <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
+            <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
+        </table>
+        </div>
+        <div class='card'>
+        <h3>Maintenance</h3>
+        <div style='margin-bottom:15px'>
+            <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
+            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
+        </div>
+        </div>
+        <div class='card'>
         <h3>Temperature Compensation</h3>
         <table>
             <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' min='50' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
@@ -62,32 +133,10 @@ const char* htmlFooter = R"rawliteral(
             <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
             <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. Mineral Oil 80w90)</td></tr>
             <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Gear Oil SAE 90)</td></tr>
-            <tr><td colspan='2' style='font-size:0.8em;color:#666'>Current Temp: %TEMP_C% &deg;C</td></tr>
+            <tr><td colspan='2' style='font-size:1.1em;color:#888'>Current Temp: %TEMP_C% &deg;C</td></tr>
         </table>
-        <h3>General</h3>
-        <table>
-            <tr><td>Rain Mode (x2)</td><td><input type='checkbox' name='rain_mode' %RAIN_CHECKED%></td></tr>
-            <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
-            <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
-            <tr><td>Cross-Country Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
-            <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
-            <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
-            <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
-            <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
-        </table>
-        <h3>LED Settings (Day)</h3>
-        <table>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
-        </table>
-        <h3>LED Settings (Night)</h3>
-        <table>
-            <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
-            <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
-            <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
-        </table>
+        </div>
+        <div class='card'>
         <h3>Tank Monitor</h3>
         <table>
             <tr><td>Enable</td><td><input type='checkbox' name='tank_en' %TANK_CHECKED%></td></tr>
@@ -97,16 +146,54 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Warning at (%)</td><td><input type='number' name='tank_warn' value='%TANK_WARN%' class='num-input'></td></tr>
             <tr><td>Current Level</td><td>%TANK_LEVEL% ml (%TANK_PCT%%)</td></tr>
         </table>
-        <div style='margin-top:10px'><a href='/refill' style='color:green;text-decoration:none;font-size:0.9em'>[Refill Tank]</a></div>
+        <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:1.1em'>[Refill Tank]</a></div>
+        </div>
+        <div class='card'>
         <h3>Statistics</h3>
         <table>
             <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
             <tr><td>Total Juices</td><td>%PUMP_COUNT%</td></tr>
         </table>
-        <div style='margin-top:10px'><a href='/reset_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
+        <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:1.1em'>[Reset Stats]</a></div>
         <div class='progress'>Current Progress: %PROGRESS%%</div>
+        </div>
         <input type='submit' value='Save' class='btn'>
-        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#999;text-decoration:none;font-size:0.8em'>[Firmware Update]</a></div>
+        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:1.1em'>[Firmware Update]</a></div>
+    </form>
+</body>
+</html>
+)rawliteral";
+
+const char* htmlLEDSettings = R"rawliteral(
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>LED Settings</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>LED Settings</h2>
+    <form action='/save_led' method='POST'>
+        <div class='card'>
+            <h3>Daytime Settings</h3>
+            <table>
+                <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
+                <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
+            </table>
+        </div>
+        <div class='card'>
+            <h3>Nighttime Settings</h3>
+            <table>
+                <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
+                <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
+                <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
+                <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
+                <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
+            </table>
+        </div>
+        <input type='submit' value='Save' class='btn'>
     </form>
 </body>
 </html>
@@ -118,16 +205,11 @@ const char* htmlHelp = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Help</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:15px;background:#fff;line-height:1.6}
-        h2{color:#333}
-        h3{color:#007bff;border-bottom:1px solid #eee;padding-bottom:5px}
-        ul{padding-left:20px}
-        .color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
-        .btn{display:block;background:#6c757d;color:white;text-align:center;padding:10px;text-decoration:none;border-radius:4px;margin-top:20px}
-    </style>
+    <link rel="stylesheet" href="/style.css">
+    <style>body{line-height:1.6}</style>
 </head>
 <body>
+    <a href='/' class='back-btn'>&larr; Home</a>
     <h2>Manual</h2>
     <h3>Features</h3>
     <ul>
@@ -145,7 +227,14 @@ const char* htmlHelp = R"rawliteral(
                 <li>Useful for cleaning the chain or after heavy rain.</li>
             </ul>
         </li>
-        <li><b>Cross-Country Mode:</b>
+        <li><b>Bleeding Mode:</b>
+            <ul>
+                <li>Activates via Web Interface.</li>
+                <li>Runs pump continuously for 15s to fill the line.</li>
+                <li>Only works at standstill.</li>
+            </ul>
+        </li>
+        <li><b>Offroad Mode:</b>
             <ul>
                 <li>Activates via <b>6x Button Click</b>.</li>
                 <li>Oils purely based on time (e.g. every 5 min).</li>
@@ -185,7 +274,7 @@ const char* htmlHelp = R"rawliteral(
     <h3>Aux Port Manager (GPIO 17)</h3>
     <p>Controls the Auxiliary Output for accessories.</p>
     <ul>
-        <li><b>Smart Power:</b> Turns ON when engine is running (detected via IMU vibration). Stays ON for 10s after stop.</li>
+        <li><b>Aux Power:</b> Turns ON after a configurable delay when the ESP boots (Ignition ON). Protects battery during cranking.</li>
         <li><b>Heated Grips:</b> Automated PWM control.
             <ul>
                 <li><b>Base:</b> Minimum heat level.</li>
@@ -194,21 +283,24 @@ const char* htmlHelp = R"rawliteral(
                 <li><b>Rain:</b> Adds boost in Rain Mode.</li>
                 <li><b>Startup:</b> High power for 60s after start.</li>
                 <li><b>Offset:</b> Corrects sensor reading (e.g. if placed near hot engine).</li>
+                <li><b>Start Delay:</b> Waits after boot before turning on (protects battery).</li>
             </ul>
         </li>
     </ul>
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
     <ul>
-        <li><b>Activate:</b> Hold button (> 3s) at standstill.</li>
+        <li><b>Activate:</b> 5x Button Click.</li>
         <li><b>Deactivate:</b> Auto-off when driving (> 10 km/h) or after 5 min inactivity.</li>
     </ul>
     <h3>Button Functions</h3>
     <ul>
-        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay).</li>
-        <li><b>3x Click:</b> Toggle 'Chain Flush Mode' (Configurable).</li>
-        <li><b>6x Click:</b> Toggle 'Cross-Country Mode' (Time based oiling).</li>
-        <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
+        <li><b>1x Click:</b> Toggle 'Rain Mode'.</li>
+        <li><b>Hold > 2s:</b> Toggle 'Aux Port' (Manual Override).</li>
+        <li><b>3x Click:</b> Toggle 'Offroad Mode'.</li>
+        <li><b>4x Click:</b> Toggle 'Chain Flush Mode'.</li>
+        <li><b>5x Click:</b> Toggle 'WiFi'.</li>
+        <li><b>Hold > 5s (at Boot):</b> Factory Reset.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
@@ -223,7 +315,6 @@ const char* htmlHelp = R"rawliteral(
         <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan (fast blink):</b> Firmware Update.</li>
     </ul>
-    <a href='/' class='btn'>Back</a>
 </body>
 </html>
 )rawliteral";
@@ -234,15 +325,11 @@ const char* htmlUpdate = R"rawliteral(
 <head>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Firmware Update</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:20px;background:#f4f4f9;text-align:center}
-        h2{color:#333}
-        form{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);display:inline-block}
-        input[type=file]{margin-bottom:15px}
-        input[type=submit]{background:#007bff;color:white;padding:10px 20px;border:none;border-radius:4px;cursor:pointer;font-size:16px}
-    </style>
+    <link rel="stylesheet" href="/style.css">
+    <style>body{text-align:center} form{display:inline-block}</style>
 </head>
 <body>
+    <a href='/' class='back-btn'>&larr; Home</a>
     <h2>Firmware Update</h2>
     <form method='POST' action='/update' enctype='multipart/form-data'>
         <input type='file' name='update'>
@@ -260,21 +347,11 @@ const char* htmlIMU = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>IMU Calibration</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
-        h2{text-align:center;color:#333}
-        h3{color:#555;margin-top:20px}
-        .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px}
-        table{width:100%;border-collapse:collapse}
-        td{padding:8px 5px;border-bottom:1px solid #eee}
-        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer}
-        .btn-cal{background:#28a745}
-        .val{font-weight:bold;font-family:monospace}
-        .note{font-size:0.9em;color:#666;margin-top:5px}
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h2>🧭 IMU Calibration</h2>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>IMU Calibration</h2>
     
     <div class='card'>
         <h3>Sensor Status</h3>
@@ -307,15 +384,15 @@ const char* htmlIMU = R"rawliteral(
     </div>
 
     <div class='card'>
-        <h3>Configuration</h3>
+        <h3>Chain position</h3>
         <form action='/imu_config' method='POST'>
             <table>
                 <tr>
                     <td>Chain Side:</td>
                     <td>
                         <select name='chain_side'>
-                            <option value='0' %CHAIN_LEFT%>Left (Standard)</option>
-                            <option value='1' %CHAIN_RIGHT%>Right</option>
+                            <option value='0' %CHAIN_LEFT%>Left</option>
+                            <option value='1' %CHAIN_RIGHT%>Right (Standard)</option>
                         </select>
                     </td>
                 </tr>
@@ -333,8 +410,6 @@ const char* htmlIMU = R"rawliteral(
             <li><b>Turn Safety:</b> Stops oiling in turns towards the chain side (> 20&deg;).</li>
         </ul>
     </div>
-
-    <a href='/' class='btn'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
@@ -345,41 +420,36 @@ const char* htmlAuxConfig = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Aux Config</title>
-    <style>
-        body{font-family:sans-serif;margin:0;padding:10px;background:#f4f4f9}
-        h2{text-align:center;color:#333}
-        h3{color:#555;margin-top:20px}
-        .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:15px}
-        table{width:100%;border-collapse:collapse}
-        td{padding:10px 5px;border-bottom:1px solid #eee}
-        input, select{width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;font-size:16px;box-sizing:border-box}
-        .btn{background:#007bff;color:white;padding:12px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer}
-        .note{font-size:0.9em;color:#666;margin-top:5px}
-    </style>
+    <link rel="stylesheet" href="/style.css">
     <script>
         function toggleFields() {
             var mode = document.getElementById('mode').value;
             var grips = document.getElementById('grips_settings');
             var desc = document.getElementById('grips_desc');
-            var smart = document.getElementById('smart_desc');
+            var aux = document.getElementById('aux_desc');
+            var delay = document.getElementById('common_delay');
             
             if (mode == '2') { // Heated Grips
                 grips.style.display = 'block';
                 desc.style.display = 'block';
-                smart.style.display = 'none';
-            } else if (mode == '1') { // Smart Power
+                aux.style.display = 'none';
+                delay.style.display = 'table-row';
+            } else if (mode == '1') { // Aux Power
                 grips.style.display = 'none';
                 desc.style.display = 'none';
-                smart.style.display = 'block';
+                aux.style.display = 'block';
+                delay.style.display = 'table-row';
             } else {
                 grips.style.display = 'none';
                 desc.style.display = 'none';
-                smart.style.display = 'none';
+                aux.style.display = 'none';
+                delay.style.display = 'none';
             }
         }
     </script>
 </head>
 <body onload="toggleFields()">
+    <a href='/' class='back-btn'>&larr; Home</a>
     <h2>Aux Port Configuration</h2>
     <form action='/save_aux' method='POST'>
         <div class='card'>
@@ -390,10 +460,14 @@ const char* htmlAuxConfig = R"rawliteral(
                     <td>
                         <select id='mode' name='mode' onchange="toggleFields()">
                             <option value='0' %MODE_OFF%>OFF</option>
-                            <option value='1' %MODE_SMART%>Smart Power (Engine Run)</option>
+                            <option value='1' %MODE_AUX%>Aux Power (Switched)</option>
                             <option value='2' %MODE_GRIPS%>Heated Grips (Auto)</option>
                         </select>
                     </td>
+                </tr>
+                <tr id='common_delay' style='display:none'>
+                    <td>Start Delay (sec)</td>
+                    <td><input type='number' name='startD' value='%STARTD%' min='0'></td>
                 </tr>
             </table>
         </div>
@@ -435,6 +509,10 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
+                        <td style="font-size:1.1em; color:#ccc">Current Reading:</td>
+                        <td style="font-size:1.1em; color:#ffc107; font-weight:bold">%CURRENT_TEMP% &deg;C</td>
+                    </tr>
+                    <tr>
                         <td colspan="2" class="note" style="padding-bottom: 10px;">
                             Correction for sensor placement. Use <b>negative values</b> (e.g. -5.0) if sensor is near a hot engine to lower the reading.
                         </td>
@@ -451,10 +529,6 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td>Startup Boost Time (sec)</td>
                         <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
                     </tr>
-                    <tr>
-                        <td>Start Delay (sec)</td>
-                        <td><input type='number' name='startD' value='%STARTD%' min='0'></td>
-                    </tr>
                 </table>
             </div>
         </div>
@@ -470,17 +544,15 @@ const char* htmlAuxConfig = R"rawliteral(
         </div>
     </div>
 
-    <div id='smart_desc' class='card' style='display:none; margin-top:15px'>
-        <h3>Smart Power Description</h3>
+    <div id='aux_desc' class='card' style='display:none; margin-top:15px'>
+        <h3>Aux Power Description</h3>
         <div class='note' style='margin-bottom:15px; line-height:1.4'>
-            <b>Smart Power</b> automatically turns on the Aux Port (12V) when the engine is running (detected via vibration/IMU).<br>
-            It keeps the power ON for 10 seconds after the engine stops to prevent flickering.<br><br>
+            <b>Aux Power</b> automatically turns on the Aux Port (12V) after a configurable delay (Ignition ON).<br>
+            It protects the battery during cranking.<br><br>
             <span style='color:red; font-weight:bold'>⚠️ WARNING:</span><br>
             Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the traces.
         </div>
     </div>
-
-    <a href='/' class='btn'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
@@ -492,13 +564,7 @@ const char* htmlConsole = R"rawliteral(
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Serial Console</title>
-    <style>
-        body{font-family:monospace;margin:0;padding:10px;background:#222;color:#0f0}
-        h2{text-align:center;color:#fff;font-family:sans-serif}
-        #console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box}
-        .btn{background:#444;color:white;padding:10px;border:none;width:100%;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-family:sans-serif}
-        .btn:hover{background:#666}
-    </style>
+    <link rel="stylesheet" href="/style.css">
     <script>
         function fetchLogs() {
             fetch('/console/data')
@@ -518,14 +584,15 @@ const char* htmlConsole = R"rawliteral(
     </script>
 </head>
 <body>
-    <h2>📟 Serial Console</h2>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>Serial Console</h2>
     <div id='console'>Loading...</div>
     <form action='/console/clear' method='POST'>
         <input type='submit' value='Clear Log' class='btn'>
     </form>
-    <a href='/' class='btn' style='display:block;text-align:center;text-decoration:none;margin-top:10px'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
 
 #endif
+
