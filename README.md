@@ -222,13 +222,13 @@ To prevent the pump from triggering briefly during boot, desolder the little dri
 *   **Aux Circuit (Grips):** 7.5A (Brown) - Protects the heated grips wiring (Load ~5.2A).
 *   **Pump Circuit:** 5A (Tan) - Protects the pump and its MOSFET (Load ~4A Peak).
 
-**Important:** The 200Ω series resistor and 10kΩ Pull-Down resistor are **mandatory** to prevent the pump from running uncontrollably during the ESP32 boot sequence.
+**Important:** The 220Ω series resistor and 10kΩ Pull-Down resistor are **mandatory** to prevent the pump from running uncontrollably during the ESP32 boot sequence.
 
 ```ascii
 ESP32 GPIO (the one that switches the MOSFET
 )  ----[ 200R ]----+-----> MOSFET Gate
                                |
-                              [10k]
+                              [existing SMD pull-down resistor with 10k]
                                |
                               GND
 ```
