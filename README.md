@@ -241,10 +241,11 @@ ESP32 GPIO (the one that switches the MOSFET
 
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
-| **Short Press** | < 1.5s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 400ms delay. Turning OFF triggers **Rain Flush** (6 pulses) if enabled and moving. |
+| **1x Click** | < 1s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 600ms delay. |
 | **3x Click** | < 2s | Always | **Offroad Mode** On/Off (LED: Magenta Blink). Time based oiling. |
 | **4x Click** | < 2s | Always | **Chain Flush Mode** On/Off (LED: Cyan Blink). Time-based (Configurable). |
-| **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
+| **5x Click** | < 2s | Always | Activate **WiFi & Web Interface** (LED: White pulsing). |
+| **Hold** | > 2s | Always | **Aux Port / Grip Heating** Manual Toggle (Override). |
 | **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
 
 ### LED Status Codes
