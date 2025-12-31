@@ -32,9 +32,9 @@ void AuxManager::begin(ImuHandler* imu) {
     _rainBoost = _prefs.getInt("rainB", 10);
     _startupBoostLevel = _prefs.getInt("startL", 100);
     _startupBoostSec = _prefs.getInt("startS", 75);
-    _startDelaySec = _prefs.getInt("startD", 20);
+    _startDelaySec = _prefs.getInt("startD", 15);
     
-    // Safety: Heated Grips always start OFF. Smart Power respects saved state.
+    // Safety: Heated Grips always start OFF. Aux Power respects saved state.
     if (_mode == AUX_MODE_HEATED_GRIPS) {
         _manualOverride = false;
     } else {
@@ -50,8 +50,8 @@ void AuxManager::loop(float currentSpeedKmh, float currentTempC, bool isRainMode
         return;
     }
     
-    if (_mode == AUX_MODE_SMART_POWER) {
-        handleSmartPower();
+    if (_mode == AUX_MODE_AUX_POWER) {
+        handleAuxPower();
     } else if (_mode == AUX_MODE_HEATED_GRIPS) {
         handleHeatedGrips(currentSpeedKmh, currentTempC, isRainMode);
     }
@@ -64,46 +64,22 @@ void AuxManager::toggleManualOverride() {
     _prefs.end();
 }
 
-void AuxManager::handleSmartPower() {
-    // Logic: If motion/vibration is detected, keep power ON.
-    // We use a timeout to prevent flickering.
-    
-    if (_imu && _imu->isMotionDetected()) {
-        _lastMotionTime = millis();
-        _engineRunning = true;
+void AuxManager::handleAuxPower() {
+    // Simple logic: ESP is powered by ignition.
+    // Wait configured delay after boot to protect battery during cranking/startup.
+    if (millis() < ((unsigned long)_startDelaySec * 1000)) {
+        setPwm(0);
+    } else {
+        setPwm(100);
     }
-    
-    // 10 Second Timeout for "Engine Off" detection
-    if (millis() - _lastMotionTime > 3000) {
-        _engineRunning = false;
-    }
-    
-    setPwm(_engineRunning ? 100 : 0);
 }
 
 void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
-    // 0. Check Start Condition (Engine Running + Delay)
-    if (_startTime == 0) {
-        bool engineRunning = false;
-        if (_imu && _imu->isAvailable()) {
-            if (_imu->isMotionDetected()) engineRunning = true;
-        } else {
-            // Fallback if no IMU: Wait 60 seconds from boot
-            if (millis() > 60000) {
-                engineRunning = true;
-            }
-        }
-        
-        if (engineRunning) {
-            _startTime = millis();
-        } else {
-            setPwm(0);
-            return;
-        }
-    }
-    
-    // Check Delay
-    unsigned long elapsed = millis() - _startTime;
+    // Simple logic: ESP is powered by ignition.
+    // Use millis() directly as elapsed time since start.
+    unsigned long elapsed = millis();
+
+    // Check Configured Delay
     if (elapsed < ((unsigned long)_startDelaySec * 1000)) {
         setPwm(0);
         return;

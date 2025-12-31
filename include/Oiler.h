@@ -58,8 +58,8 @@ public:
     bool isFlushMode() { return flushMode; }
     void setFlushMode(bool mode);
 
-    bool isCrossCountryMode() { return crossCountryMode; }
-    void setCrossCountryMode(bool mode);
+    bool isOffroadMode() { return offroadMode; }
+    void setOffroadMode(bool mode);
 
     bool isEmergencyMode() { return emergencyMode; }
     void setEmergencyMode(bool mode) { emergencyMode = mode; }
@@ -138,9 +138,9 @@ public:
     void resetTankToFull();
 
     // Offroad Settings
-    bool crossCountryMode;
-    int crossCountryIntervalMin;
-    unsigned long lastCrossCountryOilTime;
+    bool offroadMode;
+    int offroadIntervalMin;
+    unsigned long lastOffroadOilTime;
 
     // Chain Flush Mode Settings
     int flushConfigEvents;      // Total events to run

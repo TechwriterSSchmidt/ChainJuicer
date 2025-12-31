@@ -83,9 +83,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     flushEventsRemaining = 0;
     lastFlushOilTime = 0;
 
-    crossCountryMode = false;
-    lastCrossCountryOilTime = 0;
-    crossCountryIntervalMin = CROSS_COUNTRY_INTERVAL_MIN_DEFAULT;
+    offroadMode = false;
+    lastOffroadOilTime = 0;
+    offroadIntervalMin = OFFROAD_INTERVAL_MIN_DEFAULT;
     buttonClickCount = 0;
     lastClickTime = 0;
     buttonPressStartTime = 0;
@@ -240,16 +240,16 @@ void Oiler::loop() {
     processPump(); // Unified pump logic
     
     // Offroad Mode Logic (Time Based)
-    if (crossCountryMode) {
+    if (offroadMode) {
         unsigned long now = millis();
-        unsigned long intervalMs = (unsigned long)crossCountryIntervalMin * 60 * 1000;
+        unsigned long intervalMs = (unsigned long)offroadIntervalMin * 60 * 1000;
         
-        if (now - lastCrossCountryOilTime > intervalMs) {
+        if (now - lastOffroadOilTime > intervalMs) {
             // SAFETY: Only oil if moving! 
             // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
             if (currentSpeed >= 7.0) {
                 triggerOil(ranges[0].pulses); // Use pulses from first range
-                lastCrossCountryOilTime = now;
+                lastOffroadOilTime = now;
             }
         }
     }
@@ -351,7 +351,7 @@ void Oiler::handleButton() {
             }
         } else if (buttonClickCount == 3) {
             // 3 Clicks -> Toggle Offroad Mode
-            setCrossCountryMode(!crossCountryMode);
+            setOffroadMode(!offroadMode);
         } else if (buttonClickCount == 4) {
             // 4 Clicks -> Toggle Chain Flush Mode
             setFlushMode(!flushMode);
@@ -450,7 +450,7 @@ void Oiler::updateLED() {
         }
     }
     // 1.6 Offroad Mode -> MAGENTA Blinking
-    else if (crossCountryMode) {
+    else if (offroadMode) {
         strip.setBrightness(currentHighBrightness);
         if ((now / 1000) % 2 == 0) { // Slow blink (1s on, 1s off)
             color = strip.Color(255, 0, 255); // Magenta
@@ -546,14 +546,14 @@ void Oiler::updateLED() {
         if (i == 0) {
             strip.setPixelColor(i, color);
         } 
-        // LED 1: Aux Status LED (Heated Grips / Smart Power)
+        // LED 1: Aux Status LED (Heated Grips / Aux Power)
         else if (i == 1) {
             uint32_t auxColor = 0;
             
             if (auxMode == 0 || auxPwm == 0) {
                 auxColor = 0; // OFF
             } else if (auxMode == 1) {
-                // Smart Power Active -> Green Static
+                // Aux Power Active -> Green Static
                 strip.setBrightness(currentDimBrightness);
                 auxColor = strip.Color(0, 255, 0);
             } else if (auxMode == 2) {
@@ -606,7 +606,7 @@ void Oiler::loadConfig() {
     emergencyMode = preferences.getBool("emerg_mode", false);
 
     // Load Offroad & Startup
-    crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
+    offroadIntervalMin = preferences.getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
     startupDelayMeters = preferences.getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
@@ -697,7 +697,7 @@ void Oiler::saveConfig() {
     preferences.putBool("emerg_mode", emergencyMode);
 
     // Save Offroad & Startup
-    preferences.putInt("cc_int", crossCountryIntervalMin);
+    preferences.putInt("off_int", offroadIntervalMin);
     preferences.putFloat("start_dly_m", startupDelayMeters);
 
     // Save Chain Flush Mode
@@ -982,7 +982,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     // 1.2 Offroad Mode Check
     // If Offroad Mode is active, we ignore distance-based oiling here.
     // Oiling is handled by time in loop().
-    if (crossCountryMode) {
+    if (offroadMode) {
         return; 
     }
     progressChanged = true; // So Odometer gets saved
@@ -1300,18 +1300,18 @@ void Oiler::setFlushMode(bool mode) {
     flushMode = mode;
 }
 
-void Oiler::setCrossCountryMode(bool mode) {
-    if (mode && !crossCountryMode) {
-        lastCrossCountryOilTime = millis(); // Reset timer on start
+void Oiler::setOffroadMode(bool mode) {
+    if (mode && !offroadMode) {
+        lastOffroadOilTime = millis(); // Reset timer on start
 #ifdef GPS_DEBUG
-        Serial.println("Cross Country Mode ACTIVATED");
+        Serial.println("Offroad Mode ACTIVATED");
 #endif
-    } else if (!mode && crossCountryMode) {
+    } else if (!mode && offroadMode) {
 #ifdef GPS_DEBUG
-        Serial.println("Cross Country Mode DEACTIVATED");
+        Serial.println("Offroad Mode DEACTIVATED");
 #endif
     }
-    crossCountryMode = mode;
+    offroadMode = mode;
 }
 
 void Oiler::startBleeding() {

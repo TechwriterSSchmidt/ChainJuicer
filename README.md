@@ -2,7 +2,7 @@
 
 **The Swiss Army Knife for your Motorcycle Chain.**
 
-An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Smart Power Manager for accessories, and an automated Heated Grips Controller. It combines intelligent maintenance with modern convenience and safety features like IMU-based crash detection.
+An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Aux Power Manager for accessories, and an automated Heated Grips Controller. It combines intelligent maintenance with modern convenience and safety features like IMU-based crash detection.
 
 **Easy to Build:** Designed around a widely available standard ESP32 Relay Board (LCTECH), this project requires **no custom PCB** and minimal soldering skills. It's the perfect entry point for DIY motorcycle electronics.
 
@@ -45,7 +45,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
 | **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (15s). |
 | **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
-| **Aux Port Manager** | Smart control for accessories. | **Smart Power:** Auto-ON when engine runs (IMU). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. **Toggle:** Hold > 2s. |
+| **Aux Port Manager** | Smart control for accessories. | **Aux Power:** Auto-ON after boot (Delay). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. **Toggle:** Hold > 2s. |
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
@@ -122,7 +122,7 @@ This table shows which features are available depending on the connected hardwar
 | **Crash Detection** | ❌ | ❌ | ✅ | ✅ |
 | **Garage Guard** | ❌ | ❌ | ✅ | ✅ |
 | **Smart Stop** | ❌ | ❌ | ✅ | ✅ |
-| **Aux: Smart Power** | ❌ | ❌ | ✅ | ✅ |
+| **Aux: Aux Power** | ❌ | ❌ | ✅ | ✅ |
 | **Aux: Heated Grips** | ❌ | ✅ | ✅ | ✅ |
 | **Data Logging** | ❌ | ❌ | ❌ | ✅ |
 
@@ -162,10 +162,10 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 
 The system features a versatile Auxiliary Output (MOSFET/Relay driver) that can be configured for two main purposes:
 
-### 1. Smart Power (Switched Live)
-Turns on your accessories (Navigation, USB, Lights) only when the engine is running.
-*   **Logic:** Uses the IMU to detect engine vibration and movement.
-*   **Timeout:** Keeps power ON for 10 seconds after motion stops (prevents flickering).
+### 1. Aux Power (Switched Live)
+Turns on your accessories (Navigation, USB, Lights) automatically when the ignition is ON.
+*   **Logic:** Activates the output after a configurable delay when the ESP boots.
+*   **Start Delay:** Configurable delay (default 15s) to protect the battery during engine cranking.
 *   **Benefit:** No need to tap into the bike's wiring harness or ignition switch. Connect directly to the battery via the Chain Juicer.
 
 ### 2. Automated Heated Grips
@@ -178,8 +178,7 @@ Advanced PWM control for heated grips, far superior to simple "Low/High" switche
 *   **Temp Offset:** Adjusts the sensor reading if placed near heat sources (e.g. engine).
 *   **Rain Boost:** Automatically adds extra heat when Rain Mode is active.
 *   **Startup Boost:** Heats up quickly (e.g. 80% for 60s) when you start the ride.
-*   **Start Delay:** Configurable delay (default 20s) after engine start before grips turn on to protect the battery.
-    *   *Note:* Without IMU, the system waits 60s after boot + the configured delay.
+*   **Start Delay:** Configurable delay (default 15s) after boot before grips turn on to protect the battery.
 
 **Configuration:**
 All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays) are fully configurable via the new "Aux Config" web page.
@@ -243,8 +242,8 @@ ESP32 GPIO (the one that switches the MOSFET
 | Action | Duration | Condition | Function |
 | :--- | :--- | :--- | :--- |
 | **Short Press** | < 1.5s | Not in Emergency Mode | **Rain Mode** On/Off (LED: Blue). **Note:** Toggles with 400ms delay. Turning OFF triggers **Rain Flush** (6 pulses) if enabled and moving. |
-| **3x Click** | < 2s | Always | **Chain Flush Mode** On/Off (LED: Cyan Blink). Time-based (Configurable). |
-| **6x Click** | < 3s | Always | **Cross-Country Mode** On/Off (LED: Magenta Blink). Time based oiling. |
+| **3x Click** | < 2s | Always | **Offroad Mode** On/Off (LED: Magenta Blink). Time based oiling. |
+| **4x Click** | < 2s | Always | **Chain Flush Mode** On/Off (LED: Cyan Blink). Time-based (Configurable). |
 | **Hold** | > 3s | At Standstill (< 7 km/h) | Activate **WiFi & Web Interface** (LED: White pulsing) |
 | **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
 
@@ -252,7 +251,7 @@ ESP32 GPIO (the one that switches the MOSFET
 
 | Color / Pattern | LED 1 (Main System) | LED 2 (Aux Port) |
 | :--- | :--- | :--- |
-| 🟢 **Green** | Normal Operation (GPS Fix) | Smart Power: **ON** (12V Active) |
+| 🟢 **Green** | Normal Operation (GPS Fix) | Aux Power: **ON** (12V Active) |
 | 🔵 **Blue** | Rain Mode Active | Heated Grips: **Level 1** (Low) |
 | 🟡 **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
 | 🟠 **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
@@ -281,7 +280,7 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
 
 The system uses two LEDs to communicate its status.
 *   **LED 1 (Main):** System Status, Oiling, Warnings.
-*   **LED 2 (Aux):** Status of the Auxiliary Port (Heated Grips / Smart Power).
+*   **LED 2 (Aux):** Status of the Auxiliary Port (Heated Grips / Aux Power).
 
 | Scenario | Trigger / Action | LED 1 (Main) | LED 2 (Aux) | System Behavior |
 | :--- | :--- | :--- | :--- | :--- |
@@ -294,7 +293,7 @@ The system uses two LEDs to communicate its status.
 | **Dust / Flushing** | 4x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
 | **Configuration** | 5x Click | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
 | **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |
-| **Aux: Smart Power** | Engine Running (IMU) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
+| **Aux: Aux Power** | Engine Running (IMU) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
 | **Aux: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
@@ -303,7 +302,7 @@ The system uses two LEDs to communicate its status.
 | Pin | Function | Note |
 | :--- | :--- | :--- |
 | **GPIO 16** | Pump (MOSFET) | Active HIGH |
-| **GPIO 17** | Aux Port (MOSFET) | Smart Power / Heated Grips |
+| **GPIO 17** | Aux Port (MOSFET) | Aux Power / Heated Grips |
 | **GPIO 32** | LED (WS2812B) | Data In |
 | **GPIO 27** | GPS RX | Connect to GPS TX |
 | **GPIO 26** | GPS TX | Connect to GPS RX |
@@ -370,8 +369,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
 
 ### Hardware Notes
 *   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the status display in the cockpit and a second one (optional) near the tank or pump for debugging/tank warning.
-*   **Resistors:** Don't forget the **200R** (Series) and **10k** (Pull-Down) for the MOSFET gate if your board doesn't have them integrated!
-*   **LCTECH Board Modification (Critical):** If you are using the LCTECH Relay Board with the NCE6020AK MOSFET and J3Y driver circuit, you should modify the circuit to prevent the pump from being activated once during powerup.
+*   **LCTECH Board Modification (Critical):** If you are using the LCTECH Relay Board with the NCE6020AK MOSFET and J3Y driver circuit, you should modify the switching circuit of the pump (only the pump circuit!) to prevent the pump from triggering briefly during boot as follows:
     1.  **Remove:** Transistor `J3Y` (S8050) and Resistors `R8` & `R7`.
     2.  **Keep:** Resistor `R3` (10k Pull-Down).
     3.  **Add:** A **220 Ohm** resistor between GPIO 16 and the Gate of the MOSFET.

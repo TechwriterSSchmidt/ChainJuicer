@@ -10,7 +10,7 @@
 #define GPS_TX_PIN 26      // GPS TX to ESP RX - LEFT SIDE (Middle)
 #define BUTTON_PIN 4      // Handlebar button - LEFT SIDE (Top of block)
 #define RAIN_SENSOR_PIN 34 // Analog Input for Rain Sensor
-#define AUX_PIN 17         // Auxiliary Output (Smart Power / Heated Grips)
+#define AUX_PIN 17         // Auxiliary Output (Aux Power / Heated Grips)
 
 // Pump Logic Configuration
 // Normal Logic: HIGH = Pump ON, LOW = Pump OFF
@@ -90,8 +90,8 @@
 #define FLUSH_PRESS_WINDOW_MS 2000    // 2 Seconds window
 
 #define STARTUP_DELAY_METERS_DEFAULT 250.0  // Default startup delay in meters
-#define CROSS_COUNTRY_INTERVAL_MIN_DEFAULT 5 // Default Cross-Country interval in minutes
-#define CROSS_COUNTRY_PRESS_COUNT 6   // 6 Clicks for Cross-Country Mode
+#define OFFROAD_INTERVAL_MIN_DEFAULT 5 // Default Offroad interval in minutes
+#define OFFROAD_PRESS_COUNT 6   // 6 Clicks for Offroad Mode
 
 // Button Timings
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode

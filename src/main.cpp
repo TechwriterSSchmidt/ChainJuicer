@@ -265,7 +265,7 @@ void handleSettings() {
     }
     
     // Add Reset Link below the table
-    html += "</table><div style='text-align:left;margin-top:10px;margin-bottom:10px'><a href='/reset_time_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>";
+    html += "</table><div style='text-align:left;margin-top:10px;margin-bottom:10px'><a href='/reset_time_stats' style='color:red;text-decoration:none;font-size:1.1em'>[Reset Stats]</a></div>";
     
     String footer = htmlFooter;
     
@@ -294,7 +294,7 @@ void handleSettings() {
     
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
     footer.replace("%START_DLY%", String(oiler.startupDelayMeters, 0));
-    footer.replace("%CC_INT%", String(oiler.crossCountryIntervalMin));
+    footer.replace("%OFFROAD_INT%", String(oiler.offroadIntervalMin));
     
     footer.replace("%FLUSH_EV%", String(oiler.flushConfigEvents));
     footer.replace("%FLUSH_PLS%", String(oiler.flushConfigPulses));
@@ -419,7 +419,7 @@ void handleSave() {
     oiler.setEmergencyModeForced(server.hasArg("emerg_mode"));
     
     if(server.hasArg("start_dly")) oiler.startupDelayMeters = server.arg("start_dly").toFloat();
-    if(server.hasArg("cc_int")) oiler.crossCountryIntervalMin = server.arg("cc_int").toInt();
+    if(server.hasArg("offroad_int")) oiler.offroadIntervalMin = server.arg("offroad_int").toInt();
     
     if(server.hasArg("flush_ev")) oiler.flushConfigEvents = server.arg("flush_ev").toInt();
     if(server.hasArg("flush_pls")) oiler.flushConfigPulses = server.arg("flush_pls").toInt();
@@ -473,7 +473,7 @@ void handleAuxConfig() {
     
     AuxMode mode = auxManager.getMode();
     html.replace("%MODE_OFF%", (mode == AUX_MODE_OFF) ? "selected" : "");
-    html.replace("%MODE_SMART%", (mode == AUX_MODE_SMART_POWER) ? "selected" : "");
+    html.replace("%MODE_AUX%", (mode == AUX_MODE_AUX_POWER) ? "selected" : "");
     html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
     
     int base, rainB, startL, startS, startD;

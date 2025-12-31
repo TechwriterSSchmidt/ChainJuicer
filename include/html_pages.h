@@ -7,7 +7,7 @@ h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;l
 h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
 .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
 table{width:100%;border-collapse:collapse}
-th{text-align:left;color:#ccc;font-size:0.9em}
+th{text-align:left;color:#ccc;font-size:1.1em}
 td{padding:10px 5px;border-bottom:1px solid #333}
 input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
 input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
@@ -20,21 +20,21 @@ select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px;appearanc
 .btn-sec{background:#222;color:#aaa;border:1px solid #444}
 .btn-danger{background:#500;color:#fff;border:1px solid #800}
 .btn-cal{background:#28a745;color:#fff;border:none}
-.back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
+.back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:20px;font-weight:bold}
 .stat-box{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px;text-align:left}
 .stat-row{display:flex;justify-content:space-between;margin-bottom:5px;border-bottom:1px solid #333;padding-bottom:5px}
 .stat-row:last-child{border-bottom:none}
 .val{font-weight:bold;color:#ffffff;font-family:monospace}
-.status-bar{font-size:0.9em;color:#ccc;margin-bottom:20px;text-align:center}
+.status-bar{font-size:1.1em;color:#ccc;margin-bottom:20px;text-align:center}
 .tank-bar{width:100%;height:10px;background:#333;border-radius:2px;overflow:hidden;margin-top:8px;border:1px solid #444}
 .tank-fill{height:100%;background:#ccc;transition:width 0.3s}
 .progress{text-align:center;margin-top:15px;color:#ccc}
-.time{text-align:center;color:#ccc;font-size:0.9em;margin-bottom:10px}
+.time{text-align:center;color:#ccc;font-size:1.1em;margin-bottom:10px}
 .disabled{opacity:0.5;pointer-events:none}
-.note{font-size:0.9em;color:#ccc;margin-top:5px}
+.note{font-size:1.1em;color:#ccc;margin-top:5px}
 .color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
 ul{padding-left:20px}
-#console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box;color:#0f0;font-family:monospace}
+#console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:14px;box-sizing:border-box;color:#0f0;font-family:monospace}
 )rawliteral";
 
 const char* htmlLanding = R"rawliteral(
@@ -110,7 +110,7 @@ const char* htmlFooter = R"rawliteral(
         <table>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (m)</td><td><input type='number' step='1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
-            <tr><td>Offroad Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
+            <tr><td>Offroad Interval (min)</td><td><input type='number' name='offroad_int' value='%OFFROAD_INT%' class='num-input'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
             <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
@@ -133,7 +133,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
             <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. Mineral Oil 80w90)</td></tr>
             <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Gear Oil SAE 90)</td></tr>
-            <tr><td colspan='2' style='font-size:0.8em;color:#888'>Current Temp: %TEMP_C% &deg;C</td></tr>
+            <tr><td colspan='2' style='font-size:1.1em;color:#888'>Current Temp: %TEMP_C% &deg;C</td></tr>
         </table>
         </div>
         <div class='card'>
@@ -146,7 +146,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Warning at (%)</td><td><input type='number' name='tank_warn' value='%TANK_WARN%' class='num-input'></td></tr>
             <tr><td>Current Level</td><td>%TANK_LEVEL% ml (%TANK_PCT%%)</td></tr>
         </table>
-        <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:0.9em'>[Refill Tank]</a></div>
+        <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:1.1em'>[Refill Tank]</a></div>
         </div>
         <div class='card'>
         <h3>Statistics</h3>
@@ -154,11 +154,11 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
             <tr><td>Total Juices</td><td>%PUMP_COUNT%</td></tr>
         </table>
-        <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
+        <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:1.1em'>[Reset Stats]</a></div>
         <div class='progress'>Current Progress: %PROGRESS%%</div>
         </div>
         <input type='submit' value='Save' class='btn'>
-        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:0.8em'>[Firmware Update]</a></div>
+        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:1.1em'>[Firmware Update]</a></div>
     </form>
 </body>
 </html>
@@ -274,7 +274,7 @@ const char* htmlHelp = R"rawliteral(
     <h3>Aux Port Manager (GPIO 17)</h3>
     <p>Controls the Auxiliary Output for accessories.</p>
     <ul>
-        <li><b>Smart Power:</b> Turns ON when engine is running (detected via IMU vibration). Stays ON for 10s after stop.</li>
+        <li><b>Aux Power:</b> Turns ON after a configurable delay when the ESP boots (Ignition ON). Protects battery during cranking.</li>
         <li><b>Heated Grips:</b> Automated PWM control.
             <ul>
                 <li><b>Base:</b> Minimum heat level.</li>
@@ -283,6 +283,7 @@ const char* htmlHelp = R"rawliteral(
                 <li><b>Rain:</b> Adds boost in Rain Mode.</li>
                 <li><b>Startup:</b> High power for 60s after start.</li>
                 <li><b>Offset:</b> Corrects sensor reading (e.g. if placed near hot engine).</li>
+                <li><b>Start Delay:</b> Waits after boot before turning on (protects battery).</li>
             </ul>
         </li>
     </ul>
@@ -425,20 +426,24 @@ const char* htmlAuxConfig = R"rawliteral(
             var mode = document.getElementById('mode').value;
             var grips = document.getElementById('grips_settings');
             var desc = document.getElementById('grips_desc');
-            var smart = document.getElementById('smart_desc');
+            var aux = document.getElementById('aux_desc');
+            var delay = document.getElementById('common_delay');
             
             if (mode == '2') { // Heated Grips
                 grips.style.display = 'block';
                 desc.style.display = 'block';
-                smart.style.display = 'none';
-            } else if (mode == '1') { // Smart Power
+                aux.style.display = 'none';
+                delay.style.display = 'table-row';
+            } else if (mode == '1') { // Aux Power
                 grips.style.display = 'none';
                 desc.style.display = 'none';
-                smart.style.display = 'block';
+                aux.style.display = 'block';
+                delay.style.display = 'table-row';
             } else {
                 grips.style.display = 'none';
                 desc.style.display = 'none';
-                smart.style.display = 'none';
+                aux.style.display = 'none';
+                delay.style.display = 'none';
             }
         }
     </script>
@@ -455,10 +460,14 @@ const char* htmlAuxConfig = R"rawliteral(
                     <td>
                         <select id='mode' name='mode' onchange="toggleFields()">
                             <option value='0' %MODE_OFF%>OFF</option>
-                            <option value='1' %MODE_SMART%>Smart Power (Engine Run)</option>
+                            <option value='1' %MODE_AUX%>Aux Power (Switched)</option>
                             <option value='2' %MODE_GRIPS%>Heated Grips (Auto)</option>
                         </select>
                     </td>
+                </tr>
+                <tr id='common_delay' style='display:none'>
+                    <td>Start Delay (sec)</td>
+                    <td><input type='number' name='startD' value='%STARTD%' min='0'></td>
                 </tr>
             </table>
         </div>
@@ -500,8 +509,8 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
-                        <td style="font-size:0.9em; color:#ccc">Current Reading:</td>
-                        <td style="font-size:0.9em; color:#ffc107; font-weight:bold">%CURRENT_TEMP% &deg;C</td>
+                        <td style="font-size:1.1em; color:#ccc">Current Reading:</td>
+                        <td style="font-size:1.1em; color:#ffc107; font-weight:bold">%CURRENT_TEMP% &deg;C</td>
                     </tr>
                     <tr>
                         <td colspan="2" class="note" style="padding-bottom: 10px;">
@@ -520,10 +529,6 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td>Startup Boost Time (sec)</td>
                         <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
                     </tr>
-                    <tr>
-                        <td>Start Delay (sec)</td>
-                        <td><input type='number' name='startD' value='%STARTD%' min='0'></td>
-                    </tr>
                 </table>
             </div>
         </div>
@@ -539,11 +544,11 @@ const char* htmlAuxConfig = R"rawliteral(
         </div>
     </div>
 
-    <div id='smart_desc' class='card' style='display:none; margin-top:15px'>
-        <h3>Smart Power Description</h3>
+    <div id='aux_desc' class='card' style='display:none; margin-top:15px'>
+        <h3>Aux Power Description</h3>
         <div class='note' style='margin-bottom:15px; line-height:1.4'>
-            <b>Smart Power</b> automatically turns on the Aux Port (12V) when the engine is running (detected via vibration/IMU).<br>
-            It keeps the power ON for 10 seconds after the engine stops to prevent flickering.<br><br>
+            <b>Aux Power</b> automatically turns on the Aux Port (12V) after a configurable delay (Ignition ON).<br>
+            It protects the battery during cranking.<br><br>
             <span style='color:red; font-weight:bold'>⚠️ WARNING:</span><br>
             Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the traces.
         </div>
