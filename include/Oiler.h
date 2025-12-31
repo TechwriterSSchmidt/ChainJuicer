@@ -76,6 +76,8 @@ public:
 
     // WiFi Status
     void setWifiActive(bool active);
+    bool checkWifiToggleRequest(); // Returns true if WiFi toggle was requested via button
+    bool checkAuxToggleRequest();  // Returns true if Aux toggle was requested via button
 
     // Update Status
     void setUpdateMode(bool mode);
@@ -199,12 +201,15 @@ private:
     unsigned long lastClickTime;
     bool emergencyMode;
     bool wifiActive; // WiFi Status
+    bool wifiToggleRequested; // Flag for main.cpp
+    bool auxToggleRequested;  // Flag for main.cpp
     bool bleedingMode;
     unsigned long bleedingStartTime;
     unsigned long wifiActivationTime;
     unsigned long buttonPressStartTime;
     bool buttonState;
     bool lastButtonState;
+    bool longPressHandled; // To prevent repeat triggers
     unsigned long lastDebounceTime; // Added for Debouncing
     float currentSpeed; // Added for logic suppression
     float smoothedInterval; // Low-Pass Filter for Interval

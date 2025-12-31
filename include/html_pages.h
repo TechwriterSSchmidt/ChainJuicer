@@ -10,7 +10,7 @@ const char* htmlLanding = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0;text-align:center}
         h2{color:#ffffff;margin-bottom:5px;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        h3{color:#ffc107;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
         .stat-box{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px;text-align:left}
         .stat-row{display:flex;justify-content:space-between;margin-bottom:5px;border-bottom:1px solid #333;padding-bottom:5px}
         .stat-row:last-child{border-bottom:none}
@@ -61,7 +61,7 @@ const char* htmlHeader = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
         .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         th{text-align:left;color:#ccc;font-size:0.9em}
@@ -171,7 +171,7 @@ const char* htmlLEDSettings = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        h3{color:#ffc107;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
         .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:10px 5px;border-bottom:1px solid #333}
@@ -219,7 +219,7 @@ const char* htmlHelp = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:15px;background:#121212;color:#e0e0e0;line-height:1.6}
         h2{color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        h3{color:#ffc107;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
         ul{padding-left:20px}
         .color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
         .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-top:20px;border:1px solid #444;font-size:16px}
@@ -308,14 +308,17 @@ const char* htmlHelp = R"rawliteral(
     <h3>WiFi & Web Interface</h3>
     <p>WiFi is <b>OFF</b> by default.</p>
     <ul>
-        <li><b>Activate:</b> Hold button (> 3s) at standstill.</li>
+        <li><b>Activate:</b> 5x Button Click.</li>
         <li><b>Deactivate:</b> Auto-off when driving (> 10 km/h) or after 5 min inactivity.</li>
     </ul>
     <h3>Button Functions</h3>
     <ul>
-        <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay).</li>
-        <li><b>3x Click:</b> Toggle 'Chain Flush Mode' (Configurable).</li>
-        <li><b>6x Click:</b> Toggle 'Offroad Mode' (Time based oiling).</li>
+        <li><b>1x Click:</b> Toggle 'Rain Mode'.</li>
+        <li><b>Hold > 2s:</b> Toggle 'Aux Port' (Manual Override).</li>
+        <li><b>3x Click:</b> Toggle 'Offroad Mode'.</li>
+        <li><b>4x Click:</b> Toggle 'Chain Flush Mode'.</li>
+        <li><b>5x Click:</b> Toggle 'WiFi'.</li>
+        <li><b>Hold > 5s (at Boot):</b> Factory Reset.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
@@ -372,7 +375,7 @@ const char* htmlIMU = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
         .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:8px 5px;border-bottom:1px solid #333}
@@ -420,7 +423,7 @@ const char* htmlIMU = R"rawliteral(
     </div>
 
     <div class='card'>
-        <h3>Configuration</h3>
+        <h3>Chain position</h3>
         <form action='/imu_config' method='POST'>
             <table>
                 <tr>
@@ -459,7 +462,7 @@ const char* htmlAuxConfig = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        h3{color:#ffc107;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:bold}
         .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:10px 5px;border-bottom:1px solid #333}

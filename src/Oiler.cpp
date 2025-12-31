@@ -70,6 +70,8 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     rainModeStartTime = 0;
     emergencyMode = false;
     wifiActive = false;
+    wifiToggleRequested = false;
+    auxToggleRequested = false;
     updateMode = false;
     bleedingMode = false;
     bleedingStartTime = 0;
@@ -89,6 +91,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     buttonPressStartTime = 0;
     buttonState = false;
     lastButtonState = false;
+    longPressHandled = false;
     lastDebounceTime = 0; // Init
     lastLedUpdate = 0;
     currentSpeed = 0.0;
@@ -289,6 +292,22 @@ void Oiler::loop() {
     updateLED();
 }
 
+bool Oiler::checkWifiToggleRequest() {
+    if (wifiToggleRequested) {
+        wifiToggleRequested = false;
+        return true;
+    }
+    return false;
+}
+
+bool Oiler::checkAuxToggleRequest() {
+    if (auxToggleRequested) {
+        auxToggleRequested = false;
+        return true;
+    }
+    return false;
+}
+
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
     // Check both external button AND onboard boot button
@@ -308,65 +327,51 @@ void Oiler::handleButton() {
             if (buttonState) {
                 // Pressed
                 buttonPressStartTime = millis();
+                longPressHandled = false; // Reset flag
             } else {
                 // Released
                 unsigned long pressDuration = millis() - buttonPressStartTime;
                 
-                // Short Press: Rain Mode Toggle
-                if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
-                    // Multi-Click Detection for Chain Flush Mode
+                // Short Press (< 1000ms) - Only if NOT handled as long press
+                if (pressDuration < 1000 && pressDuration > 50 && !longPressHandled) {
                     buttonClickCount++;
                     lastClickTime = millis();
-                    
-                    if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
-                        // 6 Clicks -> Toggle Offroad Mode
-                        setCrossCountryMode(!crossCountryMode);
-                        buttonClickCount = 0; // Reset
-                    } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
-                        // 3 Clicks -> Toggle Chain Flush Mode
-                        // Wait a bit to see if it becomes 6 clicks?
-                        // No, immediate action for Flush is better UX.
-                        // But this conflicts with 6 clicks.
-                        // Solution: We only trigger Flush if NO more clicks follow.
-                        // Moved to Delayed Action Handler.
-                    }
                 }
             }
         }
     }
 
-    // Delayed Action Handler (Single Click)
-    // Wait 600ms to see if more clicks follow (increased for 6 clicks)
+    // Delayed Action Handler
+    // Wait 600ms to see if more clicks follow
     if (buttonClickCount > 0 && (millis() - lastClickTime > 600)) {
         if (buttonClickCount == 1) {
-            // Single Click -> Toggle Rain Mode
+            // 1 Click -> Toggle Rain Mode
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
             }
-        } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
-             // 3 Clicks -> Toggle Chain Flush Mode
-             setFlushMode(!flushMode);
-        } else if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
-             // 6 Clicks -> Toggle Offroad Mode
-             setCrossCountryMode(!crossCountryMode);
+        } else if (buttonClickCount == 3) {
+            // 3 Clicks -> Toggle Offroad Mode
+            setCrossCountryMode(!crossCountryMode);
+        } else if (buttonClickCount == 4) {
+            // 4 Clicks -> Toggle Chain Flush Mode
+            setFlushMode(!flushMode);
+        } else if (buttonClickCount == 5) {
+            // 5 Clicks -> Toggle WiFi
+            wifiToggleRequested = true;
         }
         
         // Reset after timeout
         buttonClickCount = 0;
     }
 
-    // Check Long Press while holding (using stable buttonState)
-    if (buttonState) {
-        unsigned long duration = millis() - buttonPressStartTime;
-        
-        // Long Press: WiFi Activation (if not already active)
-        if (duration > WIFI_PRESS_MS && !wifiActive) {
-             // Only allow WiFi activation at standstill
-             if (currentSpeed < MIN_SPEED_KMH) {
-                 setWifiActive(true);
-                 // Reset button start time to avoid re-triggering immediately
-                 buttonPressStartTime = millis(); 
-             }
+    // Check Long Press (> 2s) for Aux Toggle
+    if (buttonState && !longPressHandled) {
+        if (millis() - buttonPressStartTime > 2000) {
+            auxToggleRequested = true;
+            longPressHandled = true; // Prevent repeat
+            
+            // Visual Feedback (Optional, but good UX)
+            // We could flash the LED here, but updateLED handles status.
         }
     }
 

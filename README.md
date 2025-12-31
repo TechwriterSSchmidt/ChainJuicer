@@ -37,15 +37,15 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Safety Cutoff** | Hard limit for pump runtime. | Max 30s continuous run to prevent hardware damage. |
 | **Start Delay** | Distance driven before first oiling. | Default **250 m**. Keeps garage floor clean. |
 | **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
-| **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** Short Press. **Auto-Off:** 30 min or restart. |
-| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 3x Click. **Action:** Time-based (Configurable). LED: Cyan Blink. |
-| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 6x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
+| **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** 1x Click. **Auto-Off:** 30 min or restart. |
+| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 4x Click. **Action:** Time-based (Configurable). LED: Cyan Blink. |
+| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 3x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
-| **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** Hold button >3s at standstill. **Features:** OTA Update, LED config, Stats, Test functions. |
+| **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** 5x Click. **Features:** OTA Update, LED config, Stats, Test functions. |
 | **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
 | **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (15s). |
 | **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
-| **Aux Port Manager** | Smart control for accessories. | **Smart Power:** Auto-ON when engine runs (IMU). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. |
+| **Aux Port Manager** | Smart control for accessories. | **Smart Power:** Auto-ON when engine runs (IMU). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. **Toggle:** Hold > 2s. |
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
@@ -288,14 +288,14 @@ The system uses two LEDs to communicate its status.
 | **Normal Ride** | GPS Fix, Speed > 7 km/h | **Green** | *State dependent* | System oils automatically based on speed and configured distance intervals. |
 | **Oiling Event** | Distance reached | **Yellow Breathing** | *State dependent* | Pump releases oil pulse. |
 | **Tunnel / Signal Loss** | No GPS signal > 3 min | **Cyan** | *State dependent* | Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
-| **Rain Ride** | Short Press (< 1.5s) | **Blue** | *State dependent* | **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
-| **Dust / Flushing** | 3x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
-| **Offroad / Enduro** | 6x Click | **Magenta Blink** | *State dependent* | **Offroad Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
-| **Configuration** | Hold > 3s (Standstill) | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
+| **Rain Ride** | 1x Click | **Blue** | *State dependent* | **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
+| **Aux: Manual Toggle** | Hold > 2s | *State dependent* | **Off / On** | Manually toggles the Aux Port (Override). |
+| **Offroad / Enduro** | 3x Click | **Magenta Blink** | *State dependent* | **Offroad Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
+| **Dust / Flushing** | 4x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
+| **Configuration** | 5x Click | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
 | **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |
 | **Aux: Smart Power** | Engine Running (IMU) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
 | **Aux: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
-| **Aux: Manual Toggle** | Hold 2s (1.5s - 3.0s) | *State dependent* | **Off / On** | Manually toggles the Aux Port (Override). |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
 ### Pin Assignment (Current Config)

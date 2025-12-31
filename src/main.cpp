@@ -752,52 +752,33 @@ void loop() {
     // --- WiFi Management & Aux Toggle ---
     unsigned long currentMillis = millis();
 
-    // 1. Activation: Standstill + Button pressed
-    static unsigned long wifiButtonPressStart = 0;
-    static bool wifiButtonHeld = false;
+    // 1. Button Requests (Handled by Oiler)
+    if (oiler.checkWifiToggleRequest()) {
+        if (!wifiActive) {
+            // Activate WiFi
+            WiFi.softAP(AP_SSID);
+            IPAddress IP = WiFi.softAPIP();
+#ifdef GPS_DEBUG
+            Serial.print("WiFi activated via Button. IP: ");
+            Serial.println(IP);
+#endif
+            dnsServer.start(53, "*", IP);
+            server.begin();
+            wifiActive = true;
+            wifiStartTime = currentMillis;
+        } else {
+            // Deactivate WiFi
+            WiFi.softAPdisconnect(true);
+            wifiActive = false;
+        }
+    }
 
-    if (oiler.isButtonPressed()) {
-        // Allow WiFi activation if speed is low OR if we have no GPS fix yet (assuming standstill/setup)
-        if (currentSpeed < MIN_SPEED_KMH || !gps.location.isValid()) { 
-            if (!wifiButtonHeld) {
-                wifiButtonPressStart = currentMillis;
-                wifiButtonHeld = true;
-            } else {
-                // Check duration for WiFi (> 3s)
-                if (currentMillis - wifiButtonPressStart > WIFI_PRESS_MS) {
-                    // Button held
-                    wifiStartTime = currentMillis; // Reset timeout timer
-                    
-                    if (!wifiActive) {
-                        WiFi.softAP(AP_SSID);
-                        IPAddress IP = WiFi.softAPIP();
+    if (oiler.checkAuxToggleRequest()) {
+        auxManager.toggleManualOverride();
 #ifdef GPS_DEBUG
-                        Serial.print("WiFi activated via Button. IP: ");
-                        Serial.println(IP);
+        Serial.print("Aux Manual Override Toggled: ");
+        Serial.println(auxManager.isManualOverrideActive() ? "ON" : "OFF");
 #endif
-                        dnsServer.start(53, "*", IP);
-                        server.begin();
-                        wifiActive = true;
-                    }
-                }
-            }
-        }
-    } else {
-        // Button Released
-        if (wifiButtonHeld) {
-            unsigned long duration = currentMillis - wifiButtonPressStart;
-            
-            // Check for Aux Toggle (1.5s - 3.0s)
-            // RAIN_TOGGLE_MS is 1500, WIFI_PRESS_MS is 3000
-            if (duration >= RAIN_TOGGLE_MS && duration < WIFI_PRESS_MS) {
-                auxManager.toggleManualOverride();
-#ifdef GPS_DEBUG
-                Serial.print("Aux Manual Override Toggled: ");
-                Serial.println(auxManager.isManualOverrideActive() ? "ON" : "OFF");
-#endif
-            }
-        }
-        wifiButtonHeld = false;
     }
 
     // 2. Deactivation: Driving or Timeout
