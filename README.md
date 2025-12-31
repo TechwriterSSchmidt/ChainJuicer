@@ -122,7 +122,7 @@ This table shows which features are available depending on the connected hardwar
 | **Crash Detection** | ❌ | ❌ | ✅ | ✅ |
 | **Garage Guard** | ❌ | ❌ | ✅ | ✅ |
 | **Smart Stop** | ❌ | ❌ | ✅ | ✅ |
-| **Aux: Aux Power** | ❌ | ❌ | ✅ | ✅ |
+| **Aux: Aux Power** | ✅ | ✅ | ✅ | ✅ |
 | **Aux: Heated Grips** | ❌ | ✅ | ✅ | ✅ |
 | **Data Logging** | ❌ | ❌ | ❌ | ✅ |
 
@@ -294,7 +294,7 @@ The system uses two LEDs to communicate its status.
 | **Dust / Flushing** | 4x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
 | **Configuration** | 5x Click | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
 | **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |
-| **Aux: Aux Power** | Engine Running (IMU) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
+| **Aux: Aux Power** | Ignition ON (Delay) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
 | **Aux: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
