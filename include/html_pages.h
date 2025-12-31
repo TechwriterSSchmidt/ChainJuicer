@@ -102,16 +102,8 @@ const char* htmlHeader = R"rawliteral(
 
 const char* htmlFooter = R"rawliteral(
         </table>
-        <h3>Temperature Compensation</h3>
-        <table>
-            <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' min='50' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
-            <tr><td>Pause Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pause' value='%TC_PAUSE%' class='num-input'></td></tr>
-            <tr><td colspan='2'><b>Oil Viscosity Profile:</b></td></tr>
-            <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
-            <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. Mineral Oil 80w90)</td></tr>
-            <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Gear Oil SAE 90)</td></tr>
-            <tr><td colspan='2' style='font-size:0.8em;color:#888'>Current Temp: %TEMP_C% &deg;C</td></tr>
-        </table>
+        </div>
+        <div class='card'>
         <h3>General</h3>
         <table>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
@@ -122,11 +114,27 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
             <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
         </table>
+        </div>
+        <div class='card'>
         <h3>Maintenance</h3>
         <div style='margin-bottom:15px'>
             <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
             <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
         </div>
+        </div>
+        <div class='card'>
+        <h3>Temperature Compensation</h3>
+        <table>
+            <tr><td>Pulse Duration (ms) @ 25&deg;C</td><td><input type='number' min='50' name='tc_pulse' value='%TC_PULSE%' class='pulse-input'></td></tr>
+            <tr><td>Pause Duration (ms) @ 25&deg;C</td><td><input type='number' name='tc_pause' value='%TC_PAUSE%' class='num-input'></td></tr>
+            <tr><td colspan='2'><b>Oil Viscosity Profile:</b></td></tr>
+            <tr><td><input type='radio' name='oil_type' value='0' %OIL_THIN%> Thin Oil</td><td>(e.g. ATF / Bio)</td></tr>
+            <tr><td><input type='radio' name='oil_type' value='1' %OIL_NORMAL%> Normal Oil</td><td>(e.g. Mineral Oil 80w90)</td></tr>
+            <tr><td><input type='radio' name='oil_type' value='2' %OIL_THICK%> Thick Oil</td><td>(e.g. Gear Oil SAE 90)</td></tr>
+            <tr><td colspan='2' style='font-size:0.8em;color:#888'>Current Temp: %TEMP_C% &deg;C</td></tr>
+        </table>
+        </div>
+        <div class='card'>
         <h3>Tank Monitor</h3>
         <table>
             <tr><td>Enable</td><td><input type='checkbox' name='tank_en' %TANK_CHECKED%></td></tr>
@@ -137,6 +145,8 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Current Level</td><td>%TANK_LEVEL% ml (%TANK_PCT%%)</td></tr>
         </table>
         <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:0.9em'>[Refill Tank]</a></div>
+        </div>
+        <div class='card'>
         <h3>Statistics</h3>
         <table>
             <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
@@ -144,6 +154,7 @@ const char* htmlFooter = R"rawliteral(
         </table>
         <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>
         <div class='progress'>Current Progress: %PROGRESS%%</div>
+        </div>
         <input type='submit' value='Save' class='btn'>
         <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:0.8em'>[Firmware Update]</a></div>
     </form>
