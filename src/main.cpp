@@ -630,7 +630,6 @@ void setup() {
     });
     
     server.on("/bleeding", HTTP_GET, []() {
-        Serial.println("WEB: /bleeding requested");
         oiler.startBleeding();
         server.sendHeader("Location", "/settings");
         server.send(303);

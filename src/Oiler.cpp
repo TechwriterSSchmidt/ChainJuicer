@@ -1310,7 +1310,6 @@ void Oiler::setCrossCountryMode(bool mode) {
 }
 
 void Oiler::startBleeding() {
-    Serial.println("DEBUG: Oiler::startBleeding() called");
     if (currentSpeed < MIN_SPEED_KMH) {
         bleedingMode = true;
         bleedingStartTime = millis();
