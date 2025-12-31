@@ -287,9 +287,8 @@ void handleSettings() {
     footer.replace("%LED_DIM%", String(map(oiler.ledBrightnessDim, 2, 202, 0, 100)));
     footer.replace("%LED_HIGH%", String(map(oiler.ledBrightnessHigh, 2, 202, 0, 100)));
     
-    footer.replace("%RAIN_CHECKED%", oiler.isRainMode() ? "checked" : "");
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
-    footer.replace("%START_DLY%", String(oiler.startupDelayKm, 1));
+    footer.replace("%START_DLY%", String(oiler.startupDelayMeters, 0));
     footer.replace("%CC_INT%", String(oiler.crossCountryIntervalMin));
     
     footer.replace("%FLUSH_EV%", String(oiler.flushConfigEvents));
@@ -411,11 +410,9 @@ void handleSave() {
     if(server.hasArg("tc_pause")) oiler.tempConfig.basePause25 = server.arg("tc_pause").toFloat();
     if(server.hasArg("oil_type")) oiler.tempConfig.oilType = (Oiler::OilType)server.arg("oil_type").toInt();
 
-    // Rain Mode Checkbox handling
-    oiler.setRainMode(server.hasArg("rain_mode"));
     oiler.setEmergencyModeForced(server.hasArg("emerg_mode"));
     
-    if(server.hasArg("start_dly")) oiler.startupDelayKm = server.arg("start_dly").toFloat();
+    if(server.hasArg("start_dly")) oiler.startupDelayMeters = server.arg("start_dly").toFloat();
     if(server.hasArg("cc_int")) oiler.crossCountryIntervalMin = server.arg("cc_int").toInt();
     
     if(server.hasArg("flush_ev")) oiler.flushConfigEvents = server.arg("flush_ev").toInt();
@@ -490,7 +487,13 @@ void handleAuxConfig() {
     html.replace("%TEMP_HIGH%", (abs(tempF - 3.0) < 0.1) ? "selected" : "");
 
     html.replace("%TEMPO%", String(tempO, 1));
-    html.replace("%CURRENT_TEMP%", String(oiler.getCurrentTempC(), 1));
+    
+    if (oiler.isTempSensorConnected()) {
+        html.replace("%CURRENT_TEMP%", String(oiler.getCurrentTempC(), 1));
+    } else {
+        html.replace("%CURRENT_TEMP%", "no sensor");
+    }
+
     html.replace("%STARTT%", String(startT, 0));
     html.replace("%RAINB%", String(rainB));
     html.replace("%STARTL%", String(startL));

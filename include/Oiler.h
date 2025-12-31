@@ -144,7 +144,7 @@ public:
     unsigned long lastFlushOilTime;
 
     // Startup Delay
-    float startupDelayKm;
+    float startupDelayMeters;
     float currentStartupDistance;
 
     // Crash Latch

@@ -95,7 +95,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     smoothedInterval = 0.0; // Init
 
     // Startup Delay
-    startupDelayKm = STARTUP_DELAY_KM_DEFAULT;
+    startupDelayMeters = STARTUP_DELAY_METERS_DEFAULT;
     currentStartupDistance = 0.0;
     oilingDelayed = false;
     crashTripped = false;
@@ -623,7 +623,7 @@ void Oiler::loadConfig() {
 
     // Load Offroad & Startup
     crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
-    startupDelayKm = preferences.getFloat("start_dly", STARTUP_DELAY_KM_DEFAULT);
+    startupDelayMeters = preferences.getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
     flushConfigEvents = preferences.getInt("tb_evt", FLUSH_DEFAULT_EVENTS);
@@ -714,7 +714,7 @@ void Oiler::saveConfig() {
 
     // Save Offroad & Startup
     preferences.putInt("cc_int", crossCountryIntervalMin);
-    preferences.putFloat("start_dly", startupDelayKm);
+    preferences.putFloat("start_dly_m", startupDelayMeters);
 
     // Save Chain Flush Mode
     preferences.putInt("tb_evt", flushConfigEvents);
@@ -989,7 +989,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     totalDistance += distKm;
 
     // 1.1 Startup Delay Check
-    if (currentStartupDistance < startupDelayKm) {
+    // Convert currentStartupDistance (km) to meters for comparison
+    if ((currentStartupDistance * 1000.0) < startupDelayMeters) {
         currentStartupDistance += distKm;
         return; // Skip oiling logic until delay is reached
     }

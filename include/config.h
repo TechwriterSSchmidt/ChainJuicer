@@ -89,7 +89,7 @@
 #define FLUSH_PRESS_COUNT 3           // 3 Clicks
 #define FLUSH_PRESS_WINDOW_MS 2000    // 2 Seconds window
 
-#define STARTUP_DELAY_KM_DEFAULT 2.0  // Default startup delay in km
+#define STARTUP_DELAY_METERS_DEFAULT 250.0  // Default startup delay in meters
 #define CROSS_COUNTRY_INTERVAL_MIN_DEFAULT 5 // Default Cross-Country interval in minutes
 #define CROSS_COUNTRY_PRESS_COUNT 6   // 6 Clicks for Cross-Country Mode
 

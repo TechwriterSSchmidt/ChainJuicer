@@ -111,9 +111,8 @@ const char* htmlFooter = R"rawliteral(
         </table>
         <h3>General</h3>
         <table>
-            <tr><td>Rain Mode (x2)</td><td><input type='checkbox' name='rain_mode' %RAIN_CHECKED%></td></tr>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
-            <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
+            <tr><td>Start Delay (m)</td><td><input type='number' step='1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Offroad Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
