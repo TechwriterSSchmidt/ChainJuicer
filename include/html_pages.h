@@ -123,7 +123,7 @@ const char* htmlFooter = R"rawliteral(
         <h3>Maintenance</h3>
         <div style='margin-bottom:15px'>
             <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
-            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px' onclick="return confirm('Start Bleeding Mode? Pump will run for 15s.')">Start Bleeding Mode</a>
+            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
         </div>
         <h3>Tank Monitor</h3>
         <table>
