@@ -1311,7 +1311,7 @@ void Oiler::setCrossCountryMode(bool mode) {
 
 void Oiler::startBleeding() {
     Serial.println("DEBUG: Oiler::startBleeding() called");
-    if (currentSpeed < MIN_SPEED_KMH && !emergencyMode && !emergencyModeForced) {
+    if (currentSpeed < MIN_SPEED_KMH) {
         bleedingMode = true;
         bleedingStartTime = millis();
         pumpActivityStartTime = millis(); // Safety Cutoff Start
@@ -1330,10 +1330,9 @@ void Oiler::startBleeding() {
         Serial.print(currentSpeed);
         Serial.print(" (Max: ");
         Serial.print(MIN_SPEED_KMH);
-        Serial.print("), Emergency: ");
-        Serial.println(emergencyMode || emergencyModeForced ? "YES" : "NO");
+        Serial.println(")");
         
-        webConsole.log("Bleeding REJECTED: Check Speed/Emergency Mode");
+        webConsole.log("Bleeding REJECTED: Check Speed");
     }
 }
 
