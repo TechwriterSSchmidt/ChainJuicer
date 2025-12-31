@@ -10,7 +10,7 @@
 #define GPS_TX_PIN 26      // GPS TX to ESP RX - LEFT SIDE (Middle)
 #define BUTTON_PIN 4      // Handlebar button - LEFT SIDE (Top of block)
 #define RAIN_SENSOR_PIN 34 // Analog Input for Rain Sensor
-#define AUX_PIN 17         // Auxiliary Output (Smart Power / Heated Grips)
+#define AUX_PIN 17         // Auxiliary Output (Aux Power / Heated Grips)
 
 // Pump Logic Configuration
 // Normal Logic: HIGH = Pump ON, LOW = Pump OFF
@@ -81,7 +81,7 @@
 #define MIN_SPEED_KMH 7.0         // Minimum speed for oiling (Standstill threshold)
 #define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
-#define BLEEDING_DURATION_MS 15000 // Pumping time in ms for bleeding
+#define BLEEDING_DURATION_MS 20000 // Pumping time in ms for bleeding
 // Chain Flush Mode Defaults
 #define FLUSH_DEFAULT_EVENTS 15       // Run 15 times
 #define FLUSH_DEFAULT_PULSES 2        // 2 Pulses per event
@@ -89,14 +89,13 @@
 #define FLUSH_PRESS_COUNT 3           // 3 Clicks
 #define FLUSH_PRESS_WINDOW_MS 2000    // 2 Seconds window
 
-#define STARTUP_DELAY_KM_DEFAULT 2.0  // Default startup delay in km
-#define CROSS_COUNTRY_INTERVAL_MIN_DEFAULT 5 // Default Cross-Country interval in minutes
-#define CROSS_COUNTRY_PRESS_COUNT 6   // 6 Clicks for Cross-Country Mode
+#define STARTUP_DELAY_METERS_DEFAULT 250.0  // Default startup delay in meters
+#define OFFROAD_INTERVAL_MIN_DEFAULT 5 // Default Offroad interval in minutes
+#define OFFROAD_PRESS_COUNT 6   // 6 Clicks for Offroad Mode
 
 // Button Timings
 #define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode
 #define WIFI_PRESS_MS 3000        // > 3s: Activate WiFi (if standing still)
-#define BLEEDING_PRESS_MS 10000   // > 10s: Start Bleeding Mode
 #define FACTORY_RESET_PRESS_MS 10000 // > 10s at Boot: Factory Reset
 
 // Safety

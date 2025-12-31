@@ -70,6 +70,8 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     rainModeStartTime = 0;
     emergencyMode = false;
     wifiActive = false;
+    wifiToggleRequested = false;
+    auxToggleRequested = false;
     updateMode = false;
     bleedingMode = false;
     bleedingStartTime = 0;
@@ -81,21 +83,22 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     flushEventsRemaining = 0;
     lastFlushOilTime = 0;
 
-    crossCountryMode = false;
-    lastCrossCountryOilTime = 0;
-    crossCountryIntervalMin = CROSS_COUNTRY_INTERVAL_MIN_DEFAULT;
+    offroadMode = false;
+    lastOffroadOilTime = 0;
+    offroadIntervalMin = OFFROAD_INTERVAL_MIN_DEFAULT;
     buttonClickCount = 0;
     lastClickTime = 0;
     buttonPressStartTime = 0;
     buttonState = false;
     lastButtonState = false;
+    longPressHandled = false;
     lastDebounceTime = 0; // Init
     lastLedUpdate = 0;
     currentSpeed = 0.0;
     smoothedInterval = 0.0; // Init
 
     // Startup Delay
-    startupDelayKm = STARTUP_DELAY_KM_DEFAULT;
+    startupDelayMeters = STARTUP_DELAY_METERS_DEFAULT;
     currentStartupDistance = 0.0;
     oilingDelayed = false;
     crashTripped = false;
@@ -236,17 +239,17 @@ void Oiler::loop() {
     handleButton();
     processPump(); // Unified pump logic
     
-    // Cross Country Mode Logic (Time Based)
-    if (crossCountryMode) {
+    // Offroad Mode Logic (Time Based)
+    if (offroadMode) {
         unsigned long now = millis();
-        unsigned long intervalMs = (unsigned long)crossCountryIntervalMin * 60 * 1000;
+        unsigned long intervalMs = (unsigned long)offroadIntervalMin * 60 * 1000;
         
-        if (now - lastCrossCountryOilTime > intervalMs) {
+        if (now - lastOffroadOilTime > intervalMs) {
             // SAFETY: Only oil if moving! 
             // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
             if (currentSpeed >= 7.0) {
                 triggerOil(ranges[0].pulses); // Use pulses from first range
-                lastCrossCountryOilTime = now;
+                lastOffroadOilTime = now;
             }
         }
     }
@@ -289,6 +292,22 @@ void Oiler::loop() {
     updateLED();
 }
 
+bool Oiler::checkWifiToggleRequest() {
+    if (wifiToggleRequested) {
+        wifiToggleRequested = false;
+        return true;
+    }
+    return false;
+}
+
+bool Oiler::checkAuxToggleRequest() {
+    if (auxToggleRequested) {
+        auxToggleRequested = false;
+        return true;
+    }
+    return false;
+}
+
 void Oiler::handleButton() {
     // Read button (Active LOW due to INPUT_PULLUP)
     // Check both external button AND onboard boot button
@@ -308,86 +327,51 @@ void Oiler::handleButton() {
             if (buttonState) {
                 // Pressed
                 buttonPressStartTime = millis();
+                longPressHandled = false; // Reset flag
             } else {
                 // Released
                 unsigned long pressDuration = millis() - buttonPressStartTime;
                 
-                // Short Press: Rain Mode Toggle
-                if (pressDuration < RAIN_TOGGLE_MS && pressDuration > 50) {
-                    // Multi-Click Detection for Chain Flush Mode
+                // Short Press (< 1000ms) - Only if NOT handled as long press
+                if (pressDuration < 1000 && pressDuration > 50 && !longPressHandled) {
                     buttonClickCount++;
                     lastClickTime = millis();
-                    
-                    if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
-                        // 6 Clicks -> Toggle Cross Country Mode
-                        setCrossCountryMode(!crossCountryMode);
-                        buttonClickCount = 0; // Reset
-                    } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
-                        // 3 Clicks -> Toggle Chain Flush Mode
-                        // Wait a bit to see if it becomes 6 clicks?
-                        // No, immediate action for Flush is better UX.
-                        // But this conflicts with 6 clicks.
-                        // Solution: We only trigger Flush if NO more clicks follow.
-                        // Moved to Delayed Action Handler.
-                    }
                 }
             }
         }
     }
 
-    // Delayed Action Handler (Single Click)
-    // Wait 600ms to see if more clicks follow (increased for 6 clicks)
+    // Delayed Action Handler
+    // Wait 600ms to see if more clicks follow
     if (buttonClickCount > 0 && (millis() - lastClickTime > 600)) {
         if (buttonClickCount == 1) {
-            // Single Click -> Toggle Rain Mode
+            // 1 Click -> Toggle Rain Mode
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
             }
-        } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
-             // 3 Clicks -> Toggle Chain Flush Mode
-             setFlushMode(!flushMode);
-        } else if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
-             // 6 Clicks -> Toggle Cross Country Mode
-             setCrossCountryMode(!crossCountryMode);
+        } else if (buttonClickCount == 3) {
+            // 3 Clicks -> Toggle Offroad Mode
+            setOffroadMode(!offroadMode);
+        } else if (buttonClickCount == 4) {
+            // 4 Clicks -> Toggle Chain Flush Mode
+            setFlushMode(!flushMode);
+        } else if (buttonClickCount == 5) {
+            // 5 Clicks -> Toggle WiFi
+            wifiToggleRequested = true;
         }
         
         // Reset after timeout
         buttonClickCount = 0;
     }
 
-    // Check Long Press while holding (using stable buttonState)
-    if (buttonState && !bleedingMode) {
-        unsigned long duration = millis() - buttonPressStartTime;
-        
-        // Long Press: Bleeding Mode
-        if (duration > BLEEDING_PRESS_MS) {
-            // SAFETY: Only allow in standstill AND NOT in Emergency Mode (Auto or Forced)
-            if (currentSpeed < MIN_SPEED_KMH && !emergencyMode && !emergencyModeForced) {
-                bleedingMode = true;
-                bleedingStartTime = millis();
-                pumpActivityStartTime = millis(); // Safety Cutoff Start
-#ifdef GPS_DEBUG
-                Serial.println("Bleeding Mode STARTED");
-                webConsole.log("Bleeding Mode STARTED");
-#endif
-                
-                // Init Pump State for immediate start
-                pulseState = false; 
-                lastPulseTime = millis() - 1000; // Force start
-
-                saveConfig(); // Save immediately
-            } else {
-#ifdef GPS_DEBUG
-                if (emergencyMode || emergencyModeForced) {
-                    Serial.println("Bleeding blocked: Emergency Mode Active");
-                } else {
-                    Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
-                }
-#endif
-            }
-
-            // Reset button start time to avoid re-triggering immediately
-            buttonPressStartTime = millis(); 
+    // Check Long Press (> 2s) for Aux Toggle
+    if (buttonState && !longPressHandled) {
+        if (millis() - buttonPressStartTime > 2000) {
+            auxToggleRequested = true;
+            longPressHandled = true; // Prevent repeat
+            
+            // Visual Feedback (Optional, but good UX)
+            // We could flash the LED here, but updateLED handles status.
         }
     }
 
@@ -465,8 +449,8 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     }
-    // 1.6 Cross Country Mode -> MAGENTA Blinking
-    else if (crossCountryMode) {
+    // 1.6 Offroad Mode -> MAGENTA Blinking
+    else if (offroadMode) {
         strip.setBrightness(currentHighBrightness);
         if ((now / 1000) % 2 == 0) { // Slow blink (1s on, 1s off)
             color = strip.Color(255, 0, 255); // Magenta
@@ -562,14 +546,14 @@ void Oiler::updateLED() {
         if (i == 0) {
             strip.setPixelColor(i, color);
         } 
-        // LED 1: Aux Status LED (Heated Grips / Smart Power)
+        // LED 1: Aux Status LED (Heated Grips / Aux Power)
         else if (i == 1) {
             uint32_t auxColor = 0;
             
             if (auxMode == 0 || auxPwm == 0) {
                 auxColor = 0; // OFF
             } else if (auxMode == 1) {
-                // Smart Power Active -> Green Static
+                // Aux Power Active -> Green Static
                 strip.setBrightness(currentDimBrightness);
                 auxColor = strip.Color(0, 255, 0);
             } else if (auxMode == 2) {
@@ -617,13 +601,13 @@ void Oiler::loadConfig() {
     nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
     
     // Restore Rain Mode
-    rainMode = false; // Always start with Rain Mode OFF
+    rainMode = preferences.getBool("rain_mode", false); 
     
     emergencyMode = preferences.getBool("emerg_mode", false);
 
-    // Load Cross Country & Startup
-    crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
-    startupDelayKm = preferences.getFloat("start_dly", STARTUP_DELAY_KM_DEFAULT);
+    // Load Offroad & Startup
+    offroadIntervalMin = preferences.getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
+    startupDelayMeters = preferences.getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
     flushConfigEvents = preferences.getInt("tb_evt", FLUSH_DEFAULT_EVENTS);
@@ -645,7 +629,7 @@ void Oiler::loadConfig() {
     }
 
     // Load Tank Monitor
-    tankMonitorEnabled = preferences.getBool("tank_en", false);
+    tankMonitorEnabled = preferences.getBool("tank_en", true);
     tankCapacityMl = preferences.getFloat("tank_cap", 100.0);
     currentTankLevelMl = preferences.getFloat("tank_lvl", 100.0);
     dropsPerMl = preferences.getInt("drop_ml", 50);
@@ -712,9 +696,9 @@ void Oiler::saveConfig() {
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
 
-    // Save Cross Country & Startup
-    preferences.putInt("cc_int", crossCountryIntervalMin);
-    preferences.putFloat("start_dly", startupDelayKm);
+    // Save Offroad & Startup
+    preferences.putInt("off_int", offroadIntervalMin);
+    preferences.putFloat("start_dly_m", startupDelayMeters);
 
     // Save Chain Flush Mode
     preferences.putInt("tb_evt", flushConfigEvents);
@@ -989,15 +973,16 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     totalDistance += distKm;
 
     // 1.1 Startup Delay Check
-    if (currentStartupDistance < startupDelayKm) {
+    // Convert currentStartupDistance (km) to meters for comparison
+    if ((currentStartupDistance * 1000.0) < startupDelayMeters) {
         currentStartupDistance += distKm;
         return; // Skip oiling logic until delay is reached
     }
 
-    // 1.2 Cross Country Mode Check
-    // If Cross Country Mode is active, we ignore distance-based oiling here.
+    // 1.2 Offroad Mode Check
+    // If Offroad Mode is active, we ignore distance-based oiling here.
     // Oiling is handled by time in loop().
-    if (crossCountryMode) {
+    if (offroadMode) {
         return; 
     }
     progressChanged = true; // So Odometer gets saved
@@ -1173,9 +1158,9 @@ void Oiler::processPump() {
     // REVISED for Blocking PWM Pulse
     // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
     
-    // Bleeding Mode: Fast pumping (80ms Pulse / 250ms Pause)
-    unsigned long effectivePause = bleedingMode ? 250 : dynamicPauseMs;
-    unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
+    // Bleeding Mode: Fast pumping (65ms Pulse / 300ms Pause)
+    unsigned long effectivePause = bleedingMode ? 300 : dynamicPauseMs;
+    unsigned long effectivePulse = bleedingMode ? 65 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
         
@@ -1315,18 +1300,44 @@ void Oiler::setFlushMode(bool mode) {
     flushMode = mode;
 }
 
-void Oiler::setCrossCountryMode(bool mode) {
-    if (mode && !crossCountryMode) {
-        lastCrossCountryOilTime = millis(); // Reset timer on start
+void Oiler::setOffroadMode(bool mode) {
+    if (mode && !offroadMode) {
+        lastOffroadOilTime = millis(); // Reset timer on start
 #ifdef GPS_DEBUG
-        Serial.println("Cross Country Mode ACTIVATED");
+        Serial.println("Offroad Mode ACTIVATED");
 #endif
-    } else if (!mode && crossCountryMode) {
+    } else if (!mode && offroadMode) {
 #ifdef GPS_DEBUG
-        Serial.println("Cross Country Mode DEACTIVATED");
+        Serial.println("Offroad Mode DEACTIVATED");
 #endif
     }
-    crossCountryMode = mode;
+    offroadMode = mode;
+}
+
+void Oiler::startBleeding() {
+    if (currentSpeed < MIN_SPEED_KMH) {
+        bleedingMode = true;
+        bleedingStartTime = millis();
+        pumpActivityStartTime = millis(); // Safety Cutoff Start
+#ifdef GPS_DEBUG
+        Serial.println("Bleeding Mode STARTED");
+        webConsole.log("Bleeding Mode STARTED");
+#endif
+        
+        // Init Pump State for immediate start
+        pulseState = false; 
+        lastPulseTime = millis() - 1000; // Force start
+
+        saveConfig(); // Save immediately
+    } else {
+        Serial.print("Bleeding Request REJECTED. Speed: ");
+        Serial.print(currentSpeed);
+        Serial.print(" (Max: ");
+        Serial.print(MIN_SPEED_KMH);
+        Serial.println(")");
+        
+        webConsole.log("Bleeding REJECTED: Check Speed");
+    }
 }
 
 SpeedRange* Oiler::getRangeConfig(int index) {

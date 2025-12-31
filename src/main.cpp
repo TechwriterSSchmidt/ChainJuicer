@@ -66,6 +66,11 @@ void resetWifiTimer() {
     wifiStartTime = millis();
 }
 
+void handleCss() {
+    server.sendHeader("Cache-Control", "public, max-age=86400");
+    server.send(200, "text/css", htmlCss);
+}
+
 void handleHelp() {
     resetWifiTimer();
     server.send(200, "text/html", htmlHelp);
@@ -77,7 +82,7 @@ void handleResetStats() {
 #endif
     webConsole.log("CMD: Reset Stats");
     oiler.resetStats();
-    server.sendHeader("Location", "/");
+    server.sendHeader("Location", "/settings");
     server.send(303);
 }
 
@@ -87,7 +92,7 @@ void handleResetTimeStats() {
 #endif
     webConsole.log("CMD: Reset Time Stats");
     oiler.resetTimeStats();
-    server.sendHeader("Location", "/");
+    server.sendHeader("Location", "/settings");
     server.send(303);
 }
 
@@ -97,6 +102,15 @@ void handleRefill() {
 #endif
     webConsole.log("CMD: Refill Tank");
     oiler.resetTankToFull();
+    server.sendHeader("Location", "/");
+    server.send(303);
+}
+
+void handleToggleEmerg() {
+    resetWifiTimer();
+    bool current = oiler.isEmergencyModeForced();
+    oiler.setEmergencyModeForced(!current);
+    oiler.saveConfig();
     server.sendHeader("Location", "/");
     server.send(303);
 }
@@ -216,10 +230,10 @@ void writeLogLine(String type, String message = "") {
 }
 #endif
 
-void handleRoot() {
+void handleSettings() {
     resetWifiTimer();
 #ifdef GPS_DEBUG
-    Serial.println("Serving Root Page"); 
+    Serial.println("Serving Settings Page"); 
 #endif
     String html = htmlHeader;
     html.replace("%TIME%", getZurichTime());
@@ -245,13 +259,13 @@ void handleRoot() {
         html += "<tr><td>";
         html += String((int)r->minSpeed) + "-" + String((int)r->maxSpeed) + " km/h";
         html += "</td><td><input type='number' step='0.1' name='km" + String(i) + "' value='" + String(r->intervalKm) + "' class='km-input'>";
-        html += "</td><td style='text-align:center;color:#555'>" + String(pct, 1) + "%";
-        html += "</td><td style='text-align:center;color:#555'>" + String(oiler.getRecentOilingCount(i));
+        html += "</td><td style='text-align:center;color:#fff'>" + String(pct, 1) + "%";
+        html += "</td><td style='text-align:center;color:#fff'>" + String(oiler.getRecentOilingCount(i));
         html += "</td><td><input type='number' name='p" + String(i) + "' value='" + String(r->pulses) + "' class='pulse-input'></td></tr>";
     }
     
     // Add Reset Link below the table
-    html += "</table><div style='text-align:left;margin-top:10px;margin-bottom:10px'><a href='/reset_time_stats' style='color:red;text-decoration:none;font-size:0.9em'>[Reset Stats]</a></div>";
+    html += "</table><div style='text-align:left;margin-top:10px;margin-bottom:10px'><a href='/reset_time_stats' style='color:red;text-decoration:none;font-size:1.1em'>[Reset Stats]</a></div>";
     
     String footer = htmlFooter;
     
@@ -278,20 +292,13 @@ void handleRoot() {
     footer.replace("%LED_DIM%", String(map(oiler.ledBrightnessDim, 2, 202, 0, 100)));
     footer.replace("%LED_HIGH%", String(map(oiler.ledBrightnessHigh, 2, 202, 0, 100)));
     
-    footer.replace("%RAIN_CHECKED%", oiler.isRainMode() ? "checked" : "");
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
-    footer.replace("%START_DLY%", String(oiler.startupDelayKm, 1));
-    footer.replace("%CC_INT%", String(oiler.crossCountryIntervalMin));
+    footer.replace("%START_DLY%", String(oiler.startupDelayMeters, 0));
+    footer.replace("%OFFROAD_INT%", String(oiler.offroadIntervalMin));
     
     footer.replace("%FLUSH_EV%", String(oiler.flushConfigEvents));
     footer.replace("%FLUSH_PLS%", String(oiler.flushConfigPulses));
     footer.replace("%FLUSH_INT%", String(oiler.flushConfigIntervalSec));
-    
-    footer.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
-    footer.replace("%NIGHT_START%", String(oiler.nightStartHour));
-    footer.replace("%NIGHT_END%", String(oiler.nightEndHour));
-    footer.replace("%NIGHT_BRI%", String(map(oiler.nightBrightness, 2, 202, 0, 100)));
-    footer.replace("%NIGHT_BRI_H%", String(map(oiler.nightBrightnessHigh, 2, 202, 0, 100)));
     
     footer.replace("%TANK_CHECKED%", oiler.tankMonitorEnabled ? "checked" : "");
     footer.replace("%TANK_CAP%", String(oiler.tankCapacityMl, 0));
@@ -308,6 +315,88 @@ void handleRoot() {
     html += footer;
     
     server.send(200, "text/html", html);
+}
+
+void handleLEDSettings() {
+    resetWifiTimer();
+    String html = htmlLEDSettings;
+    
+    html.replace("%LED_DIM%", String(map(oiler.ledBrightnessDim, 2, 202, 0, 100)));
+    html.replace("%LED_HIGH%", String(map(oiler.ledBrightnessHigh, 2, 202, 0, 100)));
+    
+    html.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
+    html.replace("%NIGHT_START%", String(oiler.nightStartHour));
+    html.replace("%NIGHT_END%", String(oiler.nightEndHour));
+    html.replace("%NIGHT_BRI%", String(map(oiler.nightBrightness, 2, 202, 0, 100)));
+    html.replace("%NIGHT_BRI_H%", String(map(oiler.nightBrightnessHigh, 2, 202, 0, 100)));
+    
+    server.send(200, "text/html", html);
+}
+
+void handleRoot() {
+    resetWifiTimer();
+    String html = htmlLanding;
+    
+    html.replace("%TIME%", getZurichTime());
+    html.replace("%SATS%", String(gps.satellites.value()));
+    
+    String tempHeader = "--";
+    if (oiler.isTempSensorConnected()) {
+        tempHeader = String(oiler.getCurrentTempC(), 1);
+    }
+    html.replace("%TEMP%", tempHeader);
+    
+    html.replace("%TANK_LEVEL%", String(oiler.currentTankLevelMl, 0));
+    html.replace("%TANK_CAP%", String(oiler.tankCapacityMl, 0));
+    float pct = (oiler.tankCapacityMl > 0) ? (oiler.currentTankLevelMl / oiler.tankCapacityMl) * 100.0 : 0.0;
+    html.replace("%TANK_PCT%", String(pct, 0));
+    
+    String tankColor = (pct <= oiler.tankWarningThresholdPercent) ? "#d32f2f" : "#ffc107";
+    html.replace("%TANK_COLOR%", tankColor);
+    
+    html.replace("%TOTAL_DIST%", String(oiler.getTotalDistance(), 1));
+    html.replace("%PUMP_COUNT%", String(oiler.getPumpCycles()));
+    html.replace("%PROGRESS%", String(oiler.getCurrentProgress() * 100.0, 1));
+    
+    bool emerg = oiler.isEmergencyModeForced();
+    html.replace("%EMERG_CLASS%", emerg ? "btn-danger" : "btn-sec");
+    html.replace("%EMERG_STATUS%", emerg ? "ON" : "OFF");
+    
+    server.send(200, "text/html", html);
+}
+
+void handleSaveLED() {
+    resetWifiTimer();
+    
+    // Convert 0-100% back to 0-255
+    if(server.hasArg("led_dim")) {
+        int val = server.arg("led_dim").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.ledBrightnessDim = map(val, 0, 100, 2, 202);
+    }
+    if(server.hasArg("led_high")) {
+        int val = server.arg("led_high").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.ledBrightnessHigh = map(val, 0, 100, 2, 202);
+    }
+    
+    oiler.nightModeEnabled = server.hasArg("night_en");
+    if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();
+    if(server.hasArg("night_end")) oiler.nightEndHour = server.arg("night_end").toInt();
+    if(server.hasArg("night_bri")) {
+        int val = server.arg("night_bri").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.nightBrightness = map(val, 0, 100, 2, 202);
+    }
+    if(server.hasArg("night_bri_h")) {
+        int val = server.arg("night_bri_h").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.nightBrightnessHigh = map(val, 0, 100, 2, 202);
+    }
+    
+    oiler.saveConfig();
+    server.sendHeader("Location", "/led_settings");
+    server.send(303);
 }
 
 void handleSave() {
@@ -327,43 +416,15 @@ void handleSave() {
     if(server.hasArg("tc_pause")) oiler.tempConfig.basePause25 = server.arg("tc_pause").toFloat();
     if(server.hasArg("oil_type")) oiler.tempConfig.oilType = (Oiler::OilType)server.arg("oil_type").toInt();
 
-    // Convert 0-100% back to 0-255
-    if(server.hasArg("led_dim")) {
-        int val = server.arg("led_dim").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.ledBrightnessDim = map(val, 0, 100, 2, 202);
-    }
-    if(server.hasArg("led_high")) {
-        int val = server.arg("led_high").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.ledBrightnessHigh = map(val, 0, 100, 2, 202);
-    }
-    
-    // Rain Mode Checkbox handling
-    oiler.setRainMode(server.hasArg("rain_mode"));
     oiler.setEmergencyModeForced(server.hasArg("emerg_mode"));
     
-    if(server.hasArg("start_dly")) oiler.startupDelayKm = server.arg("start_dly").toFloat();
-    if(server.hasArg("cc_int")) oiler.crossCountryIntervalMin = server.arg("cc_int").toInt();
+    if(server.hasArg("start_dly")) oiler.startupDelayMeters = server.arg("start_dly").toFloat();
+    if(server.hasArg("offroad_int")) oiler.offroadIntervalMin = server.arg("offroad_int").toInt();
     
     if(server.hasArg("flush_ev")) oiler.flushConfigEvents = server.arg("flush_ev").toInt();
     if(server.hasArg("flush_pls")) oiler.flushConfigPulses = server.arg("flush_pls").toInt();
     if(server.hasArg("flush_int")) oiler.flushConfigIntervalSec = server.arg("flush_int").toInt();
     
-    oiler.nightModeEnabled = server.hasArg("night_en");
-    if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();
-    if(server.hasArg("night_end")) oiler.nightEndHour = server.arg("night_end").toInt();
-    if(server.hasArg("night_bri")) {
-        int val = server.arg("night_bri").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.nightBrightness = map(val, 0, 100, 2, 202);
-    }
-    if(server.hasArg("night_bri_h")) {
-        int val = server.arg("night_bri_h").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.nightBrightnessHigh = map(val, 0, 100, 2, 202);
-    }
-
     oiler.tankMonitorEnabled = server.hasArg("tank_en");
     if(server.hasArg("tank_cap")) oiler.tankCapacityMl = server.arg("tank_cap").toFloat();
     if(server.hasArg("drop_ml")) oiler.dropsPerMl = server.arg("drop_ml").toInt();
@@ -371,7 +432,7 @@ void handleSave() {
     if(server.hasArg("tank_warn")) oiler.tankWarningThresholdPercent = server.arg("tank_warn").toInt();
 
     oiler.saveConfig();
-    server.sendHeader("Location", "/");
+    server.sendHeader("Location", "/settings");
     server.send(303);
 }
 
@@ -412,7 +473,7 @@ void handleAuxConfig() {
     
     AuxMode mode = auxManager.getMode();
     html.replace("%MODE_OFF%", (mode == AUX_MODE_OFF) ? "selected" : "");
-    html.replace("%MODE_SMART%", (mode == AUX_MODE_SMART_POWER) ? "selected" : "");
+    html.replace("%MODE_AUX%", (mode == AUX_MODE_AUX_POWER) ? "selected" : "");
     html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
     
     int base, rainB, startL, startS, startD;
@@ -432,6 +493,13 @@ void handleAuxConfig() {
     html.replace("%TEMP_HIGH%", (abs(tempF - 3.0) < 0.1) ? "selected" : "");
 
     html.replace("%TEMPO%", String(tempO, 1));
+    
+    if (oiler.isTempSensorConnected()) {
+        html.replace("%CURRENT_TEMP%", String(oiler.getCurrentTempC(), 1));
+    } else {
+        html.replace("%CURRENT_TEMP%", "no sensor");
+    }
+
     html.replace("%STARTT%", String(startT, 0));
     html.replace("%RAINB%", String(rainB));
     html.replace("%STARTL%", String(startL));
@@ -533,8 +601,13 @@ void setup() {
     // Start DNS Server only when needed
 
     // Webserver Routes
+    server.on("/style.css", handleCss);
     server.on("/", handleRoot);
+    server.on("/settings", handleSettings);
+    server.on("/led_settings", handleLEDSettings);
     server.on("/save", HTTP_POST, handleSave);
+    server.on("/save_led", HTTP_POST, handleSaveLED);
+    server.on("/toggle_emerg", handleToggleEmerg);
     server.on("/help", handleHelp);
     
     // IMU Routes
@@ -555,6 +628,19 @@ void setup() {
     server.on("/reset_stats", handleResetStats);
     server.on("/reset_time_stats", handleResetTimeStats);
     server.on("/refill", handleRefill);
+    
+    // Maintenance Routes
+    server.on("/test_pump", HTTP_GET, []() {
+        oiler.triggerOil(1); // Fire 1 pulse
+        server.sendHeader("Location", "/settings");
+        server.send(303);
+    });
+    
+    server.on("/bleeding", HTTP_GET, []() {
+        oiler.startBleeding();
+        server.sendHeader("Location", "/settings");
+        server.send(303);
+    });
     
     // OTA Update
     server.on("/update", HTTP_GET, handleUpdate);
@@ -672,52 +758,33 @@ void loop() {
     // --- WiFi Management & Aux Toggle ---
     unsigned long currentMillis = millis();
 
-    // 1. Activation: Standstill + Button pressed
-    static unsigned long wifiButtonPressStart = 0;
-    static bool wifiButtonHeld = false;
+    // 1. Button Requests (Handled by Oiler)
+    if (oiler.checkWifiToggleRequest()) {
+        if (!wifiActive) {
+            // Activate WiFi
+            WiFi.softAP(AP_SSID);
+            IPAddress IP = WiFi.softAPIP();
+#ifdef GPS_DEBUG
+            Serial.print("WiFi activated via Button. IP: ");
+            Serial.println(IP);
+#endif
+            dnsServer.start(53, "*", IP);
+            server.begin();
+            wifiActive = true;
+            wifiStartTime = currentMillis;
+        } else {
+            // Deactivate WiFi
+            WiFi.softAPdisconnect(true);
+            wifiActive = false;
+        }
+    }
 
-    if (oiler.isButtonPressed()) {
-        // Allow WiFi activation if speed is low OR if we have no GPS fix yet (assuming standstill/setup)
-        if (currentSpeed < MIN_SPEED_KMH || !gps.location.isValid()) { 
-            if (!wifiButtonHeld) {
-                wifiButtonPressStart = currentMillis;
-                wifiButtonHeld = true;
-            } else {
-                // Check duration for WiFi (> 3s)
-                if (currentMillis - wifiButtonPressStart > WIFI_PRESS_MS) {
-                    // Button held
-                    wifiStartTime = currentMillis; // Reset timeout timer
-                    
-                    if (!wifiActive) {
-                        WiFi.softAP(AP_SSID);
-                        IPAddress IP = WiFi.softAPIP();
+    if (oiler.checkAuxToggleRequest()) {
+        auxManager.toggleManualOverride();
 #ifdef GPS_DEBUG
-                        Serial.print("WiFi activated via Button. IP: ");
-                        Serial.println(IP);
+        Serial.print("Aux Manual Override Toggled: ");
+        Serial.println(auxManager.isManualOverrideActive() ? "ON" : "OFF");
 #endif
-                        dnsServer.start(53, "*", IP);
-                        server.begin();
-                        wifiActive = true;
-                    }
-                }
-            }
-        }
-    } else {
-        // Button Released
-        if (wifiButtonHeld) {
-            unsigned long duration = currentMillis - wifiButtonPressStart;
-            
-            // Check for Aux Toggle (1.5s - 3.0s)
-            // RAIN_TOGGLE_MS is 1500, WIFI_PRESS_MS is 3000
-            if (duration >= RAIN_TOGGLE_MS && duration < WIFI_PRESS_MS) {
-                auxManager.toggleManualOverride();
-#ifdef GPS_DEBUG
-                Serial.print("Aux Manual Override Toggled: ");
-                Serial.println(auxManager.isManualOverrideActive() ? "ON" : "OFF");
-#endif
-            }
-        }
-        wifiButtonHeld = false;
     }
 
     // 2. Deactivation: Driving or Timeout

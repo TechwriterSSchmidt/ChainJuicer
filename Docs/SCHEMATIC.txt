@@ -17,9 +17,18 @@ Battery (12V) (-) ------------------------------> [ DC-DC Converter IN- ]
 -----------------------------------------------------------------------------
 [ PUMP CONTROL (MOSFET) ]
 -----------------------------------------------------------------------------
-ESP32 GPIO 16 ------------> Gate (G) of MOSFET (e.g., IRLZ44N)
-                            |
-                            [ 10k Resistor ] -> GND (Pull-Down)
+** IMPORTANT HARDWARE MODIFICATION FOR LCTECH BOARDS **
+The default driver circuit on the LCTECH board uses a J3Y transistor that causes the pump to juice on every whenever the board is connected to power. In order to solve this, we need to modify the MOSFET circuit as follows:
+
+1. REMOVE: Transistor J3Y (S8050)
+2. REMOVE: Resistors R8 and R7
+3. KEEP:   Resistor R3 (10k Pull-Down)
+4. ADD:    220 Ohm Resistor between GPIO 16 and Gate of NCE6020AK MOSFET
+
+Schematic after modification:
+ESP32 GPIO 16 --[ 220 Ohm ]--> Gate (G) of NCE6020AK
+                               |
+                               [ R3 (10k) ] -> GND (Pull-Down)
 
 MOSFET Drain (D) ---------> Pump (-)
 MOSFET Source (S) --------> GND
@@ -66,7 +75,7 @@ Sensor Data (Yellow/White)> ESP32 GPIO 15
   Data ---------------+
 
 -----------------------------------------------------------------------------
-[ AUX PORT (Heated Grips / Smart Power) ]
+[ AUX PORT (Heated Grips / Aux Power) ]
 -----------------------------------------------------------------------------
 ESP32 GPIO 17 ------------> Gate (G) of MOSFET (e.g., IRLZ44N)
                             |
@@ -98,7 +107,7 @@ GPIO 04  : Button (Input Pullup)
 GPIO 05  : SD Card CS
 GPIO 15  : DS18B20 Temp Sensor (Data)
 GPIO 16  : Pump MOSFET (Output)
-GPIO 17  : Aux Port (Heated Grips / Smart Power)
+GPIO 17  : Aux Port (Heated Grips / Aux Power)
 GPIO 18  : SD Card SCK
 GPIO 19  : SD Card MISO
 GPIO 23  : SD Card MOSI
