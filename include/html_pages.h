@@ -38,11 +38,11 @@ const char* htmlLanding = R"rawliteral(
         <h3>Tank Monitor</h3>
         <div class='stat-row'><span>Level:</span> <span class='val'>%TANK_LEVEL% / %TANK_CAP% ml</span></div>
         <div class='tank-bar'><div class='tank-fill' style='width:%TANK_PCT%%;background-color:%TANK_COLOR%'></div></div>
-        <div style='text-align:right;margin-top:5px'><a href='/refill' style='color:#ccc;font-size:0.8em;text-decoration:none'>[Refill]</a></div>
     </div>
 
     <a href='/toggle_emerg' class='btn %EMERG_CLASS%'>⚠️ Emergency Mode: %EMERG_STATUS%</a>
-    <a href='/settings' class='btn'>Settings</a>
+    <a href='/settings' class='btn'>Juicer Settings</a>
+    <a href='/led_settings' class='btn btn-sec'>LED Settings</a>
     <a href='/aux' class='btn btn-sec'>Aux Port</a>
     <a href='/imu' class='btn btn-sec'>IMU Config</a>
     <a href='/console' class='btn btn-sec'>Console</a>
@@ -56,7 +56,7 @@ const char* htmlHeader = R"rawliteral(
 <head>
     <meta charset="UTF-8">
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <title>Chain Juicer Settings</title>
+    <title>Juicer Settings</title>
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
@@ -75,12 +75,12 @@ const char* htmlHeader = R"rawliteral(
         .progress{text-align:center;margin-top:15px;color:#ccc}
         .time{text-align:center;color:#ccc;font-size:0.9em;margin-bottom:10px}
         .disabled{opacity:0.5;pointer-events:none}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#222;color:#aaa;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444;font-size:16px}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
     </style>
 </head>
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
-    <h2>Settings</h2>
+    <h2>Juicer Settings</h2>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
         <h3>Driving Profile</h3>
@@ -114,24 +114,11 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Rain Mode (x2)</td><td><input type='checkbox' name='rain_mode' %RAIN_CHECKED%></td></tr>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (km)</td><td><input type='number' step='0.1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
-            <tr><td>Cross-Country Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
+            <tr><td>Offroad Interval (min)</td><td><input type='number' name='cc_int' value='%CC_INT%' class='num-input'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
             <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
             <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
-        </table>
-        <h3>LED Settings (Day)</h3>
-        <table>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
-        </table>
-        <h3>LED Settings (Night)</h3>
-        <table>
-            <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
-            <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
-            <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
         </table>
         <h3>Tank Monitor</h3>
         <table>
@@ -157,6 +144,50 @@ const char* htmlFooter = R"rawliteral(
 </html>
 )rawliteral";
 
+const char* htmlLEDSettings = R"rawliteral(
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>LED Settings</title>
+    <style>
+        body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
+        h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
+        h3{color:#ffffff;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        form{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333}
+        table{width:100%;border-collapse:collapse}
+        td{padding:10px 5px;border-bottom:1px solid #333}
+        input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
+        input[type=checkbox]{width:20px;height:20px;accent-color:#ffc107}
+        .num-input{width:80px;text-align:center}
+        .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center}
+        .btn:active{background:#555}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
+    </style>
+</head>
+<body>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>LED Settings</h2>
+    <form action='/save_led' method='POST'>
+        <h3>LED Settings (Day)</h3>
+        <table>
+            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
+            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
+        </table>
+        <h3>LED Settings (Night)</h3>
+        <table>
+            <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
+            <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
+            <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
+            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
+            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
+        </table>
+        <input type='submit' value='Save' class='btn'>
+    </form>
+</body>
+</html>
+)rawliteral";
+
 const char* htmlHelp = R"rawliteral(
 <html>
 <head>
@@ -171,7 +202,7 @@ const char* htmlHelp = R"rawliteral(
         .color-box{display:inline-block;width:12px;height:12px;margin-right:5px;border-radius:50%}
         .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-top:20px;border:1px solid #444;font-size:16px}
         .btn:active{background:#555}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#222;color:#aaa;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444;font-size:16px}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
     </style>
 </head>
 <body>
@@ -193,7 +224,7 @@ const char* htmlHelp = R"rawliteral(
                 <li>Useful for cleaning the chain or after heavy rain.</li>
             </ul>
         </li>
-        <li><b>Cross-Country Mode:</b>
+        <li><b>Offroad Mode:</b>
             <ul>
                 <li>Activates via <b>6x Button Click</b>.</li>
                 <li>Oils purely based on time (e.g. every 5 min).</li>
@@ -255,7 +286,7 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay).</li>
         <li><b>3x Click:</b> Toggle 'Chain Flush Mode' (Configurable).</li>
-        <li><b>6x Click:</b> Toggle 'Cross-Country Mode' (Time based oiling).</li>
+        <li><b>6x Click:</b> Toggle 'Offroad Mode' (Time based oiling).</li>
         <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>
     <h3>LED Status</h3>
@@ -271,7 +302,6 @@ const char* htmlHelp = R"rawliteral(
         <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan (fast blink):</b> Firmware Update.</li>
     </ul>
-    <a href='/' class='btn'>Back</a>
 </body>
 </html>
 )rawliteral";
@@ -289,7 +319,7 @@ const char* htmlUpdate = R"rawliteral(
         input[type=file]{margin-bottom:15px;color:#e0e0e0}
         input[type=submit]{width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;border-radius:4px;cursor:pointer;font-size:16px}
         input[type=submit]:active{background:#555}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#222;color:#aaa;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444;font-size:16px}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
     </style>
 </head>
 <body>
@@ -318,13 +348,13 @@ const char* htmlIMU = R"rawliteral(
         .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:8px 5px;border-bottom:1px solid #333}
-        select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px}
+        select{background:#2d2d2d;color:#fff;border:1px solid #444;padding:5px;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffc107%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 8px center;background-size:24px;padding-right:30px}
         .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;text-align:center}
         .btn:active{background:#555}
         .btn-cal{background:#28a745;color:#fff;border:none}
         .val{font-weight:bold;font-family:monospace;color:#ffffff}
         .note{font-size:0.9em;color:#ccc;margin-top:5px}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#222;color:#aaa;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444;font-size:16px}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
     </style>
 </head>
 <body>
@@ -369,8 +399,8 @@ const char* htmlIMU = R"rawliteral(
                     <td>Chain Side:</td>
                     <td>
                         <select name='chain_side'>
-                            <option value='0' %CHAIN_LEFT%>Left (Standard)</option>
-                            <option value='1' %CHAIN_RIGHT%>Right</option>
+                            <option value='0' %CHAIN_LEFT%>Left</option>
+                            <option value='1' %CHAIN_RIGHT%>Right (Standard)</option>
                         </select>
                     </td>
                 </tr>
@@ -388,8 +418,6 @@ const char* htmlIMU = R"rawliteral(
             <li><b>Turn Safety:</b> Stops oiling in turns towards the chain side (> 20&deg;).</li>
         </ul>
     </div>
-
-    <a href='/' class='btn'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
@@ -407,11 +435,12 @@ const char* htmlAuxConfig = R"rawliteral(
         .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:10px 5px;border-bottom:1px solid #333}
-        input, select{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
+        input{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
+        select{width:100%;padding:8px;border:1px solid #444;background:#2d2d2d;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%23ffc107%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 8px center;background-size:24px;padding-right:30px}
         .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center}
         .btn:active{background:#555}
         .note{font-size:0.9em;color:#ccc;margin-top:5px}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#222;color:#aaa;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444;font-size:16px}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-size:16px;font-weight:bold}
     </style>
     <script>
         function toggleFields() {
@@ -493,6 +522,10 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
+                        <td style="font-size:0.9em; color:#ccc">Current Reading:</td>
+                        <td style="font-size:0.9em; color:#ffc107; font-weight:bold">%CURRENT_TEMP% &deg;C</td>
+                    </tr>
+                    <tr>
                         <td colspan="2" class="note" style="padding-bottom: 10px;">
                             Correction for sensor placement. Use <b>negative values</b> (e.g. -5.0) if sensor is near a hot engine to lower the reading.
                         </td>
@@ -537,8 +570,6 @@ const char* htmlAuxConfig = R"rawliteral(
             Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the traces.
         </div>
     </div>
-
-    <a href='/' class='btn'>Back to Main</a>
 </body>
 </html>
 )rawliteral";
@@ -556,7 +587,7 @@ const char* htmlConsole = R"rawliteral(
         #console{width:100%;height:400px;background:#000;border:1px solid #444;padding:10px;overflow-y:scroll;white-space:pre-wrap;font-size:12px;box-sizing:border-box;color:#0f0}
         .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#e0e0e0;padding:12px;border:1px solid #444;font-size:16px;border-radius:4px;margin-top:10px;cursor:pointer;font-family:sans-serif;text-align:center}
         .btn:hover{background:#444}
-        .back-btn{display:block;width:100%;box-sizing:border-box;background:#222;color:#aaa;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #444;font-family:sans-serif;font-size:16px}
+        .back-btn{display:block;width:100%;box-sizing:border-box;background:#ffc107;color:#000;text-align:center;padding:12px;text-decoration:none;border-radius:4px;margin-bottom:15px;border:1px solid #e0a800;font-family:sans-serif;font-size:16px;font-weight:bold}
     </style>
     <script>
         function fetchLogs() {
@@ -583,7 +614,6 @@ const char* htmlConsole = R"rawliteral(
     <form action='/console/clear' method='POST'>
         <input type='submit' value='Clear Log' class='btn'>
     </form>
-    <a href='/' class='btn' style='display:block;text-align:center;text-decoration:none;margin-top:10px'>Back to Main</a>
 </body>
 </html>
 )rawliteral";

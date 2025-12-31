@@ -131,7 +131,7 @@ public:
     void setTankFill(float levelMl); // Manually set level (e.g. refill)
     void resetTankToFull();
 
-    // Cross Country Settings
+    // Offroad Settings
     bool crossCountryMode;
     int crossCountryIntervalMin;
     unsigned long lastCrossCountryOilTime;

@@ -236,7 +236,7 @@ void Oiler::loop() {
     handleButton();
     processPump(); // Unified pump logic
     
-    // Cross Country Mode Logic (Time Based)
+    // Offroad Mode Logic (Time Based)
     if (crossCountryMode) {
         unsigned long now = millis();
         unsigned long intervalMs = (unsigned long)crossCountryIntervalMin * 60 * 1000;
@@ -319,7 +319,7 @@ void Oiler::handleButton() {
                     lastClickTime = millis();
                     
                     if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
-                        // 6 Clicks -> Toggle Cross Country Mode
+                        // 6 Clicks -> Toggle Offroad Mode
                         setCrossCountryMode(!crossCountryMode);
                         buttonClickCount = 0; // Reset
                     } else if (buttonClickCount == FLUSH_PRESS_COUNT) {
@@ -347,7 +347,7 @@ void Oiler::handleButton() {
              // 3 Clicks -> Toggle Chain Flush Mode
              setFlushMode(!flushMode);
         } else if (buttonClickCount == CROSS_COUNTRY_PRESS_COUNT) {
-             // 6 Clicks -> Toggle Cross Country Mode
+             // 6 Clicks -> Toggle Offroad Mode
              setCrossCountryMode(!crossCountryMode);
         }
         
@@ -465,7 +465,7 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     }
-    // 1.6 Cross Country Mode -> MAGENTA Blinking
+    // 1.6 Offroad Mode -> MAGENTA Blinking
     else if (crossCountryMode) {
         strip.setBrightness(currentHighBrightness);
         if ((now / 1000) % 2 == 0) { // Slow blink (1s on, 1s off)
@@ -621,7 +621,7 @@ void Oiler::loadConfig() {
     
     emergencyMode = preferences.getBool("emerg_mode", false);
 
-    // Load Cross Country & Startup
+    // Load Offroad & Startup
     crossCountryIntervalMin = preferences.getInt("cc_int", CROSS_COUNTRY_INTERVAL_MIN_DEFAULT);
     startupDelayKm = preferences.getFloat("start_dly", STARTUP_DELAY_KM_DEFAULT);
 
@@ -712,7 +712,7 @@ void Oiler::saveConfig() {
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
 
-    // Save Cross Country & Startup
+    // Save Offroad & Startup
     preferences.putInt("cc_int", crossCountryIntervalMin);
     preferences.putFloat("start_dly", startupDelayKm);
 
@@ -994,8 +994,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
         return; // Skip oiling logic until delay is reached
     }
 
-    // 1.2 Cross Country Mode Check
-    // If Cross Country Mode is active, we ignore distance-based oiling here.
+    // 1.2 Offroad Mode Check
+    // If Offroad Mode is active, we ignore distance-based oiling here.
     // Oiling is handled by time in loop().
     if (crossCountryMode) {
         return; 

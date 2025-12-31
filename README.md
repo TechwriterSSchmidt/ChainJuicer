@@ -39,7 +39,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
 | **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** Short Press. **Auto-Off:** 30 min or restart. |
 | **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 3x Click. **Action:** Time-based (Configurable). LED: Cyan Blink. |
-| **Cross-Country Mode** | Time-based oiling for slow offroad riding. | **Button:** 6x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
+| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 6x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** Hold button >3s at standstill. **Features:** OTA Update, LED config, Stats, Test functions. |
 | **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
@@ -258,7 +258,7 @@ ESP32 GPIO (the one that switches the MOSFET
 | 🟡 **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
 | 🟠 **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
 | 🔴 **Red** | Bleeding Mode (Blink) | Heated Grips: **Level 4** (Max) |
-| 🟣 **Magenta** | No GPS (Solid) / Cross-Country (Blink) | - |
+| 🟣 **Magenta** | No GPS (Solid) / Offroad (Blink) | - |
 | 🔵 **Cyan** | Emergency Mode (Solid) / Flush (Blink) | - |
 | ⚪ **White** | WiFi Config Mode (Pulse) | - |
 | ⚫ **Off** | - | Aux Port: **OFF** |
@@ -291,7 +291,7 @@ The system uses two LEDs to communicate its status.
 | **Tunnel / Signal Loss** | No GPS signal > 3 min | **Cyan** | *State dependent* | Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
 | **Rain Ride** | Short Press (< 1.5s) | **Blue** | *State dependent* | **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
 | **Dust / Flushing** | 3x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
-| **Offroad / Enduro** | 6x Click | **Magenta Blink** | *State dependent* | **Cross-Country Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
+| **Offroad / Enduro** | 6x Click | **Magenta Blink** | *State dependent* | **Offroad Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
 | **Refill / Bleeding** | Hold > 10s (Standstill) | **Red Blink** | *State dependent* | **Bleeding Mode**. Pump runs continuously for 15s to fill the line. |
 | **Configuration** | Hold > 3s (Standstill) | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
 | **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |

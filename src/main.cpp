@@ -254,8 +254,8 @@ void handleSettings() {
         html += "<tr><td>";
         html += String((int)r->minSpeed) + "-" + String((int)r->maxSpeed) + " km/h";
         html += "</td><td><input type='number' step='0.1' name='km" + String(i) + "' value='" + String(r->intervalKm) + "' class='km-input'>";
-        html += "</td><td style='text-align:center;color:#555'>" + String(pct, 1) + "%";
-        html += "</td><td style='text-align:center;color:#555'>" + String(oiler.getRecentOilingCount(i));
+        html += "</td><td style='text-align:center;color:#fff'>" + String(pct, 1) + "%";
+        html += "</td><td style='text-align:center;color:#fff'>" + String(oiler.getRecentOilingCount(i));
         html += "</td><td><input type='number' name='p" + String(i) + "' value='" + String(r->pulses) + "' class='pulse-input'></td></tr>";
     }
     
@@ -296,12 +296,6 @@ void handleSettings() {
     footer.replace("%FLUSH_PLS%", String(oiler.flushConfigPulses));
     footer.replace("%FLUSH_INT%", String(oiler.flushConfigIntervalSec));
     
-    footer.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
-    footer.replace("%NIGHT_START%", String(oiler.nightStartHour));
-    footer.replace("%NIGHT_END%", String(oiler.nightEndHour));
-    footer.replace("%NIGHT_BRI%", String(map(oiler.nightBrightness, 2, 202, 0, 100)));
-    footer.replace("%NIGHT_BRI_H%", String(map(oiler.nightBrightnessHigh, 2, 202, 0, 100)));
-    
     footer.replace("%TANK_CHECKED%", oiler.tankMonitorEnabled ? "checked" : "");
     footer.replace("%TANK_CAP%", String(oiler.tankCapacityMl, 0));
     footer.replace("%DROP_ML%", String(oiler.dropsPerMl));
@@ -315,6 +309,22 @@ void handleSettings() {
     footer.replace("%PUMP_COUNT%", String(oiler.getPumpCycles()));
 
     html += footer;
+    
+    server.send(200, "text/html", html);
+}
+
+void handleLEDSettings() {
+    resetWifiTimer();
+    String html = htmlLEDSettings;
+    
+    html.replace("%LED_DIM%", String(map(oiler.ledBrightnessDim, 2, 202, 0, 100)));
+    html.replace("%LED_HIGH%", String(map(oiler.ledBrightnessHigh, 2, 202, 0, 100)));
+    
+    html.replace("%NIGHT_CHECKED%", oiler.nightModeEnabled ? "checked" : "");
+    html.replace("%NIGHT_START%", String(oiler.nightStartHour));
+    html.replace("%NIGHT_END%", String(oiler.nightEndHour));
+    html.replace("%NIGHT_BRI%", String(map(oiler.nightBrightness, 2, 202, 0, 100)));
+    html.replace("%NIGHT_BRI_H%", String(map(oiler.nightBrightnessHigh, 2, 202, 0, 100)));
     
     server.send(200, "text/html", html);
 }
@@ -337,6 +347,9 @@ void handleRoot() {
     float pct = (oiler.tankCapacityMl > 0) ? (oiler.currentTankLevelMl / oiler.tankCapacityMl) * 100.0 : 0.0;
     html.replace("%TANK_PCT%", String(pct, 0));
     
+    String tankColor = (pct <= oiler.tankWarningThresholdPercent) ? "#d32f2f" : "#ffc107";
+    html.replace("%TANK_COLOR%", tankColor);
+    
     html.replace("%TOTAL_DIST%", String(oiler.getTotalDistance(), 1));
     html.replace("%PUMP_COUNT%", String(oiler.getPumpCycles()));
     
@@ -345,6 +358,40 @@ void handleRoot() {
     html.replace("%EMERG_STATUS%", emerg ? "ON" : "OFF");
     
     server.send(200, "text/html", html);
+}
+
+void handleSaveLED() {
+    resetWifiTimer();
+    
+    // Convert 0-100% back to 0-255
+    if(server.hasArg("led_dim")) {
+        int val = server.arg("led_dim").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.ledBrightnessDim = map(val, 0, 100, 2, 202);
+    }
+    if(server.hasArg("led_high")) {
+        int val = server.arg("led_high").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.ledBrightnessHigh = map(val, 0, 100, 2, 202);
+    }
+    
+    oiler.nightModeEnabled = server.hasArg("night_en");
+    if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();
+    if(server.hasArg("night_end")) oiler.nightEndHour = server.arg("night_end").toInt();
+    if(server.hasArg("night_bri")) {
+        int val = server.arg("night_bri").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.nightBrightness = map(val, 0, 100, 2, 202);
+    }
+    if(server.hasArg("night_bri_h")) {
+        int val = server.arg("night_bri_h").toInt();
+        if (val < 0) val = 0; if (val > 100) val = 100;
+        oiler.nightBrightnessHigh = map(val, 0, 100, 2, 202);
+    }
+    
+    oiler.saveConfig();
+    server.sendHeader("Location", "/led_settings");
+    server.send(303);
 }
 
 void handleSave() {
@@ -364,18 +411,6 @@ void handleSave() {
     if(server.hasArg("tc_pause")) oiler.tempConfig.basePause25 = server.arg("tc_pause").toFloat();
     if(server.hasArg("oil_type")) oiler.tempConfig.oilType = (Oiler::OilType)server.arg("oil_type").toInt();
 
-    // Convert 0-100% back to 0-255
-    if(server.hasArg("led_dim")) {
-        int val = server.arg("led_dim").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.ledBrightnessDim = map(val, 0, 100, 2, 202);
-    }
-    if(server.hasArg("led_high")) {
-        int val = server.arg("led_high").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.ledBrightnessHigh = map(val, 0, 100, 2, 202);
-    }
-    
     // Rain Mode Checkbox handling
     oiler.setRainMode(server.hasArg("rain_mode"));
     oiler.setEmergencyModeForced(server.hasArg("emerg_mode"));
@@ -387,20 +422,6 @@ void handleSave() {
     if(server.hasArg("flush_pls")) oiler.flushConfigPulses = server.arg("flush_pls").toInt();
     if(server.hasArg("flush_int")) oiler.flushConfigIntervalSec = server.arg("flush_int").toInt();
     
-    oiler.nightModeEnabled = server.hasArg("night_en");
-    if(server.hasArg("night_start")) oiler.nightStartHour = server.arg("night_start").toInt();
-    if(server.hasArg("night_end")) oiler.nightEndHour = server.arg("night_end").toInt();
-    if(server.hasArg("night_bri")) {
-        int val = server.arg("night_bri").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.nightBrightness = map(val, 0, 100, 2, 202);
-    }
-    if(server.hasArg("night_bri_h")) {
-        int val = server.arg("night_bri_h").toInt();
-        if (val < 0) val = 0; if (val > 100) val = 100;
-        oiler.nightBrightnessHigh = map(val, 0, 100, 2, 202);
-    }
-
     oiler.tankMonitorEnabled = server.hasArg("tank_en");
     if(server.hasArg("tank_cap")) oiler.tankCapacityMl = server.arg("tank_cap").toFloat();
     if(server.hasArg("drop_ml")) oiler.dropsPerMl = server.arg("drop_ml").toInt();
@@ -469,6 +490,7 @@ void handleAuxConfig() {
     html.replace("%TEMP_HIGH%", (abs(tempF - 3.0) < 0.1) ? "selected" : "");
 
     html.replace("%TEMPO%", String(tempO, 1));
+    html.replace("%CURRENT_TEMP%", String(oiler.getCurrentTempC(), 1));
     html.replace("%STARTT%", String(startT, 0));
     html.replace("%RAINB%", String(rainB));
     html.replace("%STARTL%", String(startL));
@@ -572,7 +594,9 @@ void setup() {
     // Webserver Routes
     server.on("/", handleRoot);
     server.on("/settings", handleSettings);
+    server.on("/led_settings", handleLEDSettings);
     server.on("/save", HTTP_POST, handleSave);
+    server.on("/save_led", HTTP_POST, handleSaveLED);
     server.on("/toggle_emerg", handleToggleEmerg);
     server.on("/help", handleHelp);
     
