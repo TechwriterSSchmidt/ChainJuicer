@@ -67,6 +67,10 @@ public:
     bool isEmergencyModeForced() { return emergencyModeForced; }
     void setEmergencyModeForced(bool forced);
 
+    // Manual Actions
+    void startBleeding();
+    void triggerOil(int pulses); // Made public for manual trigger
+
     // Factory Reset
     void checkFactoryReset();
 
@@ -215,7 +219,7 @@ private:
     void loadConfig();
     void validateConfig();
     // saveProgress is public
-    void triggerOil(int pulses);
+    // triggerOil is public
 
     // Emergency update and standstill save time
     unsigned long lastEmergUpdate;

@@ -356,38 +356,17 @@ void Oiler::handleButton() {
     }
 
     // Check Long Press while holding (using stable buttonState)
-    if (buttonState && !bleedingMode) {
+    if (buttonState) {
         unsigned long duration = millis() - buttonPressStartTime;
         
-        // Long Press: Bleeding Mode
-        if (duration > BLEEDING_PRESS_MS) {
-            // SAFETY: Only allow in standstill AND NOT in Emergency Mode (Auto or Forced)
-            if (currentSpeed < MIN_SPEED_KMH && !emergencyMode && !emergencyModeForced) {
-                bleedingMode = true;
-                bleedingStartTime = millis();
-                pumpActivityStartTime = millis(); // Safety Cutoff Start
-#ifdef GPS_DEBUG
-                Serial.println("Bleeding Mode STARTED");
-                webConsole.log("Bleeding Mode STARTED");
-#endif
-                
-                // Init Pump State for immediate start
-                pulseState = false; 
-                lastPulseTime = millis() - 1000; // Force start
-
-                saveConfig(); // Save immediately
-            } else {
-#ifdef GPS_DEBUG
-                if (emergencyMode || emergencyModeForced) {
-                    Serial.println("Bleeding blocked: Emergency Mode Active");
-                } else {
-                    Serial.println("Bleeding blocked: Speed > MIN_SPEED_KMH");
-                }
-#endif
-            }
-
-            // Reset button start time to avoid re-triggering immediately
-            buttonPressStartTime = millis(); 
+        // Long Press: WiFi Activation (if not already active)
+        if (duration > WIFI_PRESS_MS && !wifiActive) {
+             // Only allow WiFi activation at standstill
+             if (currentSpeed < MIN_SPEED_KMH) {
+                 setWifiActive(true);
+                 // Reset button start time to avoid re-triggering immediately
+                 buttonPressStartTime = millis(); 
+             }
         }
     }
 
@@ -617,7 +596,7 @@ void Oiler::loadConfig() {
     nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
     
     // Restore Rain Mode
-    rainMode = false; // Always start with Rain Mode OFF
+    rainMode = preferences.getBool("rain_mode", false); 
     
     emergencyMode = preferences.getBool("emerg_mode", false);
 
@@ -1328,6 +1307,24 @@ void Oiler::setCrossCountryMode(bool mode) {
 #endif
     }
     crossCountryMode = mode;
+}
+
+void Oiler::startBleeding() {
+    if (currentSpeed < MIN_SPEED_KMH && !emergencyMode && !emergencyModeForced) {
+        bleedingMode = true;
+        bleedingStartTime = millis();
+        pumpActivityStartTime = millis(); // Safety Cutoff Start
+#ifdef GPS_DEBUG
+        Serial.println("Bleeding Mode STARTED");
+        webConsole.log("Bleeding Mode STARTED");
+#endif
+        
+        // Init Pump State for immediate start
+        pulseState = false; 
+        lastPulseTime = millis() - 1000; // Force start
+
+        saveConfig(); // Save immediately
+    }
 }
 
 SpeedRange* Oiler::getRangeConfig(int index) {

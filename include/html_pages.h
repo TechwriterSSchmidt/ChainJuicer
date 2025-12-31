@@ -72,6 +72,7 @@ const char* htmlHeader = R"rawliteral(
         .pulse-input{width:50px;text-align:center}
         .btn{display:block;width:100%;box-sizing:border-box;background:#333;color:#fff;padding:12px;border:1px solid #555;font-size:16px;border-radius:4px;margin-top:15px;cursor:pointer;text-align:center}
         .btn:active{background:#555}
+        .btn-danger{background:#500;color:#fff;border:1px solid #800}
         .progress{text-align:center;margin-top:15px;color:#ccc}
         .time{text-align:center;color:#ccc;font-size:0.9em;margin-bottom:10px}
         .disabled{opacity:0.5;pointer-events:none}
@@ -119,6 +120,11 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
             <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
         </table>
+        <h3>Maintenance</h3>
+        <div style='margin-bottom:15px'>
+            <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
+            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px' onclick="return confirm('Start Bleeding Mode? Pump will run for 15s.')">Start Bleeding Mode</a>
+        </div>
         <h3>Tank Monitor</h3>
         <table>
             <tr><td>Enable</td><td><input type='checkbox' name='tank_en' %TANK_CHECKED%></td></tr>
@@ -221,6 +227,13 @@ const char* htmlHelp = R"rawliteral(
             <ul>
                 <li>Oils periodically (Time based) for cleaning.</li>
                 <li>Useful for cleaning the chain or after heavy rain.</li>
+            </ul>
+        </li>
+        <li><b>Bleeding Mode:</b>
+            <ul>
+                <li>Activates via Web Interface.</li>
+                <li>Runs pump continuously for 15s to fill the line.</li>
+                <li>Only works at standstill.</li>
             </ul>
         </li>
         <li><b>Offroad Mode:</b>

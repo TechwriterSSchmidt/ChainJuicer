@@ -35,7 +35,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Smart Smoothing** | Linear interpolation & low-pass filter. | Avoids harsh jumps in lubrication intervals. |
 | **Drift Filter** | Ignores GPS multipath reflections. | Prevents "ghost mileage" indoors/tunnels (HDOP > 5.0 or < 5 Sats). |
 | **Safety Cutoff** | Hard limit for pump runtime. | Max 30s continuous run to prevent hardware damage. |
-| **Start Delay** | Distance driven before first oiling. | Default **2.0 km**. Keeps garage floor clean. |
+| **Start Delay** | Distance driven before first oiling. | Default **250 m**. Keeps garage floor clean. |
 | **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
 | **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** Short Press. **Auto-Off:** 30 min or restart. |
 | **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 3x Click. **Action:** Time-based (Configurable). LED: Cyan Blink. |
@@ -43,7 +43,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** Hold button >3s at standstill. **Features:** OTA Update, LED config, Stats, Test functions. |
 | **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
-| **Bleeding Mode** | Continuous pumping for maintenance. | Fills oil line. |
+| **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (15s). |
 | **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
 | **Aux Port Manager** | Smart control for accessories. | **Smart Power:** Auto-ON when engine runs (IMU). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. |
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |

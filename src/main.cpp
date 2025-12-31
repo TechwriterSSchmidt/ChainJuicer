@@ -622,6 +622,19 @@ void setup() {
     server.on("/reset_time_stats", handleResetTimeStats);
     server.on("/refill", handleRefill);
     
+    // Maintenance Routes
+    server.on("/test_pump", HTTP_GET, []() {
+        oiler.triggerOil(1); // Fire 1 pulse
+        server.sendHeader("Location", "/settings");
+        server.send(303);
+    });
+    
+    server.on("/bleeding", HTTP_GET, []() {
+        oiler.startBleeding();
+        server.sendHeader("Location", "/settings");
+        server.send(303);
+    });
+    
     // OTA Update
     server.on("/update", HTTP_GET, handleUpdate);
     server.on("/update", HTTP_POST, handleUpdateResult, handleUpdateProcess);
