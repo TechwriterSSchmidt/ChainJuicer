@@ -1153,9 +1153,9 @@ void Oiler::processPump() {
     // REVISED for Blocking PWM Pulse
     // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
     
-    // Bleeding Mode: Fast pumping (80ms Pulse / 250ms Pause)
-    unsigned long effectivePause = bleedingMode ? 250 : dynamicPauseMs;
-    unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
+    // Bleeding Mode: Fast pumping (65ms Pulse / 300ms Pause)
+    unsigned long effectivePause = bleedingMode ? 300 : dynamicPauseMs;
+    unsigned long effectivePulse = bleedingMode ? 65 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
         
@@ -1310,6 +1310,7 @@ void Oiler::setCrossCountryMode(bool mode) {
 }
 
 void Oiler::startBleeding() {
+    Serial.println("DEBUG: Oiler::startBleeding() called");
     if (currentSpeed < MIN_SPEED_KMH && !emergencyMode && !emergencyModeForced) {
         bleedingMode = true;
         bleedingStartTime = millis();
@@ -1324,6 +1325,15 @@ void Oiler::startBleeding() {
         lastPulseTime = millis() - 1000; // Force start
 
         saveConfig(); // Save immediately
+    } else {
+        Serial.print("Bleeding Request REJECTED. Speed: ");
+        Serial.print(currentSpeed);
+        Serial.print(" (Max: ");
+        Serial.print(MIN_SPEED_KMH);
+        Serial.print("), Emergency: ");
+        Serial.println(emergencyMode || emergencyModeForced ? "YES" : "NO");
+        
+        webConsole.log("Bleeding REJECTED: Check Speed/Emergency Mode");
     }
 }
 

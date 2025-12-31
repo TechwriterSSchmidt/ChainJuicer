@@ -299,7 +299,6 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Short Press (< 1.5s):</b> Toggle 'Rain Mode' (with 400ms delay).</li>
         <li><b>3x Click:</b> Toggle 'Chain Flush Mode' (Configurable).</li>
         <li><b>6x Click:</b> Toggle 'Offroad Mode' (Time based oiling).</li>
-        <li><b>Long Press (> 10s):</b> 'Bleeding Mode' (15s pump). Only at standstill.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
