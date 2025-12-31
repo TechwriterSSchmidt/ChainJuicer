@@ -32,6 +32,7 @@ const char* htmlLanding = R"rawliteral(
         <h3>Statistics</h3>
         <div class='stat-row'><span>Odometer:</span> <span class='val'>%TOTAL_DIST% km</span></div>
         <div class='stat-row'><span>Juice Events:</span> <span class='val'>%PUMP_COUNT%</span></div>
+        <div class='stat-row'><span>Progress:</span> <span class='val'>%PROGRESS%%</span></div>
     </div>
 
     <div class='stat-box'>
@@ -60,8 +61,8 @@ const char* htmlHeader = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
-        form{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333}
+        h3{color:#ffffff;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         th{text-align:left;color:#ccc;font-size:0.9em}
         td{padding:10px 5px;border-bottom:1px solid #333}
@@ -84,18 +85,19 @@ const char* htmlHeader = R"rawliteral(
     <h2>Juicer Settings</h2>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
-        <h3>Driving Profile</h3>
-        <table>
-            <tr>
-                <th rowspan='2'>Speed</th>
-                <th rowspan='2'>km</th>
-                <th colspan='3' style='text-align:left'>(Last 20 juices only)</th>
-            </tr>
-            <tr>
-                <th style='text-align:center'>Usage %</th>
-                <th style='text-align:center'>Juices</th>
-                <th style='text-align:center'>Pulses</th>
-            </tr>
+        <div class='card'>
+            <h3>Driving Profile</h3>
+            <table>
+                <tr>
+                    <th rowspan='2'>Speed</th>
+                    <th rowspan='2'>km</th>
+                    <th colspan='3' style='text-align:left'>(Last 20 juices only)</th>
+                </tr>
+                <tr>
+                    <th style='text-align:center'>Usage %</th>
+                    <th style='text-align:center'>Juices</th>
+                    <th style='text-align:center'>Pulses</th>
+                </tr>
 )rawliteral";
 
 const char* htmlFooter = R"rawliteral(
@@ -158,8 +160,8 @@ const char* htmlLEDSettings = R"rawliteral(
     <style>
         body{font-family:sans-serif;margin:0;padding:10px;background:#121212;color:#e0e0e0}
         h2{text-align:center;color:#ffffff;font-weight:normal;text-transform:uppercase;letter-spacing:1px}
-        h3{color:#ffffff;margin-top:20px;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
-        form{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333}
+        h3{color:#ffffff;margin-top:0;border-bottom:1px solid #333;padding-bottom:5px;font-weight:normal}
+        .card{background:#1e1e1e;padding:15px;border-radius:4px;border:1px solid #333;margin-bottom:15px}
         table{width:100%;border-collapse:collapse}
         td{padding:10px 5px;border-bottom:1px solid #333}
         input{width:100%;padding:8px;border:1px solid #444;background:#333;color:#fff;border-radius:2px;font-size:16px;box-sizing:border-box}
@@ -174,19 +176,23 @@ const char* htmlLEDSettings = R"rawliteral(
     <a href='/' class='back-btn'>&larr; Home</a>
     <h2>LED Settings</h2>
     <form action='/save_led' method='POST'>
-        <h3>LED Settings (Day)</h3>
-        <table>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
-        </table>
-        <h3>LED Settings (Night)</h3>
-        <table>
-            <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
-            <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
-            <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
-            <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
-            <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
-        </table>
+        <div class='card'>
+            <h3>Daytime Settings</h3>
+            <table>
+                <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='led_dim' value='%LED_DIM%' class='num-input'></td></tr>
+                <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='led_high' value='%LED_HIGH%' class='num-input'></td></tr>
+            </table>
+        </div>
+        <div class='card'>
+            <h3>Nighttime Settings</h3>
+            <table>
+                <tr><td>Enable</td><td><input type='checkbox' name='night_en' %NIGHT_CHECKED%></td></tr>
+                <tr><td>Start (Hour)</td><td><input type='number' name='night_start' value='%NIGHT_START%' class='num-input'></td></tr>
+                <tr><td>End (Hour)</td><td><input type='number' name='night_end' value='%NIGHT_END%' class='num-input'></td></tr>
+                <tr><td>Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri' value='%NIGHT_BRI%' class='num-input'></td></tr>
+                <tr><td>Flash Brightness (%)</td><td><input type='number' min='0' max='100' name='night_bri_h' value='%NIGHT_BRI_H%' class='num-input'></td></tr>
+            </table>
+        </div>
         <input type='submit' value='Save' class='btn'>
     </form>
 </body>

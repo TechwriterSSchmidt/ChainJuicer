@@ -371,6 +371,11 @@ The total project cost is very low compared to commercial alternatives (~150€+
 ### Hardware Notes
 *   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the status display in the cockpit and a second one (optional) near the tank or pump for debugging/tank warning.
 *   **Resistors:** Don't forget the **200R** (Series) and **10k** (Pull-Down) for the MOSFET gate if your board doesn't have them integrated!
+*   **LCTECH Board Modification (Critical):** If you are using the LCTECH Relay Board with the NCE6020AK MOSFET and J3Y driver circuit, you should modify the circuit to prevent the pump from being activated once during powerup.
+    1.  **Remove:** Transistor `J3Y` (S8050) and Resistors `R8` & `R7`.
+    2.  **Keep:** Resistor `R3` (10k Pull-Down).
+    3.  **Add:** A **220 Ohm** resistor between GPIO 16 and the Gate of the MOSFET.
+    *   *See `Docs/SCHEMATIC.txt` for details.*
 
 ## ⚠️ Disclaimer & Safety
 

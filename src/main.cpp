@@ -351,6 +351,7 @@ void handleRoot() {
     
     html.replace("%TOTAL_DIST%", String(oiler.getTotalDistance(), 1));
     html.replace("%PUMP_COUNT%", String(oiler.getPumpCycles()));
+    html.replace("%PROGRESS%", String(oiler.getCurrentProgress() * 100.0, 1));
     
     bool emerg = oiler.isEmergencyModeForced();
     html.replace("%EMERG_CLASS%", emerg ? "btn-danger" : "btn-sec");
