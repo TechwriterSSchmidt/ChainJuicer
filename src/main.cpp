@@ -41,6 +41,11 @@ unsigned long wifiStartTime = 0;
 bool wifiActive = false; // Default OFF
 const unsigned long WIFI_TIMEOUT = WIFI_TIMEOUT_MS;
 
+// Restart / Reset Flags
+bool shouldRestart = false;
+bool shouldFactoryReset = false;
+unsigned long restartTimer = 0;
+
 String getZurichTime() {
     if (!gps.time.isValid() || !gps.date.isValid()) return "--:--";
     
@@ -661,16 +666,16 @@ void setup() {
     
     server.on("/restart", HTTP_GET, []() {
         webConsole.log("CMD: Restart System");
-        server.send(200, "text/plain", "Restarting...");
-        delay(500);
-        ESP.restart();
+        server.send(200, "text/plain", "Restarting in 3s...");
+        shouldRestart = true;
+        restartTimer = millis();
     });
 
     server.on("/factory_reset", HTTP_GET, []() {
         webConsole.log("CMD: Factory Reset");
-        server.send(200, "text/plain", "Factory Resetting... Please reconnect to WiFi AP after reboot.");
-        delay(100);
-        oiler.performFactoryReset();
+        server.send(200, "text/plain", "Factory Resetting in 3s... Please reconnect to WiFi AP after reboot.");
+        shouldFactoryReset = true;
+        restartTimer = millis();
     });
     
     // OTA Update
@@ -705,6 +710,30 @@ void setup() {
 void loop() {
     // Reset Watchdog
     esp_task_wdt_reset();
+
+    // Handle Delayed Restart / Reset
+    static int lastCountdown = 4;
+    if (shouldRestart || shouldFactoryReset) {
+        int remaining = 3 - ((millis() - restartTimer) / 1000);
+        
+        if (remaining < lastCountdown && remaining > 0) {
+            webConsole.log("... " + String(remaining));
+            lastCountdown = remaining;
+        }
+        
+        if (millis() - restartTimer > 3000) {
+             if (shouldRestart) {
+                 webConsole.log("RESTARTING NOW");
+                 delay(100);
+                 ESP.restart();
+             }
+             if (shouldFactoryReset) {
+                 oiler.performFactoryReset();
+             }
+        }
+    } else {
+        lastCountdown = 4;
+    }
 
     // Read GPS Data
     while (gpsSerial.available() > 0) {
