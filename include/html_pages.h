@@ -99,7 +99,7 @@ const char* htmlMaintenance = R"rawliteral(
             ⚠️ Reset and restart actions are executed immediately without confirmation!
         </div>
         <a href='/restart' class='btn' style='background:#555; margin-bottom:10px'>Restart System</a>        
-        <a href='/update' class='btn' style='background:#555; color:#000; margin-bottom:10px'>Firmware Update</a>
+        <a href='/update' class='btn' style='background:#555; margin-bottom:10px'>Firmware Update</a>
         <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px'>Factory Reset</a>
         <a href='/bleeding' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Start Bleeding Mode</a>
     </div>
