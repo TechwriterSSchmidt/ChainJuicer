@@ -90,8 +90,6 @@ const char* htmlMaintenance = R"rawliteral(
         <h3>Pump Control</h3>
         <div style='margin-bottom:15px'>
             <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
-            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
-            <div class='note'>Bleeding Mode runs the pump for 15s to fill the line. Only works at standstill.</div>
         </div>
     </div>
 
@@ -99,8 +97,19 @@ const char* htmlMaintenance = R"rawliteral(
         <h3>System Tools</h3>
         <a href='/imu' class='btn btn-sec' style='margin-bottom:10px'>IMU Configuration</a>
         <a href='/console' class='btn btn-sec' style='margin-bottom:10px'>Serial Console</a>
-        <a href='/update' class='btn btn-sec' style='margin-bottom:10px'>Firmware Update</a>
         <a href='/restart' class='btn btn-sec' style='background:#d32f2f; color:#fff; margin-bottom:10px'>Restart System</a>
+    </div>
+
+    <div class='card' style='border: 1px solid #d32f2f;'>
+        <h3 style='color:#d32f2f'>Danger Zone</h3>
+        <div class='note' style='color:#d32f2f; font-weight:bold; margin-bottom:15px'>
+            ⚠️ Reset and restart actions are executed immediately without confirmation!
+        </div>
+        
+        <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
+        <div class='note' style='margin-bottom:15px'>Runs pump for 15s. Only at standstill.</div>
+        
+        <a href='/update' class='btn btn-sec' style='margin-bottom:10px'>Firmware Update</a>
         <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px'>Factory Reset</a>
     </div>
 </body>

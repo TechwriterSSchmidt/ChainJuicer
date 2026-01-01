@@ -290,9 +290,8 @@ void Oiler::loop() {
     // Rain Mode Auto-Off
     if (rainMode && (millis() - rainModeStartTime > RAIN_MODE_AUTO_OFF_MS)) {
         rainMode = false;
-#ifdef GPS_DEBUG
+        webConsole.log("Rain Mode Auto-Off");
         Serial.println("Rain Mode Auto-Off");
-#endif
         saveConfig();
     }
 
@@ -1291,15 +1290,11 @@ void Oiler::setRainMode(bool mode) {
 
     if (mode && !rainMode) {
         rainModeStartTime = millis();
-#ifdef GPS_DEBUG
         webConsole.log("Rain Mode: ON");
         Serial.println("Rain Mode: ON");
-#endif
     } else if (!mode && rainMode) {
-#ifdef GPS_DEBUG
         webConsole.log("Rain Mode: OFF");
         Serial.println("Rain Mode: OFF");
-#endif
     }
     
     rainMode = mode;

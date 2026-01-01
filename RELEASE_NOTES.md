@@ -12,6 +12,7 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 
 ### UX & Feedback
 *   **Heated Grips Boost:** The LED now cycles through colors (Blue &rarr; Red) during the startup boost phase, providing a more intuitive "heating up" visualization.
+*   **Heated Grips Reaction Speed:** Added a configurable "Reaction Speed" setting (Slow/Medium/Fast) to control how quickly the heating adjusts to speed changes. "Slow" (default) provides a very smooth, high-end feel.
 *   **Button Logic:** Consolidated button commands for a simplified control scheme.
 *   **WiFi Safety:** The 5-click WiFi command now only activates WiFi or extends the timer. It prevents accidental deactivation via button (deactivation is handled automatically by timeout or driving).
 *   **Documentation:** Added a clear "Mode Hierarchy" section to the manual, explaining how Chain Flush, Offroad, Emergency, and Rain modes interact.

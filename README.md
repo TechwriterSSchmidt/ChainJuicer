@@ -189,9 +189,13 @@ Advanced PWM control for heated grips, far superior to simple "Low/High" switche
 *   **Rain Boost:** Automatically adds extra heat when Rain Mode is active.
 *   **Startup Boost:** Heats up quickly (e.g. 80% for 60s) when you start the ride.
 *   **Start Delay:** Configurable delay (default 15s) after boot before grips turn on to protect the battery.
+*   **Reaction Speed:** Configurable smoothing (Slow/Medium/Fast) to determine how quickly the heat adjusts to speed changes.
+    *   **Slow (Default):** ~10s smoothing. Very comfortable, filters out traffic lights.
+    *   **Medium:** ~5s smoothing. Balanced.
+    *   **Fast:** ~1s smoothing. Sporty response.
 
 **Configuration:**
-All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays) are fully configurable via the new "Aux Config" web page.
+All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays, Reaction) are fully configurable via the new "Aux Config" web page.
 
 ## 🛠 Hardware
 

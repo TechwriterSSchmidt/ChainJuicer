@@ -729,9 +729,9 @@ void loop() {
     esp_task_wdt_reset();
 
     // Handle Delayed Restart / Reset
-    static int lastCountdown = 4;
+    static int lastCountdown = 6;
     if (shouldRestart || shouldFactoryReset) {
-        int remaining = 3 - ((millis() - restartTimer) / 1000);
+        int remaining = 5 - ((millis() - restartTimer) / 1000);
         
         if (remaining < lastCountdown && remaining > 0) {
             String msg = "... " + String(remaining);
@@ -740,7 +740,7 @@ void loop() {
             lastCountdown = remaining;
         }
         
-        if (millis() - restartTimer > 3000) {
+        if (millis() - restartTimer > 5000) {
              if (shouldRestart) {
                  webConsole.log("RESTARTING NOW");
                  Serial.println("RESTARTING NOW");
@@ -752,7 +752,7 @@ void loop() {
              }
         }
     } else {
-        lastCountdown = 4;
+        lastCountdown = 6;
     }
 
     // Read GPS Data
