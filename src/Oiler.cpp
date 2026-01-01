@@ -1183,9 +1183,9 @@ void Oiler::startPulse(unsigned long durationMs) {
     
     if (PUMP_USE_PWM) {
         pumpState = PUMP_RAMP_UP;
-        pumpCurrentDuty = 0;
+        pumpCurrentDuty = 130; // Start at ~50% to prevent whining
         pumpLastStepTime = micros();
-        ledcWrite(PUMP_PWM_CHANNEL, 0);
+        ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
     } else {
         // Fallback: Hard Switching
         digitalWrite(pumpPin, PUMP_ON);
@@ -1243,7 +1243,7 @@ void Oiler::updatePumpPulse() {
             unsigned long stepDelay = (PUMP_RAMP_DOWN_MS * 1000) / 255;
             if (nowMicros - pumpLastStepTime >= (stepDelay * 15)) {
                 pumpCurrentDuty -= 15;
-                if (pumpCurrentDuty <= 0) {
+                if (pumpCurrentDuty <= 130) { // Stop at ~50% to prevent whining
                     pumpCurrentDuty = 0;
                     ledcWrite(PUMP_PWM_CHANNEL, 0);
                     digitalWrite(pumpPin, PUMP_OFF);

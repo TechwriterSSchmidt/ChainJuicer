@@ -29,6 +29,9 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **Persistent Emergency Mode:** The "Forced Emergency Mode" setting is now saved to non-volatile memory. This allows the mode to persist across system restarts, which is critical for long trips with a broken GPS module.
 *   **System Tools Feedback:** Fixed "Restart System" and "Factory Reset" buttons. They now redirect to the console and display a 3-second countdown before executing, providing clear visual confirmation of the action.
 *   **Additive Bleeding Mode:** The Bleeding Mode can now be extended by triggering it again while active. Each trigger adds 20 seconds to the duration (up to a maximum of 60 seconds / 3x). This allows for easier priming of long oil lines without restarting the process repeatedly.
+*   **Pump Noise Reduction:** Optimized the PWM ramp-up/ramp-down logic to start at ~50% duty cycle. This eliminates the motor "whining" sound at low power levels where torque is insufficient to move the pump.
+*   **UI Visibility:** Updated the "Home" button arrow in the Web Interface from a thin arrow (`&larr;`) to a solid triangle (`&#9664;`) for better visibility on small screens.
+*   **Bleeding Feedback:** Added a live countdown timer to the Serial Console during Bleeding Mode (e.g., "Bleeding... 15s").
 
 ## v1.0.0 - Initial Release (2025-12-29)
 
