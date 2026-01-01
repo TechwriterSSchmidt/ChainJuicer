@@ -147,7 +147,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **Calculation:** The ESP32 automatically calculates the required energy for any temperature.
 *   **Safety Limits:**
     *   **Minimum Pulse:** The system enforces a hard limit of **50ms** for the pulse duration to ensure the solenoid always moves, preventing "stuck" states at high temperatures.
-*   **Hysteresis:** A 3.0°C buffer prevents rapid switching.
+*   **Update Interval:** Temperature is measured every 15 minutes to ensure stable operation.
 
 **Configuration:**
 *   **Web Interface:** Simply enter your 25°C values and select the oil type.

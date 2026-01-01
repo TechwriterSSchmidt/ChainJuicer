@@ -296,7 +296,7 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Reference:</b> Set Pulse and Pause for normal temperature.</li>
         <li><b>Oil Type:</b> Select your oil viscosity profile (Thin, Normal, Thick).</li>
         <li><b>Logic:</b> The system automatically calculates the required energy for colder/warmer temperatures based on the selected profile.</li>
-        <li><b>Hysteresis:</b> 3&deg;C buffer prevents rapid switching.</li>
+        <li><b>Update Interval:</b> Temperature is measured every 15 minutes.</li>
     </ul>
     <h3>Aux Port Manager (GPIO 17)</h3>
     <p>Controls the Auxiliary Output for accessories.</p>

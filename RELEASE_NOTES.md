@@ -15,6 +15,9 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **Button Logic:** Consolidated button commands for a simplified control scheme.
 *   **Documentation:** Added a clear "Mode Hierarchy" section to the manual, explaining how Chain Flush, Offroad, Emergency, and Rain modes interact.
 
+### Logic Improvements
+*   **Temperature Compensation:** Changed from hysteresis-based to a fixed 15-minute update interval for more stable and predictable viscosity adjustments.
+
 ## v1.0.0 - Initial Release (2026-01-01)
 
 **Chain Juicer** is a multi-tool for motorcycle chain maintenance. This initial release brings a complete suite of features for intelligent chain lubrication and accessory management, designed for the ESP32 platform.
