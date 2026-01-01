@@ -10,7 +10,7 @@ An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Aux Powe
 
 ## Support my projects
 
-If you like this project, consider a tip. Your tip motivates me to continue developing cool stuff for the DIY community. Thank you very much for your support!
+If you like this project, consider a tip. Your tip motivates me to continue developing useful stuff for the DIY community. Thank you very much for your support!
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D01HVT9A)
 
@@ -413,6 +413,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
     *   Regularly check the system for leaks.
     *   **IMMEDIATELY clean any oil off the tire** if a spill occurs. Do not ride with oil on your tires.
 *   **Road Safety:** Do not operate the configuration interface while riding. Focus on the road.
+
 
 
 
