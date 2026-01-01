@@ -130,8 +130,15 @@ void handleUpdate() {
 
 void handleUpdateResult() {
     resetWifiTimer();
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
+    server.sendHeader("Connection", "close");
+    if (Update.hasError()) {
+        server.send(200, "text/plain", "Update Failed. Please try again.");
+        oiler.setUpdateMode(false);
+    } else {
+        server.send(200, "text/html", "<html><head><meta http-equiv='refresh' content='10;url=/'></head><body><h2>Update Success!</h2><p>Rebooting system...</p></body></html>");
+        delay(1000);
+        ESP.restart();
+    }
 }
 
 void handleUpdateProcess() {
