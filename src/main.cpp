@@ -666,14 +666,16 @@ void setup() {
     
     server.on("/restart", HTTP_GET, []() {
         webConsole.log("CMD: Restart System");
-        server.send(200, "text/plain", "Restarting in 3s...");
+        server.sendHeader("Location", "/console");
+        server.send(303);
         shouldRestart = true;
         restartTimer = millis();
     });
 
     server.on("/factory_reset", HTTP_GET, []() {
         webConsole.log("CMD: Factory Reset");
-        server.send(200, "text/plain", "Factory Resetting in 3s... Please reconnect to WiFi AP after reboot.");
+        server.sendHeader("Location", "/console");
+        server.send(303);
         shouldFactoryReset = true;
         restartTimer = millis();
     });
@@ -717,13 +719,16 @@ void loop() {
         int remaining = 3 - ((millis() - restartTimer) / 1000);
         
         if (remaining < lastCountdown && remaining > 0) {
-            webConsole.log("... " + String(remaining));
+            String msg = "... " + String(remaining);
+            webConsole.log(msg);
+            Serial.println(msg);
             lastCountdown = remaining;
         }
         
         if (millis() - restartTimer > 3000) {
              if (shouldRestart) {
                  webConsole.log("RESTARTING NOW");
+                 Serial.println("RESTARTING NOW");
                  delay(100);
                  ESP.restart();
              }

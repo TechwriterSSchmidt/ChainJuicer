@@ -622,7 +622,7 @@ const char* htmlConsole = R"rawliteral(
                     }
                 });
         }
-        setInterval(fetchLogs, 1000);
+        setInterval(fetchLogs, 200);
     </script>
 </head>
 <body>

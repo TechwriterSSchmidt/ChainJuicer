@@ -22,6 +22,7 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **Console Logging:** Added comprehensive logging of all physical button presses and WebUI actions to the Web Console for better diagnostics.
 *   **Bleeding Stats:** Fixed an issue where oil consumption during Bleeding Mode was not logged. The total amount consumed is now displayed in the console upon completion.
 *   **Persistent Emergency Mode:** The "Forced Emergency Mode" setting is now saved to non-volatile memory. This allows the mode to persist across system restarts, which is critical for long trips with a broken GPS module.
+*   **System Tools Feedback:** Fixed "Restart System" and "Factory Reset" buttons. They now redirect to the console and display a 3-second countdown before executing, providing clear visual confirmation of the action.
 
 ## v1.0.0 - Initial Release (2025-12-29)
 
