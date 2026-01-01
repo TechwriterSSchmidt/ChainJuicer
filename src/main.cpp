@@ -42,8 +42,8 @@ bool wifiActive = false; // Default OFF
 const unsigned long WIFI_TIMEOUT = WIFI_TIMEOUT_MS;
 
 // Restart / Reset Flags
-bool shouldRestart = false;
-bool shouldFactoryReset = false;
+volatile bool shouldRestart = false;
+volatile bool shouldFactoryReset = false;
 unsigned long restartTimer = 0;
 
 String getZurichTime() {
@@ -666,16 +666,18 @@ void setup() {
     
     server.on("/restart", HTTP_GET, []() {
         webConsole.log("CMD: Restart System");
-        server.sendHeader("Location", "/console");
-        server.send(303);
+        Serial.println("CMD: Restart System");
+        resetWifiTimer();
+        server.send(200, "text/html", "<html><head><meta http-equiv='refresh' content='0;url=/console'></head><body>Restarting...</body></html>");
         shouldRestart = true;
         restartTimer = millis();
     });
 
     server.on("/factory_reset", HTTP_GET, []() {
         webConsole.log("CMD: Factory Reset");
-        server.sendHeader("Location", "/console");
-        server.send(303);
+        Serial.println("CMD: Factory Reset");
+        resetWifiTimer();
+        server.send(200, "text/html", "<html><head><meta http-equiv='refresh' content='0;url=/console'></head><body>Factory Reset...</body></html>");
         shouldFactoryReset = true;
         restartTimer = millis();
     });

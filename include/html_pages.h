@@ -100,8 +100,8 @@ const char* htmlMaintenance = R"rawliteral(
         <a href='/imu' class='btn btn-sec' style='margin-bottom:10px'>IMU Configuration</a>
         <a href='/console' class='btn btn-sec' style='margin-bottom:10px'>Serial Console</a>
         <a href='/update' class='btn btn-sec' style='margin-bottom:10px'>Firmware Update</a>
-        <a href='/restart' class='btn btn-sec' style='background:#d32f2f; color:#fff; margin-bottom:10px' onclick="return confirm('Restart System?')">Restart System</a>
-        <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px' onclick="return confirm('FACTORY RESET: All settings will be lost. Continue?')">Factory Reset</a>
+        <a href='/restart' class='btn btn-sec' style='background:#d32f2f; color:#fff; margin-bottom:10px'>Restart System</a>
+        <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px'>Factory Reset</a>
     </div>
 </body>
 </html>
