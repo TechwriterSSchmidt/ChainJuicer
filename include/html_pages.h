@@ -391,7 +391,7 @@ const char* htmlIMU = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>IMU Calibration</h2>
     
     <div class='card'>
@@ -490,7 +490,7 @@ const char* htmlAuxConfig = R"rawliteral(
     </script>
 </head>
 <body onload="toggleFields()">
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>Aux Port Configuration</h2>
     <form action='/save_aux' method='POST'>
         <div class='card'>
@@ -635,7 +635,7 @@ const char* htmlConsole = R"rawliteral(
     </script>
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>Serial Console</h2>
     <div id='console'>Loading...</div>
     <form action='/console/clear' method='POST'>
