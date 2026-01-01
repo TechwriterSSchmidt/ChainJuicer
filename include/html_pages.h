@@ -328,11 +328,10 @@ const char* htmlHelp = R"rawliteral(
         <li><b>4x Click:</b> Toggle 'Chain Flush Mode'.</li>
         <li><b>5x Click:</b> Toggle 'WiFi'.</li>
         <li><b>Hold > 2s:</b> Toggle 'Aux Port'.</li>
-        <li><b>Hold > 10s (at Boot):</b> Factory Reset.</li>
     </ul>
     <h3>Maintenance</h3>
     <ul>
-        <li><b>Factory Reset:</b> Resets all settings to default. Available via Web Interface (Maintenance Page) or Hardware Button (Hold > 10s at Boot).</li>
+        <li><b>Factory Reset:</b> Resets all settings to default. Available via Web Interface (Maintenance Page).</li>
     </ul>
     <h3>Mode Hierarchy</h3>
     <div class='note'>If multiple modes are active:</div>

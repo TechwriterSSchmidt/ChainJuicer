@@ -49,7 +49,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
-| **Factory Reset** | Reset to defaults. | **WebUI:** Maintenance Page. **Hardware:** Hold button > 10s at boot. |
+| **Factory Reset** | Reset to defaults. | **WebUI:** Maintenance Page. |
 
 ## 🧭 Optional IMU Features
 

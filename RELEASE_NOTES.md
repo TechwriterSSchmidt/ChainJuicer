@@ -6,10 +6,10 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 
 ### Web Interface Overhaul
 *   **New Maintenance Page:** Created a dedicated area for system tools to declutter the main settings page.
-    *   **Visual Safety:** "Bleeding Mode" and "Firmware Update" are now color-coded yellow (Warning), while "Restart System" is gray (Neutral). The "Danger Zone" uses standard UI colors to reduce visual alarm fatigue.
+    *   **Visual Safety:** "Bleeding Mode" is color-coded yellow (Warning), "Factory Reset" is red (Danger), while "Firmware Update" and "Restart System" are gray (Neutral).
     *   **Functionality:** Includes Pump Test, Bleeding Mode, IMU Configuration, Serial Console, Firmware Update, and System Restart.
 *   **Heated Grips Settings:** Reorganized the settings page. Parameters are now logically grouped (Compensation factors vs. Base settings) with visual separation for better usability.
-*   **Factory Reset:** Added a software-based Factory Reset button to the Maintenance page (no need to hold the physical button at boot).
+*   **Factory Reset:** Removed the hardware-based Factory Reset (Hold > 10s) to prevent accidental resets. Factory Reset is now exclusively available via the Web Interface.
 *   **Layout Improvements:** Moved the "Statistics" card to the top of the Settings page for immediate visibility of key metrics.
 
 ### UX & Feedback
