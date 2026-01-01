@@ -668,11 +668,8 @@ void setup() {
 
     server.on("/factory_reset", HTTP_GET, []() {
         webConsole.log("CMD: Factory Reset");
-        ESP.restart();
-    });
-
-    server.on("/factory_reset", HTTP_GET, []() {
         server.send(200, "text/plain", "Factory Resetting... Please reconnect to WiFi AP after reboot.");
+        delay(100);
         oiler.performFactoryReset();
     });
     
@@ -807,9 +804,11 @@ void loop() {
             wifiActive = true;
             wifiStartTime = currentMillis;
         } else {
-            // Deactivate WiFi
-            WiFi.softAPdisconnect(true);
-            wifiActive = false;
+            // WiFi is already active.
+            // Prevent accidental deactivation via button (User Request).
+            // Instead, we extend the timer.
+            wifiStartTime = currentMillis;
+            webConsole.log("BTN: WiFi Timer Extended");
         }
     }
 

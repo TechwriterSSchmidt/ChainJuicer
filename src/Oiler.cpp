@@ -1166,7 +1166,8 @@ void Oiler::processPump() {
             digitalWrite(pumpPin, PUMP_OFF);
             pulseState = false; // Reset state
 #ifdef GPS_DEBUG
-            Serial.println("Bleeding Finished");
+            Serial.printf("Bleeding Finished. Consumed: %.2f ml\n", bleedingSessionConsumed);
+            webConsole.log("Bleeding Finished. Consumed: " + String(bleedingSessionConsumed, 2) + " ml");
 #endif
             return; // Done
         }
@@ -1223,6 +1224,7 @@ void Oiler::processPump() {
             if (tankMonitorEnabled) {
                 float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
                 currentTankLevelMl -= mlConsumed;
+                bleedingSessionConsumed += mlConsumed; // Track session total
                 if (currentTankLevelMl < 0) currentTankLevelMl = 0;
             }
         }
@@ -1341,6 +1343,7 @@ void Oiler::startBleeding() {
     if (currentSpeed < MIN_SPEED_KMH) {
         bleedingMode = true;
         bleedingStartTime = millis();
+        bleedingSessionConsumed = 0.0; // Reset counter
         pumpActivityStartTime = millis(); // Safety Cutoff Start
 #ifdef GPS_DEBUG
         Serial.println("Bleeding Mode STARTED");

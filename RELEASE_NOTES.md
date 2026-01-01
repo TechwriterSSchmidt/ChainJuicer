@@ -13,12 +13,14 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 ### UX & Feedback
 *   **Heated Grips Boost:** The LED now cycles through colors (Blue &rarr; Red) during the startup boost phase, providing a more intuitive "heating up" visualization.
 *   **Button Logic:** Consolidated button commands for a simplified control scheme.
+*   **WiFi Safety:** The 5-click WiFi command now only activates WiFi or extends the timer. It prevents accidental deactivation via button (deactivation is handled automatically by timeout or driving).
 *   **Documentation:** Added a clear "Mode Hierarchy" section to the manual, explaining how Chain Flush, Offroad, Emergency, and Rain modes interact.
 
 ### Logic Improvements
 *   **Temperature Compensation:** Changed from hysteresis-based to a fixed 15-minute update interval for more stable and predictable viscosity adjustments.
 *   **IMU Turn Safety:** Corrected the logic to suppress oiling when leaning towards the **tire** (unsafe side). When leaning towards the chain, oiling is now permitted.
 *   **Console Logging:** Added comprehensive logging of all physical button presses and WebUI actions to the Web Console for better diagnostics.
+*   **Bleeding Stats:** Fixed an issue where oil consumption during Bleeding Mode was not logged. The total amount consumed is now displayed in the console upon completion.
 
 ## v1.0.0 - Initial Release (2025-12-29)
 
