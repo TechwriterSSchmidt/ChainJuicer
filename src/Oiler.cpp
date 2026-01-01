@@ -119,9 +119,9 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     // Night Mode Defaults
     nightModeEnabled = false;
     nightStartHour = 20; // 20:00
-    nightEndHour = 7;    // 07:00
-    nightBrightness = 5;  // Very dim
-    nightBrightnessHigh = 15; // Default for night events
+    nightEndHour = 6;    // 06:00
+    nightBrightness = 26;  // 10%
+    nightBrightnessHigh = 64; // 25%
     currentHour = 12;    // Default noon
 
     // Tank Monitor Defaults

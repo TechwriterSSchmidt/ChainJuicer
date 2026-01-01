@@ -51,8 +51,8 @@
 
 // LED Configuration
 #define NUM_LEDS 2
-#define LED_BRIGHTNESS_DIM 20   // Brightness for status LED during normal operation (0-255)
-#define LED_BRIGHTNESS_HIGH 45  // Brightness for events (0-255)
+#define LED_BRIGHTNESS_DIM 64   // Brightness for status LED during normal operation (0-255)
+#define LED_BRIGHTNESS_HIGH 153  // Brightness for events (0-255)
 
 // SD Logging Configuration
 // Uncomment to enable SD Card Logging

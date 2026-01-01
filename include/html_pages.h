@@ -153,6 +153,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (m)</td><td><input type='number' step='1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Offroad Interval (min)</td><td><input type='number' name='offroad_int' value='%OFFROAD_INT%' class='num-input'></td></tr>
+            <tr><td colspan='2' style='height:20px;border-bottom:none'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
             <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
@@ -184,7 +185,6 @@ const char* htmlFooter = R"rawliteral(
         <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:1.1em'>[Refill Tank]</a></div>
         </div>
         <input type='submit' value='Save' class='btn'>
-        <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:1.1em'>[Firmware Update]</a></div>
     </form>
 </body>
 </html>
