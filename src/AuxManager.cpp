@@ -33,6 +33,7 @@ void AuxManager::begin(ImuHandler* imu) {
     _startupBoostLevel = _prefs.getInt("startL", 100);
     _startupBoostSec = _prefs.getInt("startS", 75);
     _startDelaySec = _prefs.getInt("startD", 15);
+    _reactionSpeed = (ReactionSpeed)_prefs.getInt("react", REACTION_SLOW);
     
     // Safety: Heated Grips always start OFF. Aux Power respects saved state.
     if (_mode == AUX_MODE_HEATED_GRIPS) {
@@ -122,10 +123,16 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     if (target > 100) target = 100;
     if (target < 0) target = 0;
     
-    // Smoothing (Low Pass Filter) to prevent rapid PWM changes
-    // This acts as a hysteresis/damping mechanism
-    // Factor 0.002 with ~10ms loop time gives approx 5 seconds smoothing
-    _smoothedPwm = (_smoothedPwm * 0.998) + (target * 0.002);
+    // Smoothing (Low Pass Filter) based on Reaction Speed
+    float alpha = 0.001; // Default SLOW (~10s)
+    
+    if (_reactionSpeed == REACTION_MEDIUM) {
+        alpha = 0.002; // Medium (~5s)
+    } else if (_reactionSpeed == REACTION_FAST) {
+        alpha = 0.01; // Fast (~1s)
+    }
+    
+    _smoothedPwm = (_smoothedPwm * (1.0 - alpha)) + (target * alpha);
     
     setPwm((int)_smoothedPwm);
 }
@@ -146,7 +153,7 @@ void AuxManager::setMode(AuxMode mode) {
     _prefs.end();
 }
 
-void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec) {
+void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec, int reactionSpeed) {
     _baseLevel = baseLevel;
     _speedFactor = speedFactor;
     _tempFactor = tempFactor;
@@ -156,6 +163,7 @@ void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFac
     _startupBoostLevel = startupBoostLevel;
     _startupBoostSec = startupBoostSec;
     _startDelaySec = startDelaySec;
+    _reactionSpeed = (ReactionSpeed)reactionSpeed;
     
     _prefs.begin("aux", false);
     _prefs.putInt("base", _baseLevel);
@@ -167,10 +175,11 @@ void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFac
     _prefs.putInt("startL", _startupBoostLevel);
     _prefs.putInt("startS", _startupBoostSec);
     _prefs.putInt("startD", _startDelaySec);
+    _prefs.putInt("react", (int)_reactionSpeed);
     _prefs.end();
 }
 
-void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec) {
+void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec, int &reactionSpeed) {
     baseLevel = _baseLevel;
     speedFactor = _speedFactor;
     tempFactor = _tempFactor;
@@ -180,4 +189,5 @@ void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &temp
     startupBoostLevel = _startupBoostLevel;
     startupBoostSec = _startupBoostSec;
     startDelaySec = _startDelaySec;
+    reactionSpeed = (int)_reactionSpeed;
 }

@@ -533,6 +533,16 @@ const char* htmlAuxConfig = R"rawliteral(
                         </td>
                     </tr>
                     <tr>
+                        <td>Reaction Speed</td>
+                        <td>
+                            <select name='reaction'>
+                                <option value='0' %REACT_SLOW%>Slow (Smooth)</option>
+                                <option value='1' %REACT_MED%>Medium</option>
+                                <option value='2' %REACT_FAST%>Fast (Responsive)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
                         <td>Temp Compensation</td>
                         <td>
                             <select name='tempF'>

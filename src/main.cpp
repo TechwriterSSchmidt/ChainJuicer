@@ -494,9 +494,9 @@ void handleAuxConfig() {
     html.replace("%MODE_AUX%", (mode == AUX_MODE_AUX_POWER) ? "selected" : "");
     html.replace("%MODE_GRIPS%", (mode == AUX_MODE_HEATED_GRIPS) ? "selected" : "");
     
-    int base, rainB, startL, startS, startD;
+    int base, rainB, startL, startS, startD, reaction;
     float speedF, tempF, tempO, startT;
-    auxManager.getGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS, startD);
+    auxManager.getGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS, startD, reaction);
     
     html.replace("%BASE%", String(base));
     
@@ -504,6 +504,11 @@ void handleAuxConfig() {
     html.replace("%SPEED_LOW%", (abs(speedF - 0.2) < 0.1) ? "selected" : "");
     html.replace("%SPEED_MED%", (abs(speedF - 0.5) < 0.1) ? "selected" : "");
     html.replace("%SPEED_HIGH%", (abs(speedF - 1.0) < 0.1) ? "selected" : "");
+    
+    // Reaction Speed Selection
+    html.replace("%REACT_SLOW%", (reaction == 0) ? "selected" : "");
+    html.replace("%REACT_MED%", (reaction == 1) ? "selected" : "");
+    html.replace("%REACT_FAST%", (reaction == 2) ? "selected" : "");
     
     // Temp Factor Selection
     html.replace("%TEMP_LOW%", (abs(tempF - 1.0) < 0.1) ? "selected" : "");
@@ -566,8 +571,9 @@ void handleSaveAux() {
     int startL = server.arg("startL").toInt();
     int startS = server.arg("startS").toInt();
     int startD = server.arg("startD").toInt();
+    int reaction = server.arg("reaction").toInt();
     
-    auxManager.setGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS, startD);
+    auxManager.setGripSettings(base, speedF, tempF, tempO, startT, rainB, startL, startS, startD, reaction);
     
     server.sendHeader("Location", "/aux");
     server.send(303);

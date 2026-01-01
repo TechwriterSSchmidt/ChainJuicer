@@ -12,6 +12,12 @@ enum AuxMode {
     AUX_MODE_HEATED_GRIPS = 2
 };
 
+enum ReactionSpeed {
+    REACTION_SLOW = 0,
+    REACTION_MEDIUM = 1,
+    REACTION_FAST = 2
+};
+
 class AuxManager {
 public:
     AuxManager();
@@ -23,8 +29,8 @@ public:
     AuxMode getMode() const { return _mode; }
     
     // Heated Grips Settings
-    void setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec);
-    void getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec);
+    void setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec, int reactionSpeed);
+    void getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec, int &reactionSpeed);
     
     // Status
     int getCurrentPwm() const { return _currentPwm; }
@@ -61,6 +67,7 @@ private:
     int _startupBoostLevel = 85;// % for startup
     int _startupBoostSec = 75;  // Seconds for startup boost
     int _startDelaySec = 20;    // Seconds delay after start
+    ReactionSpeed _reactionSpeed = REACTION_SLOW;
     
     unsigned long _startTime = 0;
     
