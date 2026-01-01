@@ -35,12 +35,8 @@ void AuxManager::begin(ImuHandler* imu) {
     _startDelaySec = _prefs.getInt("startD", 15);
     _reactionSpeed = (ReactionSpeed)_prefs.getInt("react", REACTION_SLOW);
     
-    // Safety: Heated Grips always start OFF. Aux Power respects saved state.
-    if (_mode == AUX_MODE_HEATED_GRIPS) {
-        _manualOverride = false;
-    } else {
-        _manualOverride = _prefs.getBool("man_ovr", true);
-    }
+    // Load saved state for manual override (persistence)
+    _manualOverride = _prefs.getBool("man_ovr", true);
     
     _prefs.end();
 }

@@ -6,7 +6,9 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 
 ### Web Interface Overhaul
 *   **New Maintenance Page:** Created a dedicated area for system tools to declutter the main settings page.
-    *   Includes: Pump Test, Bleeding Mode, IMU Configuration, Serial Console, Firmware Update, and System Restart.
+    *   **Visual Safety:** "Bleeding Mode" and "Firmware Update" are now color-coded yellow (Warning), while "Restart System" is gray (Neutral). The "Danger Zone" uses standard UI colors to reduce visual alarm fatigue.
+    *   **Functionality:** Includes Pump Test, Bleeding Mode, IMU Configuration, Serial Console, Firmware Update, and System Restart.
+*   **Heated Grips Settings:** Reorganized the settings page. Parameters are now logically grouped (Compensation factors vs. Base settings) with visual separation for better usability.
 *   **Factory Reset:** Added a software-based Factory Reset button to the Maintenance page (no need to hold the physical button at boot).
 *   **Layout Improvements:** Moved the "Statistics" card to the top of the Settings page for immediate visibility of key metrics.
 
@@ -18,6 +20,8 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **Documentation:** Added a clear "Mode Hierarchy" section to the manual, explaining how Chain Flush, Offroad, Emergency, and Rain modes interact.
 
 ### Logic Improvements
+*   **Aux Port Persistence:** The ON/OFF state of the Aux Port (Heated Grips / Power) is now saved to non-volatile memory. The system remembers if you turned it off manually and restores the state after a reboot.
+*   **Heated Grips Startup:** Fixed the startup logic. The "Startup Boost" now correctly begins *after* the configured "Start Delay" has elapsed, ensuring the boost phase isn't consumed while waiting for the engine to stabilize.
 *   **Temperature Compensation:** Changed from hysteresis-based to a fixed 15-minute update interval for more stable and predictable viscosity adjustments.
 *   **IMU Turn Safety:** Corrected the logic to suppress oiling when leaning towards the **tire** (unsafe side). When leaning towards the chain, oiling is now permitted.
 *   **Console Logging:** Added comprehensive logging of all physical button presses and WebUI actions to the Web Console for better diagnostics.

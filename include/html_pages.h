@@ -98,8 +98,8 @@ const char* htmlMaintenance = R"rawliteral(
         <div class='note' style='font-weight:bold; margin-bottom:15px'>
             ⚠️ Reset and restart actions are executed immediately without confirmation!
         </div>
-        <a href='/restart' class='btn' style='background:#ffc107; margin-bottom:10px'>Restart System</a>        
-        <a href='/update' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Firmware Update</a>
+        <a href='/restart' class='btn' style='background:#555; margin-bottom:10px'>Restart System</a>        
+        <a href='/update' class='btn' style='background:#555; color:#000; margin-bottom:10px'>Firmware Update</a>
         <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px'>Factory Reset</a>
         <a href='/bleeding' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Start Bleeding Mode</a>
     </div>
@@ -518,28 +518,6 @@ const char* htmlAuxConfig = R"rawliteral(
                 <h3>Heated Grips Settings</h3>
                 <table>
                     <tr>
-                        <td>Base Level (%)</td>
-                        <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
-                    </tr>
-                    <tr>
-                        <td>Start Temp (&deg;C)</td>
-                        <td><input type='number' name='startT' value='%STARTT%' step='1'></td>
-                    </tr>
-                    <tr>
-                        <td>Temp Sensor Offset (&deg;C)</td>
-                        <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
-                    </tr>
-                    <tr>
-                        <td>Reaction Speed</td>
-                        <td>
-                            <select name='reaction'>
-                                <option value='0' %REACT_SLOW%>Slow (Smooth)</option>
-                                <option value='1' %REACT_MED%>Medium</option>
-                                <option value='2' %REACT_FAST%>Fast (Responsive)</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
                         <td>Wind Chill Compensation</td>
                         <td>
                             <select name='speedF'>
@@ -560,18 +538,24 @@ const char* htmlAuxConfig = R"rawliteral(
                         </td>
                     </tr>
                     <tr>
-                        <td style="font-size:1.1em; color:#ccc">Current Reading:</td>
-                        <td style="font-size:1.1em; color:#ffc107; font-weight:bold">%CURRENT_TEMP% &deg;C</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" class="note" style="padding-bottom: 10px;">
-                            Correction for sensor placement. Use <b>negative values</b> (e.g. -5.0) if sensor is near a hot engine to lower the reading.
-                        </td>
-                    </tr>
-                    <tr>
                         <td>Rain Boost (%)</td>
                         <td><input type='number' name='rainB' value='%RAINB%' min='0' max='100'></td>
                     </tr>
+                    <tr>
+                        <td>Base Level (%)</td>
+                        <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
+                    </tr>
+                    <tr>
+                        <td>Reaction Speed</td>
+                        <td>
+                            <select name='reaction'>
+                                <option value='0' %REACT_SLOW%>Slow (Smooth)</option>
+                                <option value='1' %REACT_MED%>Medium</option>
+                                <option value='2' %REACT_FAST%>Fast (Responsive)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr><td colspan="2" style="height:15px"></td></tr>
                     <tr>
                         <td>Startup Boost Level (%)</td>
                         <td><input type='number' name='startL' value='%STARTL%' min='0' max='100'></td>
@@ -579,6 +563,23 @@ const char* htmlAuxConfig = R"rawliteral(
                     <tr>
                         <td>Startup Boost Time (sec)</td>
                         <td><input type='number' name='startS' value='%STARTS%' min='0'></td>
+                    </tr>
+                    <tr>
+                        <td>Start Temp (&deg;C)</td>
+                        <td><input type='number' name='startT' value='%STARTT%' step='1'></td>
+                    </tr>
+                    <tr>
+                        <td>Temp Sensor Offset (&deg;C)</td>
+                        <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:1.1em; color:#ccc">Current Reading:</td>
+                        <td style="font-size:1.1em; color:#ffc107; font-weight:bold">%CURRENT_TEMP% &deg;C</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="note" style="padding-bottom: 10px;">
+                            Correction for sensor placement. Use <b>negative values</b> (e.g. -5.0) if sensor is near a hot engine to lower the reading.
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -590,8 +591,7 @@ const char* htmlAuxConfig = R"rawliteral(
     <div id='grips_desc' class='card' style='display:none; margin-top:15px'>
         <h3>Feature Description</h3>
         <div class='note' style='margin-bottom:15px; line-height:1.4'>
-            The Heated Grips mode automatically adjusts the power (PWM) based on speed and temperature.<br>
-            The power changes smoothly (approx. 5 sec lag) to prevent rapid fluctuations.<br><br>
+            The Heated Grips mode automatically adjusts the power (PWM) based on speed, temperature and rain mode settings. For faster heat up, a higher initial power leel can be configured.<br>
         </div>
     </div>
 
@@ -599,7 +599,7 @@ const char* htmlAuxConfig = R"rawliteral(
         <h3>Aux Power Description</h3>
         <div class='note' style='margin-bottom:15px; line-height:1.4'>
             <b>Aux Power</b> automatically turns on the Aux Port (12V) after a configurable delay (Ignition ON).<br>
-            It protects the battery during cranking.<br><br>
+            <br>
             <span style='color:red; font-weight:bold'>⚠️ WARNING:</span><br>
             Do not exceed a continuous load of <b>5 Amps</b> on this port to prevent overheating of the traces.
         </div>
