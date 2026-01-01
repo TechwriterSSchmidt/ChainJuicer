@@ -91,19 +91,19 @@ const char* htmlMaintenance = R"rawliteral(
         <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
         <a href='/imu' class='btn btn-sec' style='margin-bottom:10px'>IMU Configuration</a>
         <a href='/console' class='btn btn-sec' style='margin-bottom:10px'>Serial Console</a>
-        <a href='/restart' class='btn btn-sec' style='background:#d32f2f; color:#fff; margin-bottom:10px'>Restart System</a>
+        <a href='/restart' class='btn' style='background:#555; margin-bottom:10px'>Restart System</a>
     </div>
 
-    <div class='card' style='border: 1px solid #d32f2f;'>
-        <h3 style='color:#d32f2f'>Danger Zone</h3>
-        <div class='note' style='color:#d32f2f; font-weight:bold; margin-bottom:15px'>
+    <div class='card'>
+        <h3>Danger Zone</h3>
+        <div class='note' style='font-weight:bold; margin-bottom:15px'>
             ⚠️ Reset and restart actions are executed immediately without confirmation!
         </div>
         
-        <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
+        <a href='/bleeding' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Start Bleeding Mode</a>
         <div class='note' style='margin-bottom:15px'>Runs pump for 15s. Only at standstill.</div>
         
-        <a href='/update' class='btn btn-sec' style='margin-bottom:10px'>Firmware Update</a>
+        <a href='/update' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Firmware Update</a>
         <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px'>Factory Reset</a>
     </div>
 </body>
@@ -525,14 +525,12 @@ const char* htmlAuxConfig = R"rawliteral(
                         <td><input type='number' name='base' value='%BASE%' min='0' max='100'></td>
                     </tr>
                     <tr>
-                        <td>Wind Chill Compensation</td>
-                        <td>
-                            <select name='speedF'>
-                                <option value='0.2' %SPEED_LOW%>Low</option>
-                                <option value='0.5' %SPEED_MED%>Medium</option>
-                                <option value='1.0' %SPEED_HIGH%>High</option>
-                            </select>
-                        </td>
+                        <td>Start Temp (&deg;C)</td>
+                        <td><input type='number' name='startT' value='%STARTT%' step='1'></td>
+                    </tr>
+                    <tr>
+                        <td>Temp Sensor Offset (&deg;C)</td>
+                        <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
                         <td>Reaction Speed</td>
@@ -545,6 +543,16 @@ const char* htmlAuxConfig = R"rawliteral(
                         </td>
                     </tr>
                     <tr>
+                        <td>Wind Chill Compensation</td>
+                        <td>
+                            <select name='speedF'>
+                                <option value='0.2' %SPEED_LOW%>Low</option>
+                                <option value='0.5' %SPEED_MED%>Medium</option>
+                                <option value='1.0' %SPEED_HIGH%>High</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
                         <td>Temp Compensation</td>
                         <td>
                             <select name='tempF'>
@@ -553,14 +561,6 @@ const char* htmlAuxConfig = R"rawliteral(
                                 <option value='3.0' %TEMP_HIGH%>High</option>
                             </select>
                         </td>
-                    </tr>
-                    <tr>
-                        <td>Start Temp (&deg;C)</td>
-                        <td><input type='number' name='startT' value='%STARTT%' step='1'></td>
-                    </tr>
-                    <tr>
-                        <td>Temp Sensor Offset (&deg;C)</td>
-                        <td><input type='number' name='tempO' value='%TEMPO%' step='0.1'></td>
                     </tr>
                     <tr>
                         <td style="font-size:1.1em; color:#ccc">Current Reading:</td>
