@@ -660,8 +660,8 @@ void Oiler::loadConfig() {
     tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
 
     // Load Emergency Mode forced setting
-    // SAFETY: Always start with Forced Emergency Mode OFF to prevent accidental oiling in garage
-    emergencyModeForced = false; 
+    // SAFETY: Previously we forced this OFF. Now we allow persistence for long trips with broken GPS.
+    emergencyModeForced = preferences.getBool("emerg_force", false); 
 
     // If forced, activate immediately
     if (emergencyModeForced) {
@@ -718,6 +718,7 @@ void Oiler::saveConfig() {
     // Save Rain Mode
     preferences.putBool("rain_mode", rainMode);
     preferences.putBool("emerg_mode", emergencyMode);
+    preferences.putBool("emerg_force", emergencyModeForced);
 
     // Save Offroad & Startup
     preferences.putInt("off_int", offroadIntervalMin);

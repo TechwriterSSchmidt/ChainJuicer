@@ -21,6 +21,7 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **IMU Turn Safety:** Corrected the logic to suppress oiling when leaning towards the **tire** (unsafe side). When leaning towards the chain, oiling is now permitted.
 *   **Console Logging:** Added comprehensive logging of all physical button presses and WebUI actions to the Web Console for better diagnostics.
 *   **Bleeding Stats:** Fixed an issue where oil consumption during Bleeding Mode was not logged. The total amount consumed is now displayed in the console upon completion.
+*   **Persistent Emergency Mode:** The "Forced Emergency Mode" setting is now saved to non-volatile memory. This allows the mode to persist across system restarts, which is critical for long trips with a broken GPS module.
 
 ## v1.0.0 - Initial Release (2025-12-29)
 
