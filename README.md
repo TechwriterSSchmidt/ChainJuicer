@@ -395,7 +395,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
 *Note: Prices vary by shipping location and seller.*
 
 ### Hardware Notes
-*   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the status display in the cockpit and a second one (optional) near the tank or pump for debugging/tank warning.
+*   **LED:** The code is configured for **2x WS2812B LEDs**. You can use one for the Chain Juicer status display in the cockpit and a second one (optional) for the Aux Port (Grip Heating or Aux Power).
 *   **LCTECH Board Modification (Critical):** If you are using the LCTECH Relay Board with the NCE6020AK MOSFET and J3Y driver circuit, you should modify the switching circuit of the pump (only the pump circuit!) to prevent the pump from triggering briefly during boot as follows:
     1.  **Remove:** Transistor `J3Y` (S8050) and Resistors `R8` & `R7`.
     2.  **Keep:** Resistor `R3` (10k Pull-Down).
