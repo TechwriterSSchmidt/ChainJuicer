@@ -376,9 +376,9 @@ const char* htmlUpdate = R"rawliteral(
     <a href='/' class='back-btn'>&larr; Home</a>
     <h2>Firmware Update</h2>
     <form method='POST' action='/update' enctype='multipart/form-data'>
-        <input type='file' name='update'>
+        <input type='file' name='update' accept='.bin'>
         <br>
-        <input type='submit' value='Update Firmware'>
+        <input type='submit' value='Update Firmware' class='btn'>
     </form>
 </body>
 </html>
