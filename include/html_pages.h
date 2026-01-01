@@ -449,7 +449,7 @@ const char* htmlIMU = R"rawliteral(
             <li><b>Garage Guard:</b> Prevents oiling if lean angle > 10&deg; (Side Stand).</li>
             <li><b>Crash Detect:</b> Stops pump if lean angle > 70&deg;. Requires restart to reset.</li>
             <li><b>Smart Stop:</b> Detects stops faster than GPS.</li>
-            <li><b>Turn Safety:</b> Stops oiling in turns towards the chain side (> 20&deg;).</li>
+            <li><b>Turn Safety:</b> Stops oiling in turns towards the tire side (> 20&deg;).</li>
         </ul>
     </div>
 </body>

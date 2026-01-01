@@ -17,8 +17,10 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 
 ### Logic Improvements
 *   **Temperature Compensation:** Changed from hysteresis-based to a fixed 15-minute update interval for more stable and predictable viscosity adjustments.
+*   **IMU Turn Safety:** Corrected the logic to suppress oiling when leaning towards the **tire** (unsafe side). When leaning towards the chain, oiling is now permitted.
+*   **Console Logging:** Added comprehensive logging of all physical button presses and WebUI actions to the Web Console for better diagnostics.
 
-## v1.0.0 - Initial Release (2026-01-01)
+## v1.0.0 - Initial Release (2025-12-29)
 
 **Chain Juicer** is a multi-tool for motorcycle chain maintenance. This initial release brings a complete suite of features for intelligent chain lubrication and accessory management, designed for the ESP32 platform.
 

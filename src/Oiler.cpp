@@ -355,16 +355,20 @@ void Oiler::handleButton() {
             // 1 Click -> Toggle Rain Mode
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
+                webConsole.log("BTN: Rain Mode " + String(rainMode ? "ON" : "OFF"));
             }
         } else if (buttonClickCount == 3) {
             // 3 Clicks -> Toggle Offroad Mode
             setOffroadMode(!offroadMode);
+            webConsole.log("BTN: Offroad Mode " + String(offroadMode ? "ON" : "OFF"));
         } else if (buttonClickCount == 4) {
             // 4 Clicks -> Toggle Chain Flush Mode
             setFlushMode(!flushMode);
+            webConsole.log("BTN: Flush Mode " + String(flushMode ? "ON" : "OFF"));
         } else if (buttonClickCount == 5) {
             // 5 Clicks -> Toggle WiFi
             wifiToggleRequested = true;
+            webConsole.log("BTN: WiFi Toggle Requested");
         }
         
         // Reset after timeout
@@ -376,6 +380,7 @@ void Oiler::handleButton() {
         if (millis() - buttonPressStartTime > 2000) {
             auxToggleRequested = true;
             longPressHandled = true; // Prevent repeat
+            webConsole.log("BTN: Aux Toggle Requested (Long Press)");
             
             // Visual Feedback (Optional, but good UX)
             // We could flash the LED here, but updateLED handles status.
@@ -1055,15 +1060,15 @@ void Oiler::processDistance(double distKm, float speedKmh) {
         if (currentProgress >= 1.0) {
             
             // Turn Safety Logic (Delayed Oiling)
-            // If we are leaning significantly on the chain side, we delay the oiling.
-            // We only release the oiling if we are upright or leaning away.
+            // If we are leaning significantly towards the tire (unsafe side), we delay the oiling.
+            // We only release the oiling if we are upright or leaning towards the chain (safe side).
             
             bool unsafeToOil = false;
             
             if (oilingDelayed) {
-                // We are already delayed. Wait until we are strictly upright or leaning away.
+                // We are already delayed. Wait until we are strictly upright or leaning safe.
                 // Threshold 5.0 deg allows for slight wobble but ensures we are out of the turn.
-                if (imu.isLeaningOnChainSide(5.0)) {
+                if (imu.isLeaningTowardsTire(5.0)) {
                     unsafeToOil = true; // Still unsafe
                 } else {
                     unsafeToOil = false; // Safe now!
@@ -1072,7 +1077,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             } else {
                 // New trigger. Check if we are currently in a turn.
                 // Threshold 20.0 deg is for significant turns.
-                if (imu.isLeaningOnChainSide(20.0)) {
+                if (imu.isLeaningTowardsTire(20.0)) {
                     unsafeToOil = true;
                     oilingDelayed = true;
                 }
@@ -1183,10 +1188,10 @@ void Oiler::processPump() {
     if (now - lastPulseTime >= effectivePause) {
         
         // Turn Safety Check (Inter-Pulse)
-        // If we are in a multi-pulse sequence and suddenly lean into a turn, we should pause.
+        // If we are in a multi-pulse sequence and suddenly lean towards the tire, we should pause.
         // We check this BEFORE executing the next pulse.
         if (!bleedingMode) { // Don't interrupt bleeding
-             if (imu.isLeaningOnChainSide(20.0)) {
+             if (imu.isLeaningTowardsTire(20.0)) {
                  // Unsafe! Delay this pulse.
                  // We simply return here. The 'lastPulseTime' is NOT updated, so we will try again next loop.
                  // This effectively "pauses" the sequence until the bike is upright again.

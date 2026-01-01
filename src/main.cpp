@@ -112,6 +112,7 @@ void handleToggleEmerg() {
     resetWifiTimer();
     bool current = oiler.isEmergencyModeForced();
     oiler.setEmergencyModeForced(!current);
+    webConsole.log("CMD: Toggle Emergency Mode " + String(!current ? "ON" : "OFF"));
     oiler.saveConfig();
     server.sendHeader("Location", "/");
     server.send(303);
@@ -369,6 +370,7 @@ void handleRoot() {
 
 void handleSaveLED() {
     resetWifiTimer();
+    webConsole.log("CMD: Save LED Settings");
     
     // Convert 0-100% back to 0-255
     if(server.hasArg("led_dim")) {
@@ -403,6 +405,7 @@ void handleSaveLED() {
 
 void handleSave() {
     resetWifiTimer();
+    webConsole.log("CMD: Save Settings");
     for(int i=0; i<NUM_RANGES; i++) {
         SpeedRange* r = oiler.getRangeConfig(i);
         if(server.hasArg("km" + String(i))) r->intervalKm = server.arg("km" + String(i)).toFloat();
@@ -463,6 +466,7 @@ void handleIMUConfig() {
     resetWifiTimer();
     if (server.hasArg("chain_side")) {
         bool isRight = (server.arg("chain_side").toInt() == 1);
+        webConsole.log("CMD: Set Chain Side " + String(isRight ? "RIGHT" : "LEFT"));
         oiler.imu.setChainSide(isRight);
     }
     server.sendHeader("Location", "/imu");
@@ -535,6 +539,7 @@ void handleConsoleClear() {
 
 void handleSaveAux() {
     resetWifiTimer();
+    webConsole.log("CMD: Save Aux Settings");
     
     if (server.hasArg("mode")) {
         auxManager.setMode((AuxMode)server.arg("mode").toInt());
@@ -558,6 +563,7 @@ void handleSaveAux() {
 
 void handleIMUZero() {
     resetWifiTimer();
+    webConsole.log("CMD: IMU Zero Calibration");
     oiler.imu.calibrateZero(); 
     server.sendHeader("Location", "/imu");
     server.send(303);
@@ -565,6 +571,7 @@ void handleIMUZero() {
 
 void handleIMUSide() {
     resetWifiTimer();
+    webConsole.log("CMD: IMU Side Stand Calibration");
     oiler.imu.calibrateSideStand();
     server.sendHeader("Location", "/imu");
     server.send(303);
@@ -639,20 +646,28 @@ void setup() {
     // Maintenance Routes
     server.on("/maintenance", handleMaintenance);
     server.on("/test_pump", HTTP_GET, []() {
+        webConsole.log("CMD: Test Pump (1 Pulse)");
         oiler.triggerOil(1); // Fire 1 pulse
         server.sendHeader("Location", "/maintenance");
         server.send(303);
     });
     
     server.on("/bleeding", HTTP_GET, []() {
+        webConsole.log("CMD: Start Bleeding");
         oiler.startBleeding();
         server.sendHeader("Location", "/maintenance");
         server.send(303);
     });
     
     server.on("/restart", HTTP_GET, []() {
+        webConsole.log("CMD: Restart System");
         server.send(200, "text/plain", "Restarting...");
         delay(500);
+        ESP.restart();
+    });
+
+    server.on("/factory_reset", HTTP_GET, []() {
+        webConsole.log("CMD: Factory Reset");
         ESP.restart();
     });
 

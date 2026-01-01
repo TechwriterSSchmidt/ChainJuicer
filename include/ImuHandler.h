@@ -32,7 +32,7 @@ public:
     bool isParked(); // Garage Guard (Side stand or Center stand)
     bool isCrashed(); // Lean > 70
     bool isMotionDetected(); // Smart Stop helper
-    bool isLeaningOnChainSide(float thresholdDeg); // Returns true if leaning towards the chain side
+    bool isLeaningTowardsTire(float thresholdDeg); // Returns true if leaning towards the tire (Unsafe to oil)
 
     // Configuration
     void setChainSide(bool isRight); // false = Left (Default), true = Right

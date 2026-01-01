@@ -191,7 +191,7 @@ bool ImuHandler::isMotionDetected() {
     return false; 
 }
 
-bool ImuHandler::isLeaningOnChainSide(float thresholdDeg) {
+bool ImuHandler::isLeaningTowardsTire(float thresholdDeg) {
     if (!_available) return false;
     
     // Determine Left direction based on Side Stand Calibration
@@ -214,11 +214,17 @@ bool ImuHandler::isLeaningOnChainSide(float thresholdDeg) {
         isLeaningLeft = (_roll > thresholdDeg);
     }
 
-    // If Chain is on Right, we check for Right Lean (which is !Left)
-    // Wait, Right Lean is opposite of Left Lean.
+    // Logic: We want to avoid oiling if we lean towards the TIRE.
+    // Tire is always opposite to the Chain.
     
     if (_chainOnRight) {
-        // Check for Right Lean
+        // Chain Right -> Tire Left
+        // Unsafe if leaning LEFT
+        return isLeaningLeft;
+    } else {
+        // Chain Left -> Tire Right
+        // Unsafe if leaning RIGHT (which is !Left)
+        
         if (leftSign < 0) {
             // Left is Negative, so Right is Positive
             return (_roll > thresholdDeg);
@@ -226,8 +232,5 @@ bool ImuHandler::isLeaningOnChainSide(float thresholdDeg) {
             // Left is Positive, so Right is Negative
             return (_roll < -thresholdDeg);
         }
-    } else {
-        // Chain is on Left (Default)
-        return isLeaningLeft;
     }
 }

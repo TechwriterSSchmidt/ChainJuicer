@@ -158,6 +158,16 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **GND:** GND
 *   **Data:** GPIO 15 (Default) - Requires 4.7kΩ Pull-Up Resistor to VCC.
 
+## 🧭 IMU Features (BNO085)
+
+If an IMU is connected, the system enables advanced safety and convenience features:
+
+*   **Turn Safety:** Prevents oiling while significant cornering.
+    *   **Logic:** Oiling is paused if the bike leans > 20° towards the **tire side** (unsafe zone). Leaning towards the chain side is considered safe (oil drops on chain, not tire).
+*   **Crash Detection:** Stops the pump immediately if the lean angle exceeds 60° (bike on ground).
+*   **Garage Guard:** Detects if the bike is on the side stand or center stand and prevents oiling (even if GPS drifts).
+*   **Smart Stop:** Uses accelerometer data to detect standstill faster than GPS.
+
 ## 🔌 Aux Port Manager (GPIO 17)
 
 The system features a versatile Auxiliary Output (MOSFET/Relay driver) that can be configured for two main purposes:
