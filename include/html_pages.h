@@ -87,14 +87,8 @@ const char* htmlMaintenance = R"rawliteral(
     <h2>Maintenance</h2>
     
     <div class='card'>
-        <h3>Pump Control</h3>
-        <div style='margin-bottom:15px'>
-            <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
-        </div>
-    </div>
-
-    <div class='card'>
         <h3>System Tools</h3>
+        <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
         <a href='/imu' class='btn btn-sec' style='margin-bottom:10px'>IMU Configuration</a>
         <a href='/console' class='btn btn-sec' style='margin-bottom:10px'>Serial Console</a>
         <a href='/restart' class='btn btn-sec' style='background:#d32f2f; color:#fff; margin-bottom:10px'>Restart System</a>
@@ -308,9 +302,9 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Update Interval:</b> Temperature is measured every 15 minutes.</li>
     </ul>
     <h3>Aux Port Manager (GPIO 17)</h3>
-    <p>Controls the Auxiliary Output for accessories.</p>
+    <p>Controls the Auxiliary Output for accessories. Set <b>Start Delay</b> to protect battery after boot before cranking the motor.</p>
     <ul>
-        <li><b>Aux Power:</b> Turns ON after a configurable delay when the ESP boots (Ignition ON). Protects battery during cranking.</li>
+        <li><b>Aux Power:</b> Turns ON after a the start delay when the ESP boots (Ignition ON).</li>
         <li><b>Heated Grips:</b> Automated PWM control.
             <ul>
                 <li><b>Base:</b> Minimum heat level.</li>
@@ -319,7 +313,6 @@ const char* htmlHelp = R"rawliteral(
                 <li><b>Rain:</b> Adds boost in Rain Mode.</li>
                 <li><b>Startup:</b> High power for 60s after start.</li>
                 <li><b>Offset:</b> Corrects sensor reading (e.g. if placed near hot engine).</li>
-                <li><b>Start Delay:</b> Waits after boot before turning on (protects battery).</li>
             </ul>
         </li>
     </ul>
