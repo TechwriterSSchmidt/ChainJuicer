@@ -67,9 +67,42 @@ const char* htmlLanding = R"rawliteral(
     <a href='/settings' class='btn'>Juicer Settings</a>
     <a href='/led_settings' class='btn btn-sec'>LED Settings</a>
     <a href='/aux' class='btn btn-sec'>Aux Port</a>
-    <a href='/imu' class='btn btn-sec'>IMU Config</a>
-    <a href='/console' class='btn btn-sec'>Console</a>
+    <a href='/maintenance' class='btn btn-sec'>Maintenance</a>
     <a href='/help' class='btn btn-sec'>Manual</a>
+</body>
+</html>
+)rawliteral";
+
+const char* htmlMaintenance = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Maintenance</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <a href='/' class='back-btn'>&larr; Home</a>
+    <h2>Maintenance</h2>
+    
+    <div class='card'>
+        <h3>Pump Control</h3>
+        <div style='margin-bottom:15px'>
+            <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
+            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
+            <div class='note'>Bleeding Mode runs the pump for 15s to fill the line. Only works at standstill.</div>
+        </div>
+    </div>
+
+    <div class='card'>
+        <h3>System Tools</h3>
+        <a href='/imu' class='btn btn-sec' style='margin-bottom:10px'>IMU Configuration</a>
+        <a href='/console' class='btn btn-sec' style='margin-bottom:10px'>Serial Console</a>
+        <a href='/update' class='btn btn-sec' style='margin-bottom:10px'>Firmware Update</a>
+        <a href='/restart' class='btn btn-sec' style='background:#d32f2f; color:#fff; margin-bottom:10px' onclick="return confirm('Restart System?')">Restart System</a>
+        <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px' onclick="return confirm('FACTORY RESET: All settings will be lost. Continue?')">Factory Reset</a>
+    </div>
 </body>
 </html>
 )rawliteral";
@@ -106,6 +139,15 @@ const char* htmlFooter = R"rawliteral(
         </table>
         </div>
         <div class='card'>
+        <h3>Statistics</h3>
+        <table>
+            <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
+            <tr><td>Total Juices</td><td>%PUMP_COUNT%</td></tr>
+        </table>
+        <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:1.1em'>[Reset Stats]</a></div>
+        <div class='progress'>Current Progress: %PROGRESS%%</div>
+        </div>
+        <div class='card'>
         <h3>General</h3>
         <table>
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
@@ -116,13 +158,6 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Pulses per Event</td><td><input type='number' name='flush_pls' value='%FLUSH_PLS%' class='num-input'></td></tr>
             <tr><td>Interval (Seconds)</td><td><input type='number' name='flush_int' value='%FLUSH_INT%' class='num-input'></td></tr>
         </table>
-        </div>
-        <div class='card'>
-        <h3>Maintenance</h3>
-        <div style='margin-bottom:15px'>
-            <a href='/test_pump' class='btn' style='background:#555; margin-bottom:10px'>Test Pump (1 Pulse)</a>
-            <a href='/bleeding' class='btn' style='background:#d32f2f; margin-bottom:10px'>Start Bleeding Mode</a>
-        </div>
         </div>
         <div class='card'>
         <h3>Temperature Compensation</h3>
@@ -147,15 +182,6 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Current Level</td><td>%TANK_LEVEL% ml (%TANK_PCT%%)</td></tr>
         </table>
         <div style='margin-top:10px'><a href='/refill' style='color:#28a745;text-decoration:none;font-size:1.1em'>[Refill Tank]</a></div>
-        </div>
-        <div class='card'>
-        <h3>Statistics</h3>
-        <table>
-            <tr><td>Total Distance</td><td>%TOTAL_DIST% km</td></tr>
-            <tr><td>Total Juices</td><td>%PUMP_COUNT%</td></tr>
-        </table>
-        <div style='margin-top:10px'><a href='/reset_stats' style='color:#d32f2f;text-decoration:none;font-size:1.1em'>[Reset Stats]</a></div>
-        <div class='progress'>Current Progress: %PROGRESS%%</div>
         </div>
         <input type='submit' value='Save' class='btn'>
         <div style='margin-top:20px;text-align:center'><a href='/update' style='color:#888;text-decoration:none;font-size:1.1em'>[Firmware Update]</a></div>
@@ -297,16 +323,31 @@ const char* htmlHelp = R"rawliteral(
     <ul>
         <li><b>1x Click:</b> Toggle 'Rain Mode'.</li>
         <li><b>Hold > 2s:</b> Toggle 'Aux Port' (Manual Override).</li>
+        <li><b>1x Click:</b> Toggle 'Rain Mode' (600ms delay).</li>
         <li><b>3x Click:</b> Toggle 'Offroad Mode'.</li>
         <li><b>4x Click:</b> Toggle 'Chain Flush Mode'.</li>
         <li><b>5x Click:</b> Toggle 'WiFi'.</li>
-        <li><b>Hold > 5s (at Boot):</b> Factory Reset.</li>
+        <li><b>Hold > 2s:</b> Toggle 'Aux Port'.</li>
+        <li><b>Hold > 10s (at Boot):</b> Factory Reset.</li>
+    </ul>
+    <h3>Maintenance</h3>
+    <ul>
+        <li><b>Factory Reset:</b> Resets all settings to default. Available via Web Interface (Maintenance Page) or Hardware Button (Hold > 10s at Boot).</li>
+    </ul>
+    <h3>Mode Hierarchy</h3>
+    <div class='note'>If multiple modes are active:</div>
+    <ul>
+        <li><b>1. Chain Flush:</b> Highest Priority. Runs with Offroad.</li>
+        <li><b>2. Offroad:</b> Runs with Flush.</li>
+        <li><b>3. Emergency:</b> Active if GPS lost. Disables Rain Mode.</li>
+        <li><b>4. Rain:</b> Lowest Priority.</li>
     </ul>
     <h3>LED Status</h3>
     <ul>
         <li><span class='color-box' style='background:green'></span> <b>Green:</b> GPS OK (Ready).</li>
         <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan (blink):</b> 'Chain Flush Mode' Active.</li>
+        <li><span class='color-box' style='background:magenta'></span> <b>Magenta (blink):</b> 'Offroad Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> 'Emergency Mode' (No GPS > 3 min).</li>
         <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s, breathes 3x).</li>

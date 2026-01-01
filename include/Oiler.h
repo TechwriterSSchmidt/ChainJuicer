@@ -73,6 +73,7 @@ public:
 
     // Factory Reset
     void checkFactoryReset();
+    void performFactoryReset();
 
     // WiFi Status
     void setWifiActive(bool active);

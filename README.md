@@ -49,7 +49,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
-| **Factory Reset** | Reset to defaults. | Hold button at boot. |
+| **Factory Reset** | Reset to defaults. | **WebUI:** Maintenance Page. **Hardware:** Hold button > 10s at boot. |
 
 ## 🧭 Optional IMU Features
 
@@ -247,6 +247,17 @@ ESP32 GPIO (the one that switches the MOSFET
 | **5x Click** | < 2s | Always | Activate **WiFi & Web Interface** (LED: White pulsing). |
 | **Hold** | > 2s | Always | **Aux Port / Grip Heating** Manual Toggle (Override). |
 | **Hold at Boot** | > 10s | During Power-On | **Factory Reset** (LED: Yellow -> Red fast blink) |
+
+### Mode Hierarchy & Interactions
+
+If multiple modes are active simultaneously, the system follows this priority logic:
+
+| Priority | Mode | LED Indication | Interaction Notes |
+| :--- | :--- | :--- | :--- |
+| **1 (Highest)** | **Chain Flush** | **Cyan Blink** | Runs in parallel with Offroad Mode. Requires Speed > 2 km/h. |
+| **2** | **Offroad** | **Magenta Blink** | Runs in parallel with Flush Mode. Requires Speed > 7 km/h. |
+| **3** | **Emergency** | **Cyan / Orange** | Active if GPS is lost. **Disables Rain Mode.** Note: Flush/Offroad will NOT oil because GPS speed is 0. |
+| **4 (Lowest)** | **Rain** | **Blue** | Disabled by Emergency Mode. |
 
 ### LED Status Codes
 

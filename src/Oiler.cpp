@@ -218,14 +218,20 @@ void Oiler::checkFactoryReset() {
         }
 
         if (resetTriggered) {
-            Serial.println("PERFORMING FACTORY RESET...");
-            preferences.begin("oiler", false);
-            preferences.clear(); // Nuke everything
-            preferences.end();
-            Serial.println("Done. Restarting...");
-            ESP.restart();
+            performFactoryReset();
         }
     }
+}
+
+void Oiler::performFactoryReset() {
+    Serial.println("PERFORMING FACTORY RESET...");
+    webConsole.log("PERFORMING FACTORY RESET...");
+    preferences.begin("oiler", false);
+    preferences.clear(); // Nuke everything
+    preferences.end();
+    Serial.println("Done. Restarting...");
+    delay(500); // Give time to send response if called from Web
+    ESP.restart();
 }
 
 void Oiler::loop() {

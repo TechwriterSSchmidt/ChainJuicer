@@ -509,6 +509,11 @@ void handleAuxConfig() {
     server.send(200, "text/html", html);
 }
 
+void handleMaintenance() {
+    resetWifiTimer();
+    server.send(200, "text/html", htmlMaintenance);
+}
+
 void handleConsole() {
     resetWifiTimer();
     server.send(200, "text/html", htmlConsole);
@@ -630,16 +635,28 @@ void setup() {
     server.on("/refill", handleRefill);
     
     // Maintenance Routes
+    server.on("/maintenance", handleMaintenance);
     server.on("/test_pump", HTTP_GET, []() {
         oiler.triggerOil(1); // Fire 1 pulse
-        server.sendHeader("Location", "/settings");
+        server.sendHeader("Location", "/maintenance");
         server.send(303);
     });
     
     server.on("/bleeding", HTTP_GET, []() {
         oiler.startBleeding();
-        server.sendHeader("Location", "/settings");
+        server.sendHeader("Location", "/maintenance");
         server.send(303);
+    });
+    
+    server.on("/restart", HTTP_GET, []() {
+        server.send(200, "text/plain", "Restarting...");
+        delay(500);
+        ESP.restart();
+    });
+
+    server.on("/factory_reset", HTTP_GET, []() {
+        server.send(200, "text/plain", "Factory Resetting... Please reconnect to WiFi AP after reboot.");
+        oiler.performFactoryReset();
     });
     
     // OTA Update
