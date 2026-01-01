@@ -11,6 +11,13 @@
 #define LUT_MAX_SPEED ((int)MAX_SPEED_KMH)
 #define LUT_SIZE ((LUT_MAX_SPEED / LUT_STEP) + 1)
 
+enum PumpState {
+    PUMP_IDLE,
+    PUMP_RAMP_UP,
+    PUMP_HOLD,
+    PUMP_RAMP_DOWN
+};
+
 class Oiler {
 public:
     Oiler();
@@ -72,7 +79,6 @@ public:
     void triggerOil(int pulses); // Made public for manual trigger
 
     // Factory Reset
-    void checkFactoryReset();
     void performFactoryReset();
 
     // WiFi Status
@@ -242,8 +248,16 @@ private:
     unsigned long lastPulseTime;
     bool pulseState; // true = HIGH, false = LOW
 
-    // Helper for PWM Pump Control
-    void pumpPulse(unsigned long durationMs);
+    // Pump State Machine
+    PumpState pumpState = PUMP_IDLE;
+    unsigned long pumpStateStartTime = 0;
+    unsigned long pumpTargetDuration = 0;
+    int pumpCurrentDuty = 0;
+    unsigned long pumpLastStepTime = 0;
+
+    void startPulse(unsigned long durationMs);
+    void updatePumpPulse();
+    void handlePulseFinished();
 
     // Temperature Compensation
     float currentTempC;

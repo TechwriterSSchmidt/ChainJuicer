@@ -298,7 +298,7 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Logic:</b> The system automatically calculates the required energy for colder/warmer temperatures based on the selected profile.</li>
         <li><b>Update Interval:</b> Temperature is measured every 15 minutes.</li>
     </ul>
-    <h3>Aux Port Manager (GPIO 17)</h3>
+    <h3>Aux Port Manager</h3>
     <p>Controls the Auxiliary Output for accessories. Set <b>Start Delay</b> to protect battery after boot before cranking the motor.</p>
     <ul>
         <li><b>Aux Power:</b> Turns ON after a the start delay when the ESP boots (Ignition ON).</li>

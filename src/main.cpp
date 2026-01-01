@@ -598,12 +598,6 @@ void handleIMUSide() {
 void setup() {
     Serial.begin(115200);
 
-    // ---------------------------------------------------------
-    // FACTORY RESET CHECK (Must be first)
-    // ---------------------------------------------------------
-    oiler.checkFactoryReset();
-    // ---------------------------------------------------------
-
     // Safety: Ensure Pump is OFF immediately
     // Set level LOW before switching to OUTPUT to prevent glitches
     digitalWrite(PUMP_PIN, PUMP_OFF);

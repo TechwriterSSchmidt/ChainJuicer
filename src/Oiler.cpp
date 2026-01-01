@@ -182,48 +182,6 @@ void Oiler::begin() {
     strip.show(); // All pixels off
 }
 
-void Oiler::checkFactoryReset() {
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
-    // Check if button is pressed during boot
-    if (digitalRead(BUTTON_PIN) == LOW) {
-        Serial.println("Button pressed at boot. Checking for Factory Reset...");
-        
-        // Initialize LED for feedback
-        strip.begin(); // Ensure strip is initialized
-        strip.setBrightness(50);
-        
-        unsigned long startPress = millis();
-        bool resetTriggered = false;
-
-        while (digitalRead(BUTTON_PIN) == LOW) {
-            unsigned long duration = millis() - startPress;
-            
-            // Visual Feedback: Yellow while holding
-            for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, strip.Color(255, 255, 0)); // Yellow
-            strip.show();
-
-            if (duration > FACTORY_RESET_PRESS_MS) {
-                resetTriggered = true;
-                // Visual Feedback: Red blinking fast
-                for(int k=0; k<10; k++) {
-                    for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, strip.Color(255, 0, 0)); // Red
-                    strip.show();
-                    delay(100);
-                    for(int i=0; i<NUM_LEDS; i++) strip.setPixelColor(i, 0); // Off
-                    strip.show();
-                    delay(100);
-                }
-                break; // Exit loop to perform reset
-            }
-            delay(10);
-        }
-
-        if (resetTriggered) {
-            performFactoryReset();
-        }
-    }
-}
-
 void Oiler::performFactoryReset() {
     Serial.println("PERFORMING FACTORY RESET...");
     webConsole.log("PERFORMING FACTORY RESET...");
@@ -1147,40 +1105,44 @@ void Oiler::processPump() {
         digitalWrite(pumpPin, PUMP_OFF);
         isOiling = false;
         bleedingMode = false;
+        pumpState = PUMP_IDLE;
         return;
     }
 
-    // SAFETY CUTOFF: Prevent pump from running too long (e.g. software bug)
-    if ((isOiling || bleedingMode) && (now - pumpActivityStartTime > PUMP_SAFETY_CUTOFF_MS)) {
-        Serial.println("[CRITICAL] Safety Cutoff triggered! Pump ran too long.");
-        digitalWrite(pumpPin, PUMP_OFF);
-        isOiling = false;
-        bleedingMode = false;
-        pulseState = false;
-        return;
+    // 1. Update State Machine
+    updatePumpPulse();
+
+    // If pump is busy, we don't start a new pulse
+    if (pumpState != PUMP_IDLE) {
+        // Check Safety Cutoff (Pump stuck ON?)
+        if ((now - pumpStateStartTime) > PUMP_SAFETY_CUTOFF_MS) {
+             Serial.println("[CRITICAL] Safety Cutoff triggered! Pump stuck.");
+             digitalWrite(pumpPin, PUMP_OFF);
+             ledcWrite(PUMP_PWM_CHANNEL, 0);
+             pumpState = PUMP_IDLE;
+             isOiling = false;
+             bleedingMode = false;
+        }
+        return; 
     }
-    // Check if we should stop bleeding
+
+    // 2. Check if we should stop bleeding (Timeout)
     if (bleedingMode) {
         if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
             bleedingMode = false;
             digitalWrite(pumpPin, PUMP_OFF);
-            pulseState = false; // Reset state
 #ifdef GPS_DEBUG
             Serial.printf("Bleeding Finished. Consumed: %.2f ml\n", bleedingSessionConsumed);
             webConsole.log("Bleeding Finished. Consumed: " + String(bleedingSessionConsumed, 2) + " ml");
 #endif
             return; // Done
         }
-        // If bleeding, we treat it as "always have pulses remaining"
     } else if (!isOiling) {
         // Not bleeding and not oiling -> Idle
         return;
     }
 
-      
-    // Logic for Pulse Generation
-    // REVISED for Blocking PWM Pulse
-    // We only track the PAUSE time. When pause is over, we execute the blocking pulse.
+    // 3. Logic for Pulse Generation (Interval Check)
     
     // Bleeding Mode: Fast pumping (65ms Pulse / 300ms Pause)
     unsigned long effectivePause = bleedingMode ? 300 : dynamicPauseMs;
@@ -1189,85 +1151,124 @@ void Oiler::processPump() {
     if (now - lastPulseTime >= effectivePause) {
         
         // Turn Safety Check (Inter-Pulse)
-        // If we are in a multi-pulse sequence and suddenly lean towards the tire, we should pause.
-        // We check this BEFORE executing the next pulse.
-        if (!bleedingMode) { // Don't interrupt bleeding
+        if (!bleedingMode) { 
              if (imu.isLeaningTowardsTire(20.0)) {
                  // Unsafe! Delay this pulse.
-                 // We simply return here. The 'lastPulseTime' is NOT updated, so we will try again next loop.
-                 // This effectively "pauses" the sequence until the bike is upright again.
                  return;
              }
         }
 
-        // Execute Blocking Pulse (Soft-Start/Stop)
-        pumpPulse(effectivePulse);
-        
-        // Reset Timer
-        lastPulseTime = millis();
-        
-        // Handle Counters
-        if (!bleedingMode) {
-            oilingPulsesRemaining--;
-            if (oilingPulsesRemaining == 0) {
-                isOiling = false;
-#ifdef GPS_DEBUG
-                Serial.println("OILING DONE");
-                webConsole.log("OILING DONE");
-#endif
+        // Start Non-Blocking Pulse
+        startPulse(effectivePulse);
+    }
+}
+
+void Oiler::startPulse(unsigned long durationMs) {
+    pumpTargetDuration = durationMs;
+    pumpStateStartTime = millis();
+    
+    if (PUMP_USE_PWM) {
+        pumpState = PUMP_RAMP_UP;
+        pumpCurrentDuty = 0;
+        pumpLastStepTime = micros();
+        ledcWrite(PUMP_PWM_CHANNEL, 0);
+    } else {
+        // Fallback: Hard Switching
+        digitalWrite(pumpPin, PUMP_ON);
+        pumpState = PUMP_HOLD;
+    }
+}
+
+void Oiler::updatePumpPulse() {
+    if (pumpState == PUMP_IDLE) return;
+
+    unsigned long now = millis();
+    unsigned long nowMicros = micros();
+
+    if (!PUMP_USE_PWM) {
+        // Simple ON/OFF logic
+        if (now - pumpStateStartTime >= pumpTargetDuration) {
+            digitalWrite(pumpPin, PUMP_OFF);
+            pumpState = PUMP_IDLE;
+            handlePulseFinished(); 
+        }
+        return;
+    }
+
+    // PWM Logic
+    switch (pumpState) {
+        case PUMP_RAMP_UP: {
+            unsigned long stepDelay = (PUMP_RAMP_UP_MS * 1000) / 255;
+            if (nowMicros - pumpLastStepTime >= (stepDelay * 15)) {
+                pumpCurrentDuty += 15;
+                if (pumpCurrentDuty >= 255) {
+                    pumpCurrentDuty = 255;
+                    pumpState = PUMP_HOLD;
+                    // Reset start time for HOLD phase to ensure accurate duration
+                    pumpStateStartTime = millis(); 
+                }
+                ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
+                pumpLastStepTime = nowMicros;
             }
-        } else {
-            // Bleeding Mode: Count every pulse as stats & consumption
-            pumpCycles++;
-            progressChanged = true;
+            break;
+        }
+        case PUMP_HOLD: {
+            unsigned long holdTime = 0;
+            if (pumpTargetDuration > PUMP_RAMP_UP_MS) {
+                holdTime = pumpTargetDuration - PUMP_RAMP_UP_MS;
+            }
             
-            if (tankMonitorEnabled) {
-                float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
-                currentTankLevelMl -= mlConsumed;
-                bleedingSessionConsumed += mlConsumed; // Track session total
-                if (currentTankLevelMl < 0) currentTankLevelMl = 0;
+            if (now - pumpStateStartTime >= holdTime) {
+                pumpState = PUMP_RAMP_DOWN;
+                pumpCurrentDuty = 255;
+                pumpLastStepTime = micros();
             }
+            break;
+        }
+        case PUMP_RAMP_DOWN: {
+            unsigned long stepDelay = (PUMP_RAMP_DOWN_MS * 1000) / 255;
+            if (nowMicros - pumpLastStepTime >= (stepDelay * 15)) {
+                pumpCurrentDuty -= 15;
+                if (pumpCurrentDuty <= 0) {
+                    pumpCurrentDuty = 0;
+                    ledcWrite(PUMP_PWM_CHANNEL, 0);
+                    digitalWrite(pumpPin, PUMP_OFF);
+                    pumpState = PUMP_IDLE;
+                    handlePulseFinished();
+                } else {
+                    ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
+                }
+                pumpLastStepTime = nowMicros;
+            }
+            break;
         }
     }
 }
 
-// --- HELPER FUNCTION: SMART PUMP DRIVER (PWM) ---
-void Oiler::pumpPulse(unsigned long durationMs) {
-    if (!PUMP_USE_PWM) {
-        // Fallback: Hard Switching
-        digitalWrite(pumpPin, PUMP_ON);
-        delay(durationMs);
-        digitalWrite(pumpPin, PUMP_OFF);
-        return;
+void Oiler::handlePulseFinished() {
+    lastPulseTime = millis();
+    
+    if (!bleedingMode) {
+        oilingPulsesRemaining--;
+        if (oilingPulsesRemaining == 0) {
+            isOiling = false;
+#ifdef GPS_DEBUG
+            Serial.println("OILING DONE");
+            webConsole.log("OILING DONE");
+#endif
+        }
+    } else {
+        // Bleeding Mode: Count every pulse as stats & consumption
+        pumpCycles++;
+        progressChanged = true;
+        
+        if (tankMonitorEnabled) {
+            float mlConsumed = (float)(1 * dropsPerPulse) / (float)dropsPerMl;
+            currentTankLevelMl -= mlConsumed;
+            bleedingSessionConsumed += mlConsumed; // Track session total
+            if (currentTankLevelMl < 0) currentTankLevelMl = 0;
+        }
     }
-
-    // 1. RAMP UP (Soft Start)
-    // Linearly increase duty cycle from 0 to 255
-    unsigned long stepDelay = (PUMP_RAMP_UP_MS * 1000) / 255; // Microseconds per step
-    for (int duty = 0; duty <= 255; duty += 15) { // Step size 15 for speed
-        ledcWrite(PUMP_PWM_CHANNEL, duty);
-        delayMicroseconds(stepDelay * 15);
-    }
-    ledcWrite(PUMP_PWM_CHANNEL, 255); // Ensure full power
-
-    // 2. HOLD (Main Pulse)
-    // We subtract the ramp time from the duration to keep timing roughly accurate,
-    // but ensure at least 5ms of full power hold.
-    unsigned long holdTime = 0;
-    if (durationMs > PUMP_RAMP_UP_MS) {
-        holdTime = durationMs - PUMP_RAMP_UP_MS;
-    }
-    delay(holdTime);
-
-    // 3. RAMP DOWN (Soft Stop)
-    // Linearly decrease duty cycle from 255 to 0
-    stepDelay = (PUMP_RAMP_DOWN_MS * 1000) / 255;
-    for (int duty = 255; duty >= 0; duty -= 15) {
-        ledcWrite(PUMP_PWM_CHANNEL, duty);
-        delayMicroseconds(stepDelay * 15);
-    }
-    ledcWrite(PUMP_PWM_CHANNEL, 0); // Ensure off
-    digitalWrite(pumpPin, PUMP_OFF);    // Safety: Disable PWM pin output
 }
 
 void Oiler::setEmergencyModeForced(bool forced) {
