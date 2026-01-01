@@ -73,7 +73,9 @@ void handleCss() {
 
 void handleHelp() {
     resetWifiTimer();
-    server.send(200, "text/html", htmlHelp);
+    String html = htmlHelp;
+    html.replace("%VERSION%", FIRMWARE_VERSION);
+    server.send(200, "text/html", html);
 }
 
 void handleResetStats() {

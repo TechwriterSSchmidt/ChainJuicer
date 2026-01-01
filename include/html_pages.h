@@ -237,6 +237,7 @@ const char* htmlHelp = R"rawliteral(
 <body>
     <a href='/' class='back-btn'>&larr; Home</a>
     <h2>Manual</h2>
+    <div style='text-align:center;color:#888;margin-bottom:15px'>Version: %VERSION%</div>
     <h3>Features</h3>
     <ul>
         <li><b>GPS Control:</b> Speed-dependent intervals (Active > 10 km/h).</li>

@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#define FIRMWARE_VERSION "1.1.0"
+
 // Hardware Pins
 #define PUMP_PIN 16        // Pin for MOSFET (Pump) - RIGHT SIDE
 #define LED_PIN 32         // WS2812B Data Pin - LEFT SIDE (Bottom)
@@ -32,7 +34,7 @@
 
 // Temperature Sensor (DS18B20)
 #define TEMP_SENSOR_PIN 15 // GPIO 15 for DS18B20 Data
-#define TEMP_UPDATE_INTERVAL_MS 60000 // Measure every 60 seconds
+#define TEMP_UPDATE_INTERVAL_MS 900000 // Measure every 15 minutes
 
 // IMU Configuration (BNO085)
 #define IMU_SDA 21

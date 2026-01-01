@@ -36,6 +36,7 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     tempConfig.basePause25 = (float)PAUSE_DURATION_MS;
     tempConfig.oilType = OIL_NORMAL;
     lastTemp = 25.0; // Init hysteresis memory
+    lastTempUpdate = 0; // Init temp update timer
 
     currentProgress = 0.0;
     lastLat = 0.0;
@@ -1448,14 +1449,7 @@ void Oiler::updateTemperature() {
         return;
     }
 
-    // Hysteresis Logic (3.0°C)
-    // Only update calculation if temp changes significantly to avoid jitter
-    if (abs(tempC - lastTemp) < 3.0) {
-        // Keep old values, just update display temp
-        currentTempC = tempC; 
-        return; 
-    }
-    
+    // Update Temp
     lastTemp = tempC;
     currentTempC = tempC;
 
