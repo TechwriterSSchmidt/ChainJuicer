@@ -43,7 +43,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** 5x Click. **Features:** OTA Update, LED config, Stats, Test functions. |
 | **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
-| **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (15s). |
+| **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (20s). **Additive:** Trigger again to extend (max 60s). |
 | **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
 | **Aux Port Manager** | Smart control for accessories. | **Aux Power:** Auto-ON after boot (Delay). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. **Toggle:** Hold > 2s. |
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |

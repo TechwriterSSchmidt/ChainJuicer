@@ -83,7 +83,7 @@ const char* htmlMaintenance = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>Maintenance</h2>
     
     <div class='card'>
@@ -116,7 +116,7 @@ const char* htmlHeader = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>Juicer Settings</h2>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
@@ -199,7 +199,7 @@ const char* htmlLEDSettings = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>LED Settings</h2>
     <form action='/save_led' method='POST'>
         <div class='card'>
@@ -235,7 +235,7 @@ const char* htmlHelp = R"rawliteral(
     <style>body{line-height:1.6}</style>
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>Manual</h2>
     <div style='text-align:center;color:#888;margin-bottom:15px'>Version: %VERSION%</div>
     <h3>Features</h3>
@@ -257,7 +257,8 @@ const char* htmlHelp = R"rawliteral(
         <li><b>Bleeding Mode:</b>
             <ul>
                 <li>Activates via Web Interface.</li>
-                <li>Runs pump continuously for 15s to fill the line.</li>
+                <li>Runs pump continuously for 20s to fill the line.</li>
+                <li><b>Additive:</b> Trigger again to extend duration (max 60s).</li>
                 <li>Only works at standstill.</li>
             </ul>
         </li>
@@ -369,7 +370,7 @@ const char* htmlUpdate = R"rawliteral(
     <style>body{text-align:center} form{display:inline-block}</style>
 </head>
 <body>
-    <a href='/' class='back-btn'>&larr; Home</a>
+    <a href='/' class='back-btn'>&#9664; Home</a>
     <h2>Firmware Update</h2>
     <form method='POST' action='/update' enctype='multipart/form-data'>
         <input type='file' name='update' accept='.bin'>

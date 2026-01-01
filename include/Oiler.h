@@ -213,6 +213,7 @@ private:
     bool auxToggleRequested;  // Flag for main.cpp
     bool bleedingMode;
     unsigned long bleedingStartTime;
+    unsigned long currentBleedingDuration; // Variable duration for additive bleeding
     float bleedingSessionConsumed; // Track consumption during bleeding
     unsigned long wifiActivationTime;
     unsigned long buttonPressStartTime;

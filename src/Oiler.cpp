@@ -1128,7 +1128,7 @@ void Oiler::processPump() {
 
     // 2. Check if we should stop bleeding (Timeout)
     if (bleedingMode) {
-        if (now - bleedingStartTime > BLEEDING_DURATION_MS) {
+        if (now - bleedingStartTime > currentBleedingDuration) {
             bleedingMode = false;
             digitalWrite(pumpPin, PUMP_OFF);
 #ifdef GPS_DEBUG
@@ -1137,6 +1137,20 @@ void Oiler::processPump() {
 #endif
             return; // Done
         }
+
+        // Countdown Log (every 1s)
+        static unsigned long lastBleedingLog = 0;
+        if (now - lastBleedingLog > 1000) {
+            lastBleedingLog = now;
+            unsigned long remaining = (bleedingStartTime + currentBleedingDuration - now) / 1000;
+            // +1 to show "20s" instead of "19s" at start, and "1s" at end
+            remaining++; 
+            
+            String msg = "Bleeding... " + String(remaining) + "s";
+            Serial.println(msg);
+            webConsole.log(msg);
+        }
+
     } else if (!isOiling) {
         // Not bleeding and not oiling -> Idle
         return;
@@ -1338,20 +1352,48 @@ void Oiler::setOffroadMode(bool mode) {
 
 void Oiler::startBleeding() {
     if (currentSpeed < MIN_SPEED_KMH) {
-        bleedingMode = true;
-        bleedingStartTime = millis();
-        bleedingSessionConsumed = 0.0; // Reset counter
-        pumpActivityStartTime = millis(); // Safety Cutoff Start
-#ifdef GPS_DEBUG
-        Serial.println("Bleeding Mode STARTED");
-        webConsole.log("Bleeding Mode STARTED");
-#endif
+        unsigned long now = millis();
         
-        // Init Pump State for immediate start
-        pulseState = false; 
-        lastPulseTime = millis() - 1000; // Force start
+        if (bleedingMode) {
+            // Already bleeding -> Add time (Max 3x)
+            unsigned long maxDuration = BLEEDING_DURATION_MS * 3;
+            unsigned long timeElapsed = now - bleedingStartTime;
+            unsigned long remaining = currentBleedingDuration > timeElapsed ? currentBleedingDuration - timeElapsed : 0;
+            
+            // Add full duration to remaining
+            unsigned long newRemaining = remaining + BLEEDING_DURATION_MS;
+            
+            // Calculate new total duration relative to original start time
+            // But simpler: Just extend currentBleedingDuration
+            currentBleedingDuration += BLEEDING_DURATION_MS;
+            
+            if (currentBleedingDuration > maxDuration) {
+                currentBleedingDuration = maxDuration;
+            }
+            
+            // Reset safety cutoff timer to allow extended run
+            pumpActivityStartTime = now; 
+            
+            webConsole.log("Bleeding Extended. Total: " + String(currentBleedingDuration/1000) + "s");
+            Serial.println("Bleeding Extended.");
+        } else {
+            // Start new bleeding session
+            bleedingMode = true;
+            bleedingStartTime = now;
+            currentBleedingDuration = BLEEDING_DURATION_MS;
+            bleedingSessionConsumed = 0.0; // Reset counter
+            pumpActivityStartTime = now; // Safety Cutoff Start
+    #ifdef GPS_DEBUG
+            Serial.println("Bleeding Mode STARTED");
+            webConsole.log("Bleeding Mode STARTED");
+    #endif
+            
+            // Init Pump State for immediate start
+            pulseState = false; 
+            lastPulseTime = now - 1000; // Force start
 
-        saveConfig(); // Save immediately
+            saveConfig(); // Save immediately
+        }
     } else {
         Serial.print("Bleeding Request REJECTED. Speed: ");
         Serial.print(currentSpeed);
