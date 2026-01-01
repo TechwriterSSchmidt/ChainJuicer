@@ -122,8 +122,8 @@ This table shows which features are available depending on the connected hardwar
 | **Crash Detection** | ❌ | ❌ | ✅ | ✅ |
 | **Garage Guard** | ❌ | ❌ | ✅ | ✅ |
 | **Smart Stop** | ❌ | ❌ | ✅ | ✅ |
-| **Aux: Aux Power** | ✅ | ✅ | ✅ | ✅ |
-| **Aux: Heated Grips** | ❌ | ✅ | ✅ | ✅ |
+| **Aux Port: Aux Power** | ✅ | ✅ | ✅ | ✅ |
+| **Aux Port: Heated Grips** | ❌ | ✅ | ✅ | ✅ |
 | **Data Logging** | ❌ | ❌ | ❌ | ✅ |
 
 *   **Basic Setup:** ESP32, GPS Module, Pump, Button, LED.
@@ -200,7 +200,7 @@ All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays, Reaction) are
 ## 🛠 Hardware
 
 *   **MCU:** [LCTECH ESP32 Relay X1](http://www.chinalctech.com/cpzx/Programmer/Relay_Module/866.html).
-    *   *Specs:* ESP32-WROOM-32E, Wide Range Input (7-30V), Onboard MOSFET (**NCE6020AK**).
+    *   *Specs:* ESP32-WROOM-32E, Wide Range Input (7-30V), 2x Onboard MOSFET (**NCE6020AK**).
 *   **GPS:** ATGM336H or NEO-6M (UART, 9600 Baud)
 *   **Pump:** [12V Dosing Pump](https://de.aliexpress.com/item/1005010375479436.html).
     *   *Durability:* Tested with 2 pumps, each > 100,000 strokes without failure.
@@ -315,13 +315,13 @@ The system uses two LEDs to communicate its status.
 | **Oiling Event** | Distance reached | **Yellow Breathing** | *State dependent* | Pump releases oil pulse. |
 | **Tunnel / Signal Loss** | No GPS signal > 3 min | **Cyan** | *State dependent* | Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
 | **Rain Ride** | 1x Click | **Blue** | *State dependent* | **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
-| **Aux: Manual Toggle** | Hold > 2s | *State dependent* | **Off / On** | Manually toggles the Aux Port (Override). |
+| **Aux Port: Manual Toggle** | Hold > 2s | *State dependent* | **Off / On** | Manually toggles the Aux Port (Override). |
 | **Offroad / Enduro** | 3x Click | **Magenta Blink** | *State dependent* | **Offroad Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
 | **Dust / Flushing** | 4x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
 | **Configuration** | 5x Click | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
 | **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |
-| **Aux: Aux Power** | Ignition ON (Delay) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
-| **Aux: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
+| **Aux Port: Aux Power** | Ignition ON (Delay) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
+| **Aux Port: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
 ### Pin Assignment (Current Config)
