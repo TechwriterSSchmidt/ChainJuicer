@@ -38,11 +38,9 @@ void AuxManager::begin(ImuHandler* imu) {
     // Load saved state for manual override (persistence)
     _manualOverride = _prefs.getBool("man_ovr", true);
     
-    // If enabled at boot, treat as enabled at time 0
+    // If enabled at boot, calculate boost end time
     if (_manualOverride) {
-        _lastEnableTime = 0;
-    } else {
-        _lastEnableTime = millis(); // Just to be safe
+        calcBoostEndTime();
     }
 
     _prefs.end();
@@ -65,8 +63,8 @@ void AuxManager::toggleManualOverride() {
     _manualOverride = !_manualOverride;
     
     if (_manualOverride) {
-        // Reset boost timer when manually enabling
-        _lastEnableTime = millis();
+        // Recalculate boost when manually enabling
+        calcBoostEndTime();
     }
 
     _prefs.begin("aux", false);
@@ -120,21 +118,8 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     }
     
     // 5. Startup Boost
-    // Calculate effective start time. If enabled at boot (0), wait for delay.
-    // If enabled manually later, start immediately (since now > bootDelayEnd is already checked).
-    unsigned long effectiveStartTime = _lastEnableTime;
-    if (effectiveStartTime < bootDelayEnd) {
-        effectiveStartTime = bootDelayEnd;
-    }
-
-    // Calculate time since "effective" start
-    unsigned long timeSinceStart = 0;
-    if (now > effectiveStartTime) {
-        timeSinceStart = now - effectiveStartTime;
-    }
-
     _isBoosting = false;
-    if (timeSinceStart < ((unsigned long)_startupBoostSec * 1000)) {
+    if (now < _boostEndTime) {
         if (target < _startupBoostLevel) {
             target = _startupBoostLevel;
             _isBoosting = true;
@@ -212,4 +197,16 @@ void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &temp
     startupBoostSec = _startupBoostSec;
     startDelaySec = _startDelaySec;
     reactionSpeed = (int)_reactionSpeed;
+}
+
+void AuxManager::calcBoostEndTime() {
+    unsigned long now = millis();
+    unsigned long delayMs = (unsigned long)_startDelaySec * 1000UL;
+    unsigned long boostDurMs = (unsigned long)_startupBoostSec * 1000UL;
+
+    // If we are still in start delay, boost starts after delay.
+    // If we are past delay, boost starts now.
+    unsigned long boostStartTime = (now > delayMs) ? now : delayMs;
+    
+    _boostEndTime = boostStartTime + boostDurMs;
 }

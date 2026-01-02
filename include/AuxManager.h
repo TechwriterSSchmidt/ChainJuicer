@@ -58,7 +58,7 @@ private:
     bool _engineRunning = false;
     
     // Heated Grips Logic
-    unsigned long _lastEnableTime = 0; // Timestamp when grips were enabled
+    unsigned long _boostEndTime = 0; // Timestamp when boost ends
     int _baseLevel = 30;        // 0-100%
     float _speedFactor = 0.5;   // % per km/h
     float _tempFactor = 2.0;    // % per degree below startTemp
@@ -75,6 +75,7 @@ private:
     void handleAuxPower();
     void handleHeatedGrips(float speed, float temp, bool rain);
     void setPwm(int percent);
+    void calcBoostEndTime();
 };
 
 #endif
