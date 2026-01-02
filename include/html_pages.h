@@ -81,6 +81,24 @@ const char* htmlMaintenance = R"rawliteral(
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Maintenance</title>
     <link rel="stylesheet" href="/style.css">
+    <script>
+        let clicks = {restart: 0, reset: 0};
+        function confirmAction(type, url, btnId, defaultText) {
+            clicks[type]++;
+            let btn = document.getElementById(btnId);
+            if (clicks[type] >= 3) {
+                btn.innerText = "Executing...";
+                window.location.href = url;
+            } else {
+                btn.innerText = defaultText + " (" + clicks[type] + "/3)";
+                if(btn.timeout) clearTimeout(btn.timeout);
+                btn.timeout = setTimeout(() => { 
+                    clicks[type] = 0; 
+                    btn.innerText = defaultText; 
+                }, 2000);
+            }
+        }
+    </script>
 </head>
 <body>
     <a href='/' class='back-btn'>&#9664; Home</a>
@@ -95,13 +113,11 @@ const char* htmlMaintenance = R"rawliteral(
 
     <div class='card'>
         <h3>Danger Zone</h3>
-        <div class='note' style='font-weight:bold; margin-bottom:15px'>
-            ⚠️ Reset and restart actions are executed immediately without confirmation!
-        </div>
-        <a href='/restart' class='btn' style='background:#555; margin-bottom:10px'>Restart System</a>        
+        
+        <a id='btn-reset' href='javascript:void(0)' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px' onclick="confirmAction('reset', '/factory_reset', 'btn-reset', 'Factory Reset (3x click)')">Factory Reset (3x click)</a>
+        <a id='btn-restart' href='javascript:void(0)' class='btn' style='background:#555; margin-bottom:10px' onclick="confirmAction('restart', '/restart', 'btn-restart', 'Restart System (3x click)')">Restart System (3x click)</a>
         <a href='/update' class='btn' style='background:#555; margin-bottom:10px'>Firmware Update</a>
-        <a href='/factory_reset' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px'>Factory Reset</a>
-        <a href='/bleeding' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Start Bleeding Mode</a>
+        <a href='/bleeding' class='btn' style='background:#ffc107; color:#000; margin-bottom:10px'>Start Bleeding Mode (3x max)</a>
     </div>
 </body>
 </html>
