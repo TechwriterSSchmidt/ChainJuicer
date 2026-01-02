@@ -101,7 +101,7 @@ const char* htmlMaintenance = R"rawliteral(
     </script>
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>Maintenance</h2>
     
     <div class='card'>
@@ -132,7 +132,7 @@ const char* htmlHeader = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>Juicer Settings</h2>
     <div class='time'>Time: %TIME% | Sats: %SATS% | Temp: %TEMP%&deg;C</div>
     <form action='/save' method='POST'>
@@ -215,7 +215,7 @@ const char* htmlLEDSettings = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>LED Settings</h2>
     <form action='/save_led' method='POST'>
         <div class='card'>
@@ -251,7 +251,7 @@ const char* htmlHelp = R"rawliteral(
     <style>body{line-height:1.6}</style>
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>Manual</h2>
     <div style='text-align:center;color:#888;margin-bottom:15px'>Version: %VERSION%</div>
     <h3>Features</h3>
@@ -386,7 +386,7 @@ const char* htmlUpdate = R"rawliteral(
     <style>body{text-align:center} form{display:inline-block}</style>
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>Firmware Update</h2>
     <form method='POST' action='/update' enctype='multipart/form-data'>
         <input type='file' name='update' accept='.bin'>
@@ -407,7 +407,7 @@ const char* htmlIMU = R"rawliteral(
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>IMU Calibration</h2>
     
     <div class='card'>
@@ -506,7 +506,7 @@ const char* htmlAuxConfig = R"rawliteral(
     </script>
 </head>
 <body onload="toggleFields()">
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>Aux Port Configuration</h2>
     <form action='/save_aux' method='POST'>
         <div class='card'>
@@ -651,7 +651,7 @@ const char* htmlConsole = R"rawliteral(
     </script>
 </head>
 <body>
-    <a href='/' class='back-btn'>&#9664; Home</a>
+    <a href='/' class='back-btn'>&lt; Home</a>
     <h2>Serial Console</h2>
     <div id='console'>Loading...</div>
     <form action='/console/clear' method='POST'>
