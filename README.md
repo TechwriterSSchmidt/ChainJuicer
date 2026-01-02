@@ -42,9 +42,9 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 | **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 3x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** 5x Click. **Features:** OTA Update, LED config, Stats, Test functions. |
-| **Night Mode** | Auto-dimming of LED. | Based on GPS time. Separate brightness for events. |
+| **Night Mode** | Auto-dimming of LED. | **Default:** ON (20:00-06:00). Brightness: 5% (Dim) / 25% (Event). |
 | **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (20s). **Additive:** Trigger again to extend (max 60s). |
-| **Tank Monitor** | Virtual oil level tracking. | Warns (Red 2x blink) when low. Configurable capacity & consumption. |
+| **Tank Monitor** | Virtual oil level tracking. | **Default:** ON. Warns (Red 2x blink) when low (< 10%). Configurable capacity & consumption. |
 | **Aux Port Manager** | Smart control for accessories. | **Aux Power:** Auto-ON after boot (Delay). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. **Toggle:** Hold > 2s. |
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
 | **Advanced Stats** | Usage analysis. | Usage % per speed range, total juice counts, odometer. |
@@ -181,14 +181,14 @@ Turns on your accessories (Navigation, USB, Lights) automatically when the ignit
 ### 2. Automated Heated Grips
 Advanced PWM control for heated grips, far superior to simple "Low/High" switches.
 *   **Hardware Recommendation:** [Coolride Heating Cartridges](https://www.coolride.de/Neue-Heizpatronen-Paar-einzeln-ohne-Schalter) (52W).
-*   **Base Level:** Set your preferred minimum heat.
-*   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor). Configurable: Low/Medium/High.
-*   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor). Configurable: Low/Medium/High.
-*   **Start Temp:** Configurable threshold (default 20°C) below which the grips start working.
+*   **Base Level:** Set your preferred minimum heat. **Default: 25%**.
+*   **Speed Compensation:** Increases heat as you ride faster (Wind chill factor). **Default: 0.5x** (Medium).
+*   **Temp Compensation:** Increases heat as it gets colder (requires Temp Sensor). **Default: 2.0x** (High).
+*   **Start Temp:** Configurable threshold (**Default: 20°C**) below which the grips start working.
 *   **Temp Offset:** Adjusts the sensor reading if placed near heat sources (e.g. engine).
-*   **Rain Boost:** Automatically adds extra heat when Rain Mode is active.
-*   **Startup Boost:** Heats up quickly (e.g. 80% for 60s) when you start the ride.
-*   **Start Delay:** Configurable delay (default 15s) after boot before grips turn on to protect the battery.
+*   **Rain Boost:** Automatically adds extra heat when Rain Mode is active. **Default: +10%**.
+*   **Startup Boost:** Heats up quickly (**Default: 100% for 75s**) when you start the ride.
+*   **Start Delay:** Configurable delay (**Default: 15s**) after boot before grips turn on to protect the battery.
 *   **Reaction Speed:** Configurable smoothing (Slow/Medium/Fast) to determine how quickly the heat adjusts to speed changes.
     *   **Slow (Default):** ~10s smoothing. Very comfortable, filters out traffic lights.
     *   **Medium:** ~5s smoothing. Balanced.
@@ -196,6 +196,7 @@ Advanced PWM control for heated grips, far superior to simple "Low/High" switche
 
 **Configuration:**
 All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays, Reaction) are fully configurable via the new "Aux Config" web page.
+**Default Mode:** The Aux Port is **OFF** by default and must be enabled in the Web Interface.
 
 ## 🛠 Hardware
 

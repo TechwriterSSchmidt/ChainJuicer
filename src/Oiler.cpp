@@ -117,10 +117,10 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     ledBrightnessHigh = LED_BRIGHTNESS_HIGH;
     
     // Night Mode Defaults
-    nightModeEnabled = false;
+    nightModeEnabled = true;
     nightStartHour = 20; // 20:00
     nightEndHour = 6;    // 06:00
-    nightBrightness = 26;  // 10%
+    nightBrightness = 13;  // 5%
     nightBrightnessHigh = 64; // 25%
     currentHour = 12;    // Default noon
 
@@ -185,9 +185,17 @@ void Oiler::begin() {
 void Oiler::performFactoryReset() {
     Serial.println("PERFORMING FACTORY RESET...");
     webConsole.log("PERFORMING FACTORY RESET...");
+    
+    // Clear Oiler Preferences
     preferences.begin("oiler", false);
     preferences.clear(); // Nuke everything
     preferences.end();
+
+    // Clear Aux Preferences
+    preferences.begin("aux", false);
+    preferences.clear();
+    preferences.end();
+
     Serial.println("Done. Restarting...");
     delay(500); // Give time to send response if called from Web
     ESP.restart();
@@ -574,11 +582,11 @@ void Oiler::loadConfig() {
     ledBrightnessDim = preferences.getUChar("led_dim", LED_BRIGHTNESS_DIM);
     ledBrightnessHigh = preferences.getUChar("led_high", LED_BRIGHTNESS_HIGH);
     
-    nightModeEnabled = preferences.getBool("night_en", false);
+    nightModeEnabled = preferences.getBool("night_en", true);
     nightStartHour = preferences.getInt("night_start", 20);
     nightEndHour = preferences.getInt("night_end", 6);
-    nightBrightness = preferences.getUChar("night_bri", 5);
-    nightBrightnessHigh = preferences.getUChar("night_bri_h", 100);
+    nightBrightness = preferences.getUChar("night_bri", 13);
+    nightBrightnessHigh = preferences.getUChar("night_bri_h", 64);
     
     // Restore Rain Mode
     rainMode = preferences.getBool("rain_mode", false); 
