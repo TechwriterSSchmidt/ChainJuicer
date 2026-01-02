@@ -38,6 +38,13 @@ void AuxManager::begin(ImuHandler* imu) {
     // Load saved state for manual override (persistence)
     _manualOverride = _prefs.getBool("man_ovr", true);
     
+    // If enabled at boot, treat as enabled at time 0
+    if (_manualOverride) {
+        _lastEnableTime = 0;
+    } else {
+        _lastEnableTime = millis(); // Just to be safe
+    }
+
     _prefs.end();
 }
 
@@ -56,6 +63,12 @@ void AuxManager::loop(float currentSpeedKmh, float currentTempC, bool isRainMode
 
 void AuxManager::toggleManualOverride() {
     _manualOverride = !_manualOverride;
+    
+    if (_manualOverride) {
+        // Reset boost timer when manually enabling
+        _lastEnableTime = millis();
+    }
+
     _prefs.begin("aux", false);
     _prefs.putBool("man_ovr", _manualOverride);
     _prefs.end();
@@ -74,10 +87,11 @@ void AuxManager::handleAuxPower() {
 void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     // Simple logic: ESP is powered by ignition.
     // Use millis() directly as elapsed time since start.
-    unsigned long elapsed = millis();
+    unsigned long now = millis();
+    unsigned long bootDelayEnd = (unsigned long)_startDelaySec * 1000;
 
-    // Check Configured Delay
-    if (elapsed < ((unsigned long)_startDelaySec * 1000)) {
+    // Check Configured Delay (Global Safety)
+    if (now < bootDelayEnd) {
         setPwm(0);
         return;
     }
@@ -106,9 +120,21 @@ void AuxManager::handleHeatedGrips(float speed, float temp, bool rain) {
     }
     
     // 5. Startup Boost
-    unsigned long boostElapsed = elapsed - ((unsigned long)_startDelaySec * 1000);
+    // Calculate effective start time. If enabled at boot (0), wait for delay.
+    // If enabled manually later, start immediately (since now > bootDelayEnd is already checked).
+    unsigned long effectiveStartTime = _lastEnableTime;
+    if (effectiveStartTime < bootDelayEnd) {
+        effectiveStartTime = bootDelayEnd;
+    }
+
+    // Calculate time since "effective" start
+    unsigned long timeSinceStart = 0;
+    if (now > effectiveStartTime) {
+        timeSinceStart = now - effectiveStartTime;
+    }
+
     _isBoosting = false;
-    if (boostElapsed < ((unsigned long)_startupBoostSec * 1000)) {
+    if (timeSinceStart < ((unsigned long)_startupBoostSec * 1000)) {
         if (target < _startupBoostLevel) {
             target = _startupBoostLevel;
             _isBoosting = true;

@@ -27,11 +27,12 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **Console Logging:** Added comprehensive logging of all physical button presses and WebUI actions to the Web Console for better diagnostics.
 *   **Bleeding Stats:** Fixed an issue where oil consumption during Bleeding Mode was not logged. The total amount consumed is now displayed in the console upon completion.
 *   **Persistent Emergency Mode:** The "Forced Emergency Mode" setting is now saved to non-volatile memory. This allows the mode to persist across system restarts, which is critical for long trips with a broken GPS module.
-*   **System Tools Feedback:** Fixed "Restart System" and "Factory Reset" buttons. They now redirect to the console and display a 3-second countdown before executing, providing clear visual confirmation of the action.
+*   **System Tools Feedback:** Fixed "Restart System" and "Factory Reset" buttons. They now require a **3x click confirmation** to prevent accidental activation. The buttons display a countdown (e.g., "1/3") and are reordered for better safety.
 *   **Additive Bleeding Mode:** The Bleeding Mode can now be extended by triggering it again while active. Each trigger adds 20 seconds to the duration (up to a maximum of 60 seconds / 3x). This allows for easier priming of long oil lines without restarting the process repeatedly.
 *   **Pump Noise Reduction:** Optimized the PWM ramp-up/ramp-down logic to start at ~50% duty cycle. This eliminates the motor "whining" sound at low power levels where torque is insufficient to move the pump.
-*   **UI Visibility:** Updated the "Home" button arrow in the Web Interface from a thin arrow (`&larr;`) to a solid triangle (`&#9664;`) for better visibility on small screens.
+*   **UI Visibility:** Updated the "Home" button arrow in the Web Interface to a bold `<` symbol for better rendering on iOS devices.
 *   **Bleeding Feedback:** Added a live countdown timer to the Serial Console during Bleeding Mode (e.g., "Bleeding... 15s").
+*   **Heated Grips Boost Logic:** Improved the startup boost logic. The boost timer now resets correctly when the grips are manually enabled during a ride, ensuring the "quick heat" feature works every time they are switched on, not just at boot.
 
 ## v1.0.0 - Initial Release (2025-12-29)
 
