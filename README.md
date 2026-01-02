@@ -325,21 +325,6 @@ The system uses two LEDs to communicate its status.
 | **Aux Port: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
-### Pin Assignment (Current Config)
-
-| Pin | Function | Note |
-| :--- | :--- | :--- |
-| **GPIO 16** | Pump (MOSFET) | Active HIGH |
-| **GPIO 17** | Aux Port (MOSFET) | Aux Power / Heated Grips |
-| **GPIO 32** | LED (WS2812B) | Data In |
-| **GPIO 27** | GPS RX | Connect to GPS TX |
-| **GPIO 26** | GPS TX | Connect to GPS RX |
-| **GPIO 4** | Button | Input Pullup (Active LOW) |
-| **GPIO 15** | Temp Sensor | DS18B20 Data (Pullup 4.7k) |
-| **GPIO 21** | I2C SDA | IMU Data |
-| **GPIO 22** | I2C SCL | IMU Clock |
-| **GPIO 34** | Rain Sensor | Analog Input (Reserved) |
-
 ## ⚙️ Technical Details
 
 *   **Non-Blocking:** Pump control is asynchronous.

@@ -186,10 +186,15 @@ void Oiler::performFactoryReset() {
     Serial.println("PERFORMING FACTORY RESET...");
     webConsole.log("PERFORMING FACTORY RESET...");
     
+    // Ensure any previous session is closed
+    preferences.end();
+
     // Clear Oiler Preferences
     preferences.begin("oiler", false);
     preferences.clear(); // Nuke everything
     preferences.end();
+    
+    delay(100);
 
     // Clear Aux Preferences
     preferences.begin("aux", false);
