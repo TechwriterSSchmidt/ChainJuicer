@@ -434,10 +434,7 @@ const char* htmlIMU = R"rawliteral(
             <input type='submit' value='Set Zero Position' class='btn btn-cal'>
         </form>
         
-        <p style='margin-top:20px'>Park the bike on the <b>Side Stand</b> and press 'Set Side Stand'.</p>
-        <form action='/imu_side' method='POST'>
-            <input type='submit' value='Set Side Stand Position' class='btn btn-cal'>
-        </form>
+
     </div>
 
     <div class='card'>
@@ -461,7 +458,7 @@ const char* htmlIMU = R"rawliteral(
     <div class='card'>
         <h3>Features</h3>
         <ul>
-            <li><b>Garage Guard:</b> Prevents oiling if lean angle > 10&deg; (Side Stand).</li>
+            <li><b>Garage Guard:</b> Prevents oiling if bike is stationary (Stability Check).</li>
             <li><b>Crash Detect:</b> Stops pump if lean angle > 70&deg;. Requires restart to reset.</li>
             <li><b>Smart Stop:</b> Detects stops faster than GPS.</li>
             <li><b>Turn Safety:</b> Stops oiling in turns towards the tire side (> 20&deg;).</li>

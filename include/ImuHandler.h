@@ -13,8 +13,7 @@ public:
     void loop(); // Call frequently
 
     // Calibration
-    void calibrateZero();
-    void calibrateSideStand();
+    void calibrateZero(); // "Tare" - Set current orientation as flat
     void saveCalibration();
     void loadCalibration();
 
@@ -29,9 +28,9 @@ public:
     float getYaw() const { return _yaw; }
     
     // Features
-    bool isParked(); // Garage Guard (Side stand or Center stand)
+    bool isStationary(); // Garage Guard: Returns true if bike is stable (not moving) for 3 seconds
     bool isCrashed(); // Lean > 70
-    bool isMotionDetected(); // Smart Stop helper
+    bool isMotionDetected(); // Smart Stop helper (Vibration/Accel)
     bool isLeaningTowardsTire(float thresholdDeg); // Returns true if leaning towards the tire (Unsafe to oil)
 
     // Configuration
@@ -52,10 +51,6 @@ private:
     float _offsetRoll = 0.0;
     float _offsetPitch = 0.0;
     
-    // Side Stand Calibration (Target angles)
-    float _sideStandRoll = 0.0; // If 0, use default threshold
-    bool _sideStandCalibrated = false;
-    
     // Chain Configuration
     bool _chainOnRight = true; // Default: Right side
 
@@ -65,9 +60,19 @@ private:
     float _linAccelZ = 0.0;
     unsigned long _lastMotionTime = 0;
 
+    // Stability Check (Garage Guard)
+    static const int HISTORY_SIZE = 100; // 5 seconds at ~20Hz (50ms update)
+    float _rollHistory[HISTORY_SIZE];
+    float _pitchHistory[HISTORY_SIZE];
+    int _historyIndex = 0;
+    bool _historyFilled = false;
+
     Preferences _prefs;
     
     void processOrientation();
+    void updateHistory(float roll, float pitch);
+    float calculateVariance(float* data, int size);
+    
     unsigned long _lastUpdate = 0;
 };
 

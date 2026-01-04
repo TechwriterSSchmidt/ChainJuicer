@@ -587,13 +587,7 @@ void handleIMUZero() {
     server.send(303);
 }
 
-void handleIMUSide() {
-    resetWifiTimer();
-    webConsole.log("CMD: IMU Side Stand Calibration");
-    oiler.imu.calibrateSideStand();
-    server.sendHeader("Location", "/imu");
-    server.send(303);
-}
+
 
 void setup() {
     Serial.begin(115200);
@@ -639,7 +633,7 @@ void setup() {
     // IMU Routes
     server.on("/imu", handleIMU);
     server.on("/imu_zero", HTTP_POST, handleIMUZero);
-    server.on("/imu_side", HTTP_POST, handleIMUSide);
+
     server.on("/imu_config", HTTP_POST, handleIMUConfig);
     
     // Aux Routes

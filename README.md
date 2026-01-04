@@ -57,7 +57,7 @@ By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" a
 
 | Feature | Description | Benefit |
 | :--- | :--- | :--- |
-| **Garage Guard** | Detects if the bike is on the **Side Stand** (> 10° lean) or **Center Stand** (Calibrated position). | Prevents accidental oiling in the garage, even if the motor is running or GPS drifts. |
+| **Garage Guard** | Detects if the bike is **Stationary** (Stability Check). | Prevents accidental oiling in the garage, even if the motor is running or GPS drifts. (5s stability check) |
 | **Crash Detection** | Detects tip-overs (> 70° lean) or accidents. | Immediate safety cutoff for the pump. **Requires restart to reset.** |
 | **Smart Stop** | Detects standstill via accelerometer before GPS reacts. | More precise oiling stops at traffic lights. |
 | **Telemetry Logger** | Records max lean angles (L/R), max acceleration, and braking G-forces. | Fun stats for the web interface ("How deep was I in that corner?"). |

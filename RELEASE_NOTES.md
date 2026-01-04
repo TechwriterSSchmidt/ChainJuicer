@@ -33,6 +33,7 @@ This update focuses on streamlining the user experience, cleaning up the Web Int
 *   **UI Visibility:** Updated the "Home" button arrow in the Web Interface to a bold `<` symbol for better rendering on iOS devices.
 *   **Bleeding Feedback:** Added a live countdown timer to the Serial Console during Bleeding Mode (e.g., "Bleeding... 15s").
 *   **Heated Grips Boost Logic:** Improved the startup boost logic. The boost timer now resets correctly when the grips are manually enabled during a ride, ensuring the "quick heat" feature works every time they are switched on, not just at boot.
+*   **Garage Guard Logic:** Replaced the complex lean-angle based "Parked" detection with a robust "Stability Check". The system now detects if the bike is stationary (variance check) for 5 seconds, regardless of lean angle (Side Stand vs. Center Stand).
 
 ## v1.0.0 - Initial Release (2025-12-29)
 

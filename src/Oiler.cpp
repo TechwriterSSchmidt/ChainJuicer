@@ -960,8 +960,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     if (crashTripped) return; // Crash detected (Latched)!
     
     // Garage Guard: Only relevant if speed is low (e.g. < 10 km/h) to prevent GPS drift oiling.
-    // If we are riding fast, we don't want "isParked" (which triggers at >10 deg lean) to stop oiling.
-    if (speedKmh < 10.0 && imu.isParked()) return;
+    // If we are riding fast, we don't want "isStationary" (which triggers at low variance) to stop oiling.
+    if (speedKmh < 10.0 && imu.isStationary()) return;
 
     // 1. Add to Total Odometer
     totalDistance += distKm;
