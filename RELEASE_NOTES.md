@@ -1,6 +1,14 @@
 # Release Notes
 
-## v1.1.0 - UI & UX Refinement (Work in Progress)
+## v1.1.1 - Stability & Robustness (2026-01-04)
+
+This patch focuses on system reliability and failsafe mechanisms to ensure the ChainJuicer operates autonomously without hanging, even in case of hardware glitches.
+
+*   **Watchdog Timer (WDT):** Added a system watchdog that automatically resets the ESP32 if the main loop freezes for more than 5 seconds. This prevents the system from hanging indefinitely due to software bugs or electrical interference.
+*   **I2C Bus Recovery:** Implemented a recovery sequence for the IMU connection. If the BNO085 sensor locks up the I2C bus (e.g., due to voltage spikes), the system attempts to clear the bus by toggling the clock line before giving up.
+*   **Robust Initialization:** Improved the startup sequence to handle missing or malfunctioning sensors gracefully without blocking the rest of the system.
+
+## v1.1.0 - UI & UX Refinement (Released)
 
 This update focuses on streamlining the user experience, cleaning up the Web Interface, and refining system feedback.
 

@@ -10,12 +10,42 @@ ImuHandler::ImuHandler() {
 }
 
 bool ImuHandler::begin(int sda, int scl) {
-    // Wire.begin(sda, scl); // Assumed handled externally or default
+    // 1. Standard Startversuch mit Timeout
+    Wire.begin(sda, scl);
+    Wire.setTimeOut(10); // 10ms Timeout verhindert Hängenbleiben
     
     if (!_bno.begin_I2C()) {
-        Serial.println("IMU: BNO08x not detected. Disabling IMU features.");
-        _available = false;
-        return false;
+        Serial.println("IMU: Not found. Attempting Bus Recovery...");
+        
+        // 2. Bus Recovery Sequenz
+        // Wir beenden I2C und wackeln manuell am Clock-Pin
+        Wire.end();
+        pinMode(sda, INPUT_PULLUP);
+        pinMode(scl, OUTPUT);
+        
+        // 16 Clock-Pulse senden, um verwirrte Slaves zu resetten
+        for(int i=0; i<16; i++) {
+            digitalWrite(scl, LOW);
+            delayMicroseconds(10);
+            digitalWrite(scl, HIGH);
+            delayMicroseconds(10);
+        }
+        
+        pinMode(sda, INPUT);
+        pinMode(scl, INPUT);
+        
+        // 3. Neustart I2C
+        Wire.begin(sda, scl);
+        Wire.setTimeOut(10);
+        delay(50);
+
+        // 4. Zweiter Versuch
+        if (!_bno.begin_I2C()) {
+            Serial.println("IMU: Recovery failed. Disabling IMU features.");
+            _available = false;
+            return false;
+        }
+        Serial.println("IMU: Recovered successfully!");
     }
 
     Serial.println("IMU: BNO08x Found!");
