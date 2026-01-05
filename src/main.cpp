@@ -145,6 +145,7 @@ void handleUpdateResult() {
 
 void handleUpdateProcess() {
     resetWifiTimer();
+    esp_task_wdt_reset(); // Feed the dog during update!
     oiler.setUpdateMode(true); // Enable LED indication
     HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) {
