@@ -429,9 +429,10 @@ const char* htmlIMU = R"rawliteral(
 
     <div class='card'>
         <h3>Calibration</h3>
-        <p>Park the bike on the <b>Center Stand</b> (level ground) and press 'Set Zero'.</p>
+        <p>Park the bike on the <b>Center Stand</b> or sit on it and hold it upright.</p>
+        <p>Pressing the button will start a <b>5-second countdown</b>, followed by a <b>3-second measurement</b>.</p>
         <form action='/imu_zero' method='POST'>
-            <input type='submit' value='Set Zero Position' class='btn btn-cal'>
+            <input type='submit' value='Start Calibration' class='btn btn-cal'>
         </form>
         
 

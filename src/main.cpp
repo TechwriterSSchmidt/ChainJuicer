@@ -581,9 +581,9 @@ void handleSaveAux() {
 
 void handleIMUZero() {
     resetWifiTimer();
-    webConsole.log("CMD: IMU Zero Calibration");
-    oiler.imu.calibrateZero(); 
-    server.sendHeader("Location", "/imu");
+    // webConsole.log("CMD: IMU Zero Calibration");
+    oiler.imu.startCalibration(); 
+    server.sendHeader("Location", "/console");
     server.send(303);
 }
 

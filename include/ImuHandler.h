@@ -14,6 +14,7 @@ public:
 
     // Calibration
     void calibrateZero(); // "Tare" - Set current orientation as flat
+    void startCalibration(); // Non-blocking calibration with countdown
     void saveCalibration();
     void loadCalibration();
 
@@ -74,6 +75,19 @@ private:
     float calculateVariance(float* data, int size);
     
     unsigned long _lastUpdate = 0;
+
+    // Calibration State Machine
+    enum CalibrationState {
+        CAL_IDLE,
+        CAL_WAIT,
+        CAL_MEASURE
+    };
+    CalibrationState _calState = CAL_IDLE;
+    unsigned long _calTimer = 0;
+    double _calSumRoll = 0;
+    double _calSumPitch = 0;
+    int _calSamples = 0;
+    int _calLastSec = 0;
 };
 
 #endif

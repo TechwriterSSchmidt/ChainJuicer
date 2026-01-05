@@ -1,4 +1,5 @@
 #include "ImuHandler.h"
+#include "WebConsole.h"
 
 ImuHandler::ImuHandler() {
     _lastMotionTime = 0;
@@ -96,6 +97,61 @@ void ImuHandler::update() {
 
 void ImuHandler::loop() {
     update();
+
+    if (_calState == CAL_WAIT) {
+        unsigned long elapsed = millis() - _calTimer;
+        int sec = elapsed / 1000;
+        
+        if (sec > _calLastSec) {
+            int remaining = 5 - sec;
+            if (remaining > 0) {
+                webConsole.log("IMU: " + String(remaining) + "...");
+            }
+            _calLastSec = sec;
+        }
+        
+        if (elapsed >= 5000) {
+            _calState = CAL_MEASURE;
+            _calTimer = millis();
+            _calSumRoll = 0;
+            _calSumPitch = 0;
+            _calSamples = 0;
+            webConsole.log("IMU: Measuring... Hold still!");
+        }
+    } else if (_calState == CAL_MEASURE) {
+        // Accumulate
+        float currentRawRoll = _roll + _offsetRoll;
+        float currentRawPitch = _pitch + _offsetPitch;
+        
+        _calSumRoll += currentRawRoll;
+        _calSumPitch += currentRawPitch;
+        _calSamples++;
+        
+        if (millis() - _calTimer >= 3000) {
+            if (_calSamples > 0) {
+                _offsetRoll = _calSumRoll / _calSamples;
+                _offsetPitch = _calSumPitch / _calSamples;
+                saveCalibration();
+                webConsole.log("IMU: Calibration DONE.");
+                webConsole.logf("IMU: Offsets: R=%.2f P=%.2f", _offsetRoll, _offsetPitch);
+            } else {
+                webConsole.log("IMU: Calibration FAILED (No samples).");
+            }
+            _calState = CAL_IDLE;
+        }
+    }
+}
+
+void ImuHandler::startCalibration() {
+    if (!_available) {
+        webConsole.log("IMU: Sensor not available!");
+        return;
+    }
+    _calState = CAL_WAIT;
+    _calTimer = millis();
+    _calLastSec = 0;
+    webConsole.log("IMU: Calibration requested.");
+    webConsole.log("IMU: Get ready! 5 seconds...");
 }
 
 void ImuHandler::processOrientation() {
@@ -165,16 +221,46 @@ float ImuHandler::calculateVariance(float* data, int size) {
 
 void ImuHandler::calibrateZero() {
     if (!_available) return;
-    // Assume current position is "Zero" (Upright)
-    // We need the RAW values, so we temporarily revert the offset
-    float currentRawRoll = _roll + _offsetRoll;
-    float currentRawPitch = _pitch + _offsetPitch;
 
-    _offsetRoll = currentRawRoll;
-    _offsetPitch = currentRawPitch;
+    Serial.println("IMU: Waiting 5s for rider to stabilize...");
+    unsigned long waitStart = millis();
+    while(millis() - waitStart < 5000) {
+        update();
+        delay(10);
+    }
     
-    saveCalibration();
-    Serial.println("IMU: Zero Position Calibrated");
+    Serial.println("IMU: Starting calibration (3s)...");
+    
+    double sumRawRoll = 0;
+    double sumRawPitch = 0;
+    int samples = 0;
+    unsigned long start = millis();
+    const unsigned long CALIBRATION_DURATION = 3000; // 3 seconds averaging
+
+    while (millis() - start < CALIBRATION_DURATION) {
+        update(); // Fetch latest data from sensor
+        
+        // Reconstruct RAW values (Sensor Raw = Current Displayed + Current Offset)
+        // We need the raw sensor values to calculate the new absolute offset.
+        float currentRawRoll = _roll + _offsetRoll;
+        float currentRawPitch = _pitch + _offsetPitch;
+        
+        sumRawRoll += currentRawRoll;
+        sumRawPitch += currentRawPitch;
+        samples++;
+        
+        delay(10); // Sample at ~100Hz
+    }
+
+    if (samples > 0) {
+        _offsetRoll = sumRawRoll / samples;
+        _offsetPitch = sumRawPitch / samples;
+        
+        saveCalibration();
+        Serial.printf("IMU: Zero Calibrated. Samples: %d. Offsets: R=%.2f P=%.2f\n", samples, _offsetRoll, _offsetPitch);
+    } else {
+        Serial.println("IMU: Calibration failed - no samples");
+    }
 }
 
 void ImuHandler::saveCalibration() {

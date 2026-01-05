@@ -63,7 +63,7 @@ By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" a
 | **Telemetry Logger** | Records max lean angles (L/R), max acceleration, and braking G-forces. | Fun stats for the web interface ("How deep was I in that corner?"). |
 | **Dynamic Intervals** | Analyzes riding style (Cruising vs. Racing). | Reduces oiling intervals during aggressive riding (high load on chain). |
 
-*   **Calibration:** A dedicated Web Interface page allows zeroing the sensor and calibrating the "Parked" positions.
+*   **Calibration:** A dedicated Web Interface page allows zeroing the sensor. Includes a 5-second countdown and 3-second averaging for easy solo calibration.
 *   **Logging:** All IMU data will be logged to the SD card (if active) for analysis.
 
 ## 💾 Optional SD Card Logging
