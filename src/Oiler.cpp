@@ -1211,7 +1211,7 @@ void Oiler::processPump() {
     
     // Bleeding Mode: Fast pumping (80ms Pulse / 400ms Pause)
     unsigned long effectivePause = bleedingMode ? 400 : dynamicPauseMs;
-    unsigned long effectivePulse = bleedingMode ? 80 : dynamicPulseMs;
+    unsigned long effectivePulse = bleedingMode ? 90 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
         
