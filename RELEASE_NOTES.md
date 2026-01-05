@@ -12,7 +12,16 @@ This update introduces significant architectural changes to support future platf
     *   Migrated PWM generation from the deprecated `ledcSetup`/`ledcAttachPin` to the new `ledcAttach` API.
     *   Updated Watchdog Timer (WDT) initialization to the new configuration structure.
 
-### User Experience (Smart Stop)
+## v1.1.2 - IMU Calibration Update + Smart Stop Mode Enhancement (2026-01-04)
+
+Improved the IMU calibration process for better usability and accuracy, especially for solo riders.
+
+*   **Non-Blocking Calibration:** The calibration process no longer freezes the web interface.
+*   **Countdown Timer:** Added a 5-second countdown before calibration starts, giving the rider time to stabilize the bike (hands on handlebars).
+*   **Averaging:** Calibration now averages sensor data over 3 seconds (instead of a single snapshot) to filter out rider movement and vibrations.
+*   **Visual Feedback:** The Web Interface automatically redirects to the Serial Console to display the countdown and calibration status in real-time.
+*   
+*   ### User Experience (Smart Stop)
 Enhanced the visual feedback when the motorcycle is stationary (e.g., at traffic lights) to provide useful status information without distraction.
 
 *   **Smart Stop Mode:** When the bike is stopped (< 3 km/h), the LED switches to a "Pulsing" mode to distinguish it from normal operation.
@@ -22,16 +31,7 @@ Enhanced the visual feedback when the motorcycle is stationary (e.g., at traffic
     *   **Red Pulsing:** Tank Empty.
 *   **Tank Warning Logic:** The "Smart Stop" mode now correctly respects the user-configured tank warning threshold instead of a fixed value.
 
-## v1.1.2 - IMU Calibration Update (2026-01-05)
-
-Improved the IMU calibration process for better usability and accuracy, especially for solo riders.
-
-*   **Non-Blocking Calibration:** The calibration process no longer freezes the web interface.
-*   **Countdown Timer:** Added a 5-second countdown before calibration starts, giving the rider time to stabilize the bike (hands on handlebars).
-*   **Averaging:** Calibration now averages sensor data over 3 seconds (instead of a single snapshot) to filter out rider movement and vibrations.
-*   **Visual Feedback:** The Web Interface automatically redirects to the Serial Console to display the countdown and calibration status in real-time.
-
-## v1.1.1 - Stability & Robustness (2026-01-04)
+## v1.1.1 - Stability & Robustness (2026-01-03)
 
 This patch focuses on system reliability and failsafe mechanisms to ensure the ChainJuicer operates autonomously without hanging, even in case of hardware glitches.
 
