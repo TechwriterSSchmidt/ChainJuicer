@@ -1214,6 +1214,11 @@ void Oiler::processPump() {
     unsigned long effectivePulse = bleedingMode ? BLEEDING_PULSE_MS : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
+#ifdef GPS_DEBUG
+        if (bleedingMode) {
+             Serial.printf("BLEED: Pulse %lu, Pause %lu, Delta %lu\n", effectivePulse, effectivePause, now - lastPulseTime);
+        }
+#endif
         
         // Turn Safety Check (Inter-Pulse)
         if (!bleedingMode) { 
@@ -1229,6 +1234,9 @@ void Oiler::processPump() {
 }
 
 void Oiler::startPulse(unsigned long durationMs) {
+#ifdef GPS_DEBUG
+    if (bleedingMode) Serial.printf("BLEED: Start Pulse %lu ms\n", durationMs);
+#endif
     pumpTargetDuration = durationMs;
     pumpStateStartTime = millis();
     
@@ -1355,6 +1363,9 @@ void Oiler::handlePulseFinished() {
 #endif
         }
     } else {
+#ifdef GPS_DEBUG
+        Serial.println("BLEED: Pulse Finished");
+#endif
         // Bleeding Mode: Count every pulse as stats & consumption
         pumpCycles++;
         progressChanged = true;
