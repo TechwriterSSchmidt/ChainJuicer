@@ -1209,8 +1209,8 @@ void Oiler::processPump() {
 
     // 3. Logic for Pulse Generation (Interval Check)
     
-    // Bleeding Mode: Fast pumping (65ms Pulse / 300ms Pause)
-    unsigned long effectivePause = bleedingMode ? 300 : dynamicPauseMs;
+    // Bleeding Mode: Fast pumping (65ms Pulse / 350ms Pause)
+    unsigned long effectivePause = bleedingMode ? 350 : dynamicPauseMs;
     unsigned long effectivePulse = bleedingMode ? 65 : dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
