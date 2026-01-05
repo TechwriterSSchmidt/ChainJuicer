@@ -455,17 +455,45 @@ void Oiler::updateLED() {
         if (bri < 5) bri = 5;
         strip.setBrightness(bri);
         color = strip.Color(255, 200, 0);
-    } else if (wifiActive) {
-        // WiFi Active: White pulsing
-        // Use sine wave for smooth pulsing
-        float pulse = (sin(now / 500.0) + 1.0) / 2.0; // 0.0 to 1.0
-        uint8_t brightness = (uint8_t)(pulse * currentHighBrightness);
-        if (brightness < 10) brightness = 10; // Minimum brightness
-        
-        strip.setBrightness(brightness);
-        color = strip.Color(255, 255, 255); // White
     } 
-    // 4. Tank Warning -> ORANGE Blinking (2x fast)
+    // 3.5 Smart Stop (Stationary) -> Status Indication
+    // Show detailed status when standing still (e.g. at traffic lights)
+    else if (currentSpeed < 3.0) {
+        float pulse = getPulse(2000); // Slow pulse 2s
+        
+        // Tank Empty? (Critical) -> RED Pulsing
+        if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
+             uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
+             if (bri < 10) bri = 10;
+             strip.setBrightness(bri);
+             color = strip.Color(255, 0, 0); 
+        }
+        // Tank Warning? -> ORANGE 2x Blink
+        else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+             strip.setBrightness(currentHighBrightness);
+             int phase = now % LED_BLINK_TANK; 
+             if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
+                color = strip.Color(255, 69, 0); 
+             } else {
+                color = 0; 
+             }
+        }
+        // Rain Mode? -> BLUE Pulsing
+        else if (rainMode) {
+             uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
+             if (bri < 5) bri = 5;
+             strip.setBrightness(bri);
+             color = strip.Color(0, 0, 255);
+        }
+        // Normal OK -> GREEN Pulsing
+        else {
+             uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
+             if (bri < 5) bri = 5;
+             strip.setBrightness(bri);
+             color = strip.Color(0, 255, 0);
+        }
+    }
+    // 4. Tank Warning (Moving) -> ORANGE Blinking (2x fast)
     else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
         strip.setBrightness(currentHighBrightness);
         int phase = now % LED_BLINK_TANK; // 2s cycle

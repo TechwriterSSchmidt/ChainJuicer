@@ -1,5 +1,16 @@
 # Release Notes
 
+## v1.1.3 - Smart Stop Visuals (2026-01-05)
+
+Enhanced the visual feedback when the motorcycle is stationary (e.g., at traffic lights) to provide useful status information without distraction.
+
+*   **Smart Stop Mode:** When the bike is stopped (< 3 km/h), the LED switches to a "Pulsing" mode to distinguish it from normal operation.
+    *   **Green Pulsing:** System OK.
+    *   **Blue Pulsing:** Rain Mode Active.
+    *   **Orange Blinking (2x):** Tank Low (Warning Level).
+    *   **Red Pulsing:** Tank Empty.
+*   **Tank Warning Logic:** The "Smart Stop" mode now correctly respects the user-configured tank warning threshold instead of a fixed value.
+
 ## v1.1.2 - IMU Calibration Update (2026-01-05)
 
 Improved the IMU calibration process for better usability and accuracy, especially for solo riders.

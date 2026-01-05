@@ -361,7 +361,9 @@ const char* htmlHelp = R"rawliteral(
     <h3>LED Status</h3>
     <ul>
         <li><span class='color-box' style='background:green'></span> <b>Green:</b> GPS OK (Ready).</li>
+        <li><span class='color-box' style='background:green'></span> <b>Green (pulse):</b> Smart Stop (Stationary & OK).</li>
         <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
+        <li><span class='color-box' style='background:blue'></span> <b>Blue (pulse):</b> Smart Stop (Rain Mode).</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan (blink):</b> 'Chain Flush Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta (blink):</b> 'Offroad Mode' Active.</li>
         <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
@@ -369,6 +371,7 @@ const char* htmlHelp = R"rawliteral(
         <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s, breathes 3x).</li>
         <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White pulse:</b> 'WiFi Config' Active.</li>
         <li><span class='color-box' style='background:red'></span> <b>Red (2x blink):</b> 'Tank Warning'.</li>
+        <li><span class='color-box' style='background:red'></span> <b>Red (pulse):</b> 'Tank Empty' (Stationary).</li>
         <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>
         <li><span class='color-box' style='background:cyan'></span> <b>Cyan (fast blink):</b> Firmware Update.</li>
     </ul>
