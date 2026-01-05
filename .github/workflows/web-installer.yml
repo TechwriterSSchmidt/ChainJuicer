@@ -26,6 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install platformio
 
+      - name: Install PlatformIO Project Dependencies
+        run: pio pkg install
+
       - name: Build Firmware
         run: pio run -e esp32dev
 
