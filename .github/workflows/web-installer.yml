@@ -25,12 +25,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install platformio
+          echo "PIP_DEFAULT_TIMEOUT=100" >> $GITHUB_ENV
 
       - name: Update PlatformIO platforms and packages
-        run: pio update
+        run: pio update -v
 
       - name: Install PlatformIO Project Dependencies
-        run: pio pkg install
+        run: pio pkg install -v
 
       - name: Build Firmware
         run: pio run -e esp32dev
