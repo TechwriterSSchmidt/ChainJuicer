@@ -1233,12 +1233,22 @@ void Oiler::startPulse(unsigned long durationMs) {
     pumpStateStartTime = millis();
     
     if (PUMP_USE_PWM) {
-        pumpState = PUMP_RAMP_UP;
-        pumpCurrentDuty = 130; // Start at ~50% to prevent whining
-        pumpLastStepTime = micros();
+        if (bleedingMode || PUMP_RAMP_UP_MS == 0) {
+            // Hard Kick for Bleeding Mode OR if Ramp is disabled (Skip Ramp Up)
+            pumpState = PUMP_HOLD;
+            pumpCurrentDuty = 255;
+            pumpLastStepTime = micros();
 #ifdef ESP32
-        ledcWrite(_pumpPin, pumpCurrentDuty);
+            ledcWrite(_pumpPin, pumpCurrentDuty);
 #endif
+        } else {
+            pumpState = PUMP_RAMP_UP;
+            pumpCurrentDuty = 130; // Start at ~50% to prevent whining
+            pumpLastStepTime = micros();
+#ifdef ESP32
+            ledcWrite(_pumpPin, pumpCurrentDuty);
+#endif
+        }
     } else {
         // Fallback: Hard Switching
         digitalWrite(_pumpPin, PUMP_ON);
@@ -1283,14 +1293,28 @@ void Oiler::updatePumpPulse() {
         }
         case PUMP_HOLD: {
             unsigned long holdTime = 0;
-            if (pumpTargetDuration > PUMP_RAMP_UP_MS) {
+            
+            if (bleedingMode) {
+                holdTime = pumpTargetDuration;
+            } else if (pumpTargetDuration > PUMP_RAMP_UP_MS) {
                 holdTime = pumpTargetDuration - PUMP_RAMP_UP_MS;
             }
             
             if (now - pumpStateStartTime >= holdTime) {
-                pumpState = PUMP_RAMP_DOWN;
-                pumpCurrentDuty = 255;
-                pumpLastStepTime = micros();
+                if (bleedingMode || PUMP_RAMP_DOWN_MS == 0) {
+                    // Hard Stop for Bleeding Mode OR if Ramp Down is disabled
+                    pumpCurrentDuty = 0;
+#ifdef ESP32
+                    ledcWrite(_pumpPin, 0);
+#endif
+                    digitalWrite(_pumpPin, PUMP_OFF);
+                    pumpState = PUMP_IDLE;
+                    handlePulseFinished();
+                } else {
+                    pumpState = PUMP_RAMP_DOWN;
+                    pumpCurrentDuty = 255;
+                    pumpLastStepTime = micros();
+                }
             }
             break;
         }
