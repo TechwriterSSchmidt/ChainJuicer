@@ -85,7 +85,7 @@
 #define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
 #define BLEEDING_DURATION_MS 20000 // Pumping time in ms for bleeding
 #define BLEEDING_PULSE_MS 60       // Pulse duration for bleeding
-#define BLEEDING_PAUSE_MS 1000     // Pause duration for bleeding (Increased for debugging)
+#define BLEEDING_PAUSE_MS 320      // Pause duration for bleeding
 // Chain Flush Mode Defaults
 #define FLUSH_DEFAULT_EVENTS 15       // Run 15 times
 #define FLUSH_DEFAULT_PULSES 2        // 2 Pulses per event

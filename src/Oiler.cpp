@@ -1209,24 +1209,28 @@ void Oiler::processPump() {
 
     // 3. Logic for Pulse Generation (Interval Check)
     
-    // Bleeding Mode: Fast pumping (Configurable in config.h)
-    unsigned long effectivePause = bleedingMode ? BLEEDING_PAUSE_MS : dynamicPauseMs;
-    unsigned long effectivePulse = bleedingMode ? BLEEDING_PULSE_MS : dynamicPulseMs;
+    // Simplified Bleeding Logic
+    if (bleedingMode) {
+        if (now - lastPulseTime >= BLEEDING_PAUSE_MS) {
+#ifdef GPS_DEBUG
+             Serial.printf("BLEED: Pulse %d, Pause %d\n", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
+             webConsole.logf("BLEED: Pulse %d, Pause %d", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
+#endif
+            startPulse(BLEEDING_PULSE_MS);
+        }
+        return; // Skip all other logic in Bleeding Mode
+    }
+
+    // Normal Oiling Logic
+    unsigned long effectivePause = dynamicPauseMs;
+    unsigned long effectivePulse = dynamicPulseMs;
 
     if (now - lastPulseTime >= effectivePause) {
-#ifdef GPS_DEBUG
-        if (bleedingMode) {
-             Serial.printf("BLEED: Pulse %lu, Pause %lu, Delta %lu\n", effectivePulse, effectivePause, now - lastPulseTime);
-             webConsole.logf("BLEED: Pulse %lu, Pause %lu, Delta %lu", effectivePulse, effectivePause, now - lastPulseTime);
-        }
-#endif
         
         // Turn Safety Check (Inter-Pulse)
-        if (!bleedingMode) { 
-             if (imu.isLeaningTowardsTire(20.0)) {
-                 // Unsafe! Delay this pulse.
-                 return;
-             }
+        if (imu.isLeaningTowardsTire(20.0)) {
+             // Unsafe! Delay this pulse.
+             return;
         }
 
         // Start Non-Blocking Pulse
@@ -1355,8 +1359,16 @@ void Oiler::updatePumpPulse() {
 }
 
 void Oiler::handlePulseFinished() {
+    unsigned long oldTime = lastPulseTime;
     lastPulseTime = millis();
     
+#ifdef GPS_DEBUG
+    if (bleedingMode) {
+        Serial.printf("BLEED: Finished. lastPulseTime updated: %lu -> %lu\n", oldTime, lastPulseTime);
+        webConsole.logf("BLEED: Finished. lastPulseTime updated: %lu -> %lu", oldTime, lastPulseTime);
+    }
+#endif
+
     if (!bleedingMode) {
         oilingPulsesRemaining--;
         if (oilingPulsesRemaining == 0) {
@@ -1489,7 +1501,18 @@ void Oiler::startBleeding() {
             
             // Init Pump State for immediate start
             pulseState = false; 
-            lastPulseTime = now - 1000; // Force start
+            // Ensure we start immediately by setting lastPulseTime far in the past
+            // Handle potential underflow if now < BLEEDING_PAUSE_MS
+            if (now > BLEEDING_PAUSE_MS + 100) {
+                lastPulseTime = now - BLEEDING_PAUSE_MS - 100; 
+            } else {
+                lastPulseTime = 0;
+            }
+            
+#ifdef GPS_DEBUG
+            Serial.printf("BLEED: Started. lastPulseTime set to %lu (now=%lu)\n", lastPulseTime, now);
+            webConsole.logf("BLEED: Started. lastPulseTime set to %lu (now=%lu)", lastPulseTime, now);
+#endif
 
             saveConfig(); // Save immediately
         }
