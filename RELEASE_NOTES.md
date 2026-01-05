@@ -1,7 +1,18 @@
 # Release Notes
 
-## v1.1.3 - Smart Stop Visuals (2026-01-05)
+## v2.0.0 - Core Refactoring & Smart Stop (2026-01-05)
 
+This update introduces significant architectural changes to support future platforms (HelLo Juicer) while enhancing the current user experience.
+
+### Core Architecture
+*   **Multi-Platform Support:** Refactored the core logic (`Oiler`, `AuxManager`) to be platform-agnostic.
+    *   Decoupled storage logic using a new `IPersistence` interface, allowing the same core code to run on ESP32 (using NVS) and nRF52 (using FileSystem).
+    *   Abstracted hardware pin definitions from the core library.
+*   **ESP32 Compatibility:** Updated the codebase to support **ESP32 Arduino Core 3.x**.
+    *   Migrated PWM generation from the deprecated `ledcSetup`/`ledcAttachPin` to the new `ledcAttach` API.
+    *   Updated Watchdog Timer (WDT) initialization to the new configuration structure.
+
+### User Experience (Smart Stop)
 Enhanced the visual feedback when the motorcycle is stationary (e.g., at traffic lights) to provide useful status information without distraction.
 
 *   **Smart Stop Mode:** When the bike is stopped (< 3 km/h), the LED switches to a "Pulsing" mode to distinguish it from normal operation.

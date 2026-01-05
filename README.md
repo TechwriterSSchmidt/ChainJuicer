@@ -1,4 +1,4 @@
-# 🍋 Chain Juicer v1.1.3 (ESP32)
+# 🍋 Chain Juicer v2.0.0 (ESP32)
 
 **The Swiss Army Knife for your Motorcycle Chain.**
 
@@ -7,6 +7,8 @@ An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Aux Powe
 **Easy to Build:** Designed around a widely available standard ESP32 Relay Board (LCTECH), this project requires **no custom PCB** and minimal soldering skills. It's the perfect entry point for DIY motorcycle electronics.
 
 **Easy to Install:** No coding skills required! Use the [Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer/) to flash your ESP32 directly from the browser. Future updates can be done wirelessly via OTA (Over-The-Air) using the [latest firmware file](https://TechwriterSSchmidt.github.io/ChainJuicer/firmware.bin).
+
+> **Note:** Version 2.0.0 introduces a new core architecture to support future hardware platforms (like the Heltec T114 for LoRaWAN). For ESP32 users, functionality remains the same, but the internal structure is now more robust and modular.
 
 ## Support my projects
 

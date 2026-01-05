@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#define FIRMWARE_VERSION "1.1.0"
+#define FIRMWARE_VERSION "2.0.0"
 
 // Hardware Pins
 #define PUMP_PIN 16        // Pin for MOSFET (Pump) - RIGHT SIDE
