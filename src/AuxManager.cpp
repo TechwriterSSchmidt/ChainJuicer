@@ -4,7 +4,8 @@
 #define AUX_PWM_FREQ 1000 // 1 kHz for grips/relays
 #define AUX_PWM_RES 8     // 8-bit (0-255)
 
-AuxManager::AuxManager() {
+AuxManager::AuxManager(IPersistence* store) {
+    _store = store;
 }
 
 void AuxManager::begin(ImuHandler* imu) {
@@ -21,29 +22,29 @@ void AuxManager::begin(ImuHandler* imu) {
     ledcWrite(AUX_PWM_CHANNEL, 0);
     
     // Load Preferences
-    _prefs.begin("aux", false);
-    _mode = (AuxMode)_prefs.getInt("mode", AUX_MODE_OFF);
+    _store->begin("aux", false);
+    _mode = (AuxMode)_store->getInt("mode", AUX_MODE_OFF);
     
-    _baseLevel = _prefs.getInt("base", 25);
-    _speedFactor = _prefs.getFloat("speedF", 0.5);
-    _tempFactor = _prefs.getFloat("tempF", 2.0);
-    _tempOffset = _prefs.getFloat("tempO", 0.0);
-    _startTemp = _prefs.getFloat("startT", 20.0);
-    _rainBoost = _prefs.getInt("rainB", 10);
-    _startupBoostLevel = _prefs.getInt("startL", 100);
-    _startupBoostSec = _prefs.getInt("startS", 75);
-    _startDelaySec = _prefs.getInt("startD", 15);
-    _reactionSpeed = (ReactionSpeed)_prefs.getInt("react", REACTION_SLOW);
+    _baseLevel = _store->getInt("base", 25);
+    _speedFactor = _store->getFloat("speedF", 0.5);
+    _tempFactor = _store->getFloat("tempF", 2.0);
+    _tempOffset = _store->getFloat("tempO", 0.0);
+    _startTemp = _store->getFloat("startT", 20.0);
+    _rainBoost = _store->getInt("rainB", 10);
+    _startupBoostLevel = _store->getInt("startL", 100);
+    _startupBoostSec = _store->getInt("startS", 75);
+    _startDelaySec = _store->getInt("startD", 15);
+    _reactionSpeed = (ReactionSpeed)_store->getInt("react", REACTION_SLOW);
     
     // Load saved state for manual override (persistence)
-    _manualOverride = _prefs.getBool("man_ovr", true);
+    _manualOverride = _store->getBool("man_ovr", true);
     
     // If enabled at boot, calculate boost end time
     if (_manualOverride) {
         calcBoostEndTime();
     }
 
-    _prefs.end();
+    _store->end();
 }
 
 void AuxManager::loop(float currentSpeedKmh, float currentTempC, bool isRainMode) {
@@ -67,9 +68,9 @@ void AuxManager::toggleManualOverride() {
         calcBoostEndTime();
     }
 
-    _prefs.begin("aux", false);
-    _prefs.putBool("man_ovr", _manualOverride);
-    _prefs.end();
+    _store->begin("aux", false);
+    _store->putBool("man_ovr", _manualOverride);
+    _store->end();
 }
 
 void AuxManager::handleAuxPower() {
@@ -155,9 +156,9 @@ void AuxManager::setPwm(int percent) {
 
 void AuxManager::setMode(AuxMode mode) {
     _mode = mode;
-    _prefs.begin("aux", false);
-    _prefs.putInt("mode", (int)_mode);
-    _prefs.end();
+    _store->begin("aux", false);
+    _store->putInt("mode", (int)_mode);
+    _store->end();
 }
 
 void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFactor, float tempOffset, float startTemp, int rainBoost, int startupBoostLevel, int startupBoostSec, int startDelaySec, int reactionSpeed) {
@@ -172,18 +173,18 @@ void AuxManager::setGripSettings(int baseLevel, float speedFactor, float tempFac
     _startDelaySec = startDelaySec;
     _reactionSpeed = (ReactionSpeed)reactionSpeed;
     
-    _prefs.begin("aux", false);
-    _prefs.putInt("base", _baseLevel);
-    _prefs.putFloat("speedF", _speedFactor);
-    _prefs.putFloat("tempF", _tempFactor);
-    _prefs.putFloat("tempO", _tempOffset);
-    _prefs.putFloat("startT", _startTemp);
-    _prefs.putInt("rainB", _rainBoost);
-    _prefs.putInt("startL", _startupBoostLevel);
-    _prefs.putInt("startS", _startupBoostSec);
-    _prefs.putInt("startD", _startDelaySec);
-    _prefs.putInt("react", (int)_reactionSpeed);
-    _prefs.end();
+    _store->begin("aux", false);
+    _store->putInt("base", _baseLevel);
+    _store->putFloat("speedF", _speedFactor);
+    _store->putFloat("tempF", _tempFactor);
+    _store->putFloat("tempO", _tempOffset);
+    _store->putFloat("startT", _startTemp);
+    _store->putInt("rainB", _rainBoost);
+    _store->putInt("startL", _startupBoostLevel);
+    _store->putInt("startS", _startupBoostSec);
+    _store->putInt("startD", _startDelaySec);
+    _store->putInt("react", (int)_reactionSpeed);
+    _store->end();
 }
 
 void AuxManager::getGripSettings(int &baseLevel, float &speedFactor, float &tempFactor, float &tempOffset, float &startTemp, int &rainBoost, int &startupBoostLevel, int &startupBoostSec, int &startDelaySec, int &reactionSpeed) {

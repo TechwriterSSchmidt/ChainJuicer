@@ -11,6 +11,7 @@
 #include "AuxManager.h"
 #include "html_pages.h"
 #include "WebConsole.h"
+#include "EspPersistence.h"
 
 #ifdef SD_LOGGING_ACTIVE
     #include "FS.h"
@@ -26,8 +27,9 @@ TinyGPSPlus gps;
 HardwareSerial gpsSerial(2); // UART2
 WebServer server(80);
 DNSServer dnsServer;
-Oiler oiler;
-AuxManager auxManager;
+EspPersistence persistence;
+Oiler oiler(&persistence);
+AuxManager auxManager(&persistence);
 
 #ifdef SD_LOGGING_ACTIVE
     File logFile;
@@ -610,7 +612,7 @@ void setup() {
     gpsSerial.begin(GPS_BAUD, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
     
     // Oiler Start
-    oiler.begin();
+    oiler.begin(IMU_SDA, IMU_SCL);
     auxManager.begin(&oiler.imu);
 
 #ifdef SD_LOGGING_ACTIVE

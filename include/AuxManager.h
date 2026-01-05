@@ -2,9 +2,9 @@
 #define AUX_MANAGER_H
 
 #include <Arduino.h>
-#include <Preferences.h>
 #include "config.h"
 #include "ImuHandler.h"
+#include "Persistence.h"
 
 enum AuxMode {
     AUX_MODE_OFF = 0,
@@ -20,7 +20,7 @@ enum ReactionSpeed {
 
 class AuxManager {
 public:
-    AuxManager();
+    AuxManager(IPersistence* store);
     void begin(ImuHandler* imu);
     void loop(float currentSpeedKmh, float currentTempC, bool isRainMode);
     
@@ -43,7 +43,7 @@ public:
 
 private:
     ImuHandler* _imu;
-    Preferences _prefs;
+    IPersistence* _store;
     AuxMode _mode = AUX_MODE_OFF;
     
     // Pin State

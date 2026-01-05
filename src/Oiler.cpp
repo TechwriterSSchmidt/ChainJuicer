@@ -1,18 +1,21 @@
 #include "Oiler.h"
 #include "WebConsole.h"
-#include <Preferences.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-Preferences preferences;
-
 // Setup OneWire and DallasTemperature
-OneWire oneWire(TEMP_SENSOR_PIN);
-DallasTemperature sensors(&oneWire);
+OneWire* oneWire;
+DallasTemperature* sensors;
 
-Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
-    pumpPin = PUMP_PIN;
-    // Pin initialization moved to begin() to avoid issues during global constructor execution
+Oiler::Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin) 
+    : strip(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800) {
+    _store = store;
+    _pumpPin = pumpPin;
+    _tempPin = tempPin;
+    
+    // Initialize OneWire and DallasTemperature dynamically
+    oneWire = new OneWire(_tempPin);
+    sensors = new DallasTemperature(oneWire);
     
     // Initialize default configuration - Swiss Alpine Profile
     // Range 0: City / Hairpins (10-45 km/h) -> 6.0 km (Low centrifugal force)
@@ -151,27 +154,27 @@ Oiler::Oiler() : strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800) {
     lastTempUpdate = 0;
 }
 
-void Oiler::begin() {
+void Oiler::begin(int imuSda, int imuScl) {
     // Hardware Init
     // Ensure Pump is OFF immediately
-    digitalWrite(pumpPin, PUMP_OFF);
-    pinMode(pumpPin, OUTPUT);
+    digitalWrite(_pumpPin, PUMP_OFF);
+    pinMode(_pumpPin, OUTPUT);
 
     // Initialize PWM for Pump
     if (PUMP_USE_PWM) {
         ledcSetup(PUMP_PWM_CHANNEL, PUMP_PWM_FREQ, PUMP_PWM_RESOLUTION);
-        ledcAttachPin(pumpPin, PUMP_PWM_CHANNEL);
+        ledcAttachPin(_pumpPin, PUMP_PWM_CHANNEL);
     }
 
     // Initialize Temp Sensor
-    sensors.begin();
+    sensors->begin();
 
     // Initialize IMU
-    imu.begin(IMU_SDA, IMU_SCL);
+    imu.begin(imuSda, imuScl);
 
     ledOilingEndTimestamp = 0;
 
-    preferences.begin("oiler", false);
+    _store->begin("oiler", false);
     loadConfig();
 
     // Hardware Init
@@ -187,19 +190,19 @@ void Oiler::performFactoryReset() {
     webConsole.log("PERFORMING FACTORY RESET...");
     
     // Ensure any previous session is closed
-    preferences.end();
+    _store->end();
 
     // Clear Oiler Preferences
-    preferences.begin("oiler", false);
-    preferences.clear(); // Nuke everything
-    preferences.end();
+    _store->begin("oiler", false);
+    _store->clear(); // Nuke everything
+    _store->end();
     
     delay(100);
 
     // Clear Aux Preferences
-    preferences.begin("aux", false);
-    preferences.clear();
-    preferences.end();
+    _store->begin("aux", false);
+    _store->clear();
+    _store->end();
 
     Serial.println("Done. Restarting...");
     delay(500); // Give time to send response if called from Web
@@ -602,64 +605,64 @@ void Oiler::loadConfig() {
     // If nothing is saved yet, default values remain
     for(int i=0; i<NUM_RANGES; i++) {
         String keyBase = "r" + String(i);
-        ranges[i].intervalKm = preferences.getFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
-        ranges[i].pulses = preferences.getInt((keyBase + "_p").c_str(), ranges[i].pulses);
+        ranges[i].intervalKm = _store->getFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
+        ranges[i].pulses = _store->getInt((keyBase + "_p").c_str(), ranges[i].pulses);
     }
 
     // Load Temperature Compensation Settings (New Simplified Model)
-    tempConfig.basePulse25 = preferences.getFloat("tc_pulse", (float)PULSE_DURATION_MS);
-    tempConfig.basePause25 = preferences.getFloat("tc_pause", (float)PAUSE_DURATION_MS);
-    tempConfig.oilType = (OilType)preferences.getInt("tc_oil", (int)OIL_NORMAL);
+    tempConfig.basePulse25 = _store->getFloat("tc_pulse", (float)PULSE_DURATION_MS);
+    tempConfig.basePause25 = _store->getFloat("tc_pause", (float)PAUSE_DURATION_MS);
+    tempConfig.oilType = (OilType)_store->getInt("tc_oil", (int)OIL_NORMAL);
 
-    currentProgress = preferences.getFloat("progress", 0.0);
-    ledBrightnessDim = preferences.getUChar("led_dim", LED_BRIGHTNESS_DIM);
-    ledBrightnessHigh = preferences.getUChar("led_high", LED_BRIGHTNESS_HIGH);
+    currentProgress = _store->getFloat("progress", 0.0);
+    ledBrightnessDim = _store->getUChar("led_dim", LED_BRIGHTNESS_DIM);
+    ledBrightnessHigh = _store->getUChar("led_high", LED_BRIGHTNESS_HIGH);
     
-    nightModeEnabled = preferences.getBool("night_en", true);
-    nightStartHour = preferences.getInt("night_start", 20);
-    nightEndHour = preferences.getInt("night_end", 6);
-    nightBrightness = preferences.getUChar("night_bri", 13);
-    nightBrightnessHigh = preferences.getUChar("night_bri_h", 64);
+    nightModeEnabled = _store->getBool("night_en", true);
+    nightStartHour = _store->getInt("night_start", 20);
+    nightEndHour = _store->getInt("night_end", 6);
+    nightBrightness = _store->getUChar("night_bri", 13);
+    nightBrightnessHigh = _store->getUChar("night_bri_h", 64);
     
     // Restore Rain Mode
-    rainMode = preferences.getBool("rain_mode", false); 
+    rainMode = _store->getBool("rain_mode", false); 
     
-    emergencyMode = preferences.getBool("emerg_mode", false);
+    emergencyMode = _store->getBool("emerg_mode", false);
 
     // Load Offroad & Startup
-    offroadIntervalMin = preferences.getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
-    startupDelayMeters = preferences.getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
+    offroadIntervalMin = _store->getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
+    startupDelayMeters = _store->getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
-    flushConfigEvents = preferences.getInt("tb_evt", FLUSH_DEFAULT_EVENTS);
-    flushConfigPulses = preferences.getInt("tb_pls", FLUSH_DEFAULT_PULSES);
-    flushConfigIntervalSec = preferences.getInt("tb_int", FLUSH_DEFAULT_INTERVAL_SEC);
+    flushConfigEvents = _store->getInt("tb_evt", FLUSH_DEFAULT_EVENTS);
+    flushConfigPulses = _store->getInt("tb_pls", FLUSH_DEFAULT_PULSES);
+    flushConfigIntervalSec = _store->getInt("tb_int", FLUSH_DEFAULT_INTERVAL_SEC);
 
     // Load Stats
-    totalDistance = preferences.getDouble("totalDist", 0.0);
-    pumpCycles = preferences.getUInt("pumpCount", 0);
+    totalDistance = _store->getDouble("totalDist", 0.0);
+    pumpCycles = _store->getUInt("pumpCount", 0);
     
     // Load Time Stats History
-    size_t len = preferences.getBytesLength("statsHist");
+    size_t len = _store->getBytesLength("statsHist");
     if (len == sizeof(StatsHistory)) {
-        preferences.getBytes("statsHist", &history, sizeof(StatsHistory));
+        _store->getBytes("statsHist", &history, sizeof(StatsHistory));
     }
     // Load current interval time
     for(int i=0; i<NUM_RANGES; i++) {
-        currentIntervalTime[i] = preferences.getDouble(("cit" + String(i)).c_str(), 0.0);
+        currentIntervalTime[i] = _store->getDouble(("cit" + String(i)).c_str(), 0.0);
     }
 
     // Load Tank Monitor
-    tankMonitorEnabled = preferences.getBool("tank_en", true);
-    tankCapacityMl = preferences.getFloat("tank_cap", 100.0);
-    currentTankLevelMl = preferences.getFloat("tank_lvl", 100.0);
-    dropsPerMl = preferences.getInt("drop_ml", 50);
-    dropsPerPulse = preferences.getInt("drop_pls", 1);
-    tankWarningThresholdPercent = preferences.getInt("tank_warn", 10);
+    tankMonitorEnabled = _store->getBool("tank_en", true);
+    tankCapacityMl = _store->getFloat("tank_cap", 100.0);
+    currentTankLevelMl = _store->getFloat("tank_lvl", 100.0);
+    dropsPerMl = _store->getInt("drop_ml", 50);
+    dropsPerPulse = _store->getInt("drop_pls", 1);
+    tankWarningThresholdPercent = _store->getInt("tank_warn", 10);
 
     // Load Emergency Mode forced setting
     // SAFETY: Previously we forced this OFF. Now we allow persistence for long trips with broken GPS.
-    emergencyModeForced = preferences.getBool("emerg_force", false); 
+    emergencyModeForced = _store->getBool("emerg_force", false); 
 
     // If forced, activate immediately
     if (emergencyModeForced) {
@@ -695,55 +698,55 @@ void Oiler::validateConfig() {
 void Oiler::saveConfig() {
     for(int i=0; i<NUM_RANGES; i++) {
         String keyBase = "r" + String(i);
-        preferences.putFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
-        preferences.putInt((keyBase + "_p").c_str(), ranges[i].pulses);
+        _store->putFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
+        _store->putInt((keyBase + "_p").c_str(), ranges[i].pulses);
     }
 
     // Save Temperature Compensation Settings
-    preferences.putFloat("tc_pulse", tempConfig.basePulse25);
-    preferences.putFloat("tc_pause", tempConfig.basePause25);
-    preferences.putInt("tc_oil", (int)tempConfig.oilType);
+    _store->putFloat("tc_pulse", tempConfig.basePulse25);
+    _store->putFloat("tc_pause", tempConfig.basePause25);
+    _store->putInt("tc_oil", (int)tempConfig.oilType);
 
-    preferences.putUChar("led_dim", ledBrightnessDim);
-    preferences.putUChar("led_high", ledBrightnessHigh);
+    _store->putUChar("led_dim", ledBrightnessDim);
+    _store->putUChar("led_high", ledBrightnessHigh);
     
-    preferences.putBool("night_en", nightModeEnabled);
-    preferences.putInt("night_start", nightStartHour);
-    preferences.putInt("night_end", nightEndHour);
-    preferences.putUChar("night_bri", nightBrightness);
-    preferences.putUChar("night_bri_h", nightBrightnessHigh);
+    _store->putBool("night_en", nightModeEnabled);
+    _store->putInt("night_start", nightStartHour);
+    _store->putInt("night_end", nightEndHour);
+    _store->putUChar("night_bri", nightBrightness);
+    _store->putUChar("night_bri_h", nightBrightnessHigh);
     
     // Save Rain Mode
-    preferences.putBool("rain_mode", rainMode);
-    preferences.putBool("emerg_mode", emergencyMode);
-    preferences.putBool("emerg_force", emergencyModeForced);
+    _store->putBool("rain_mode", rainMode);
+    _store->putBool("emerg_mode", emergencyMode);
+    _store->putBool("emerg_force", emergencyModeForced);
 
     // Save Offroad & Startup
-    preferences.putInt("off_int", offroadIntervalMin);
-    preferences.putFloat("start_dly_m", startupDelayMeters);
+    _store->putInt("off_int", offroadIntervalMin);
+    _store->putFloat("start_dly_m", startupDelayMeters);
 
     // Save Chain Flush Mode
-    preferences.putInt("tb_evt", flushConfigEvents);
-    preferences.putInt("tb_pls", flushConfigPulses);
-    preferences.putInt("tb_int", flushConfigIntervalSec);
+    _store->putInt("tb_evt", flushConfigEvents);
+    _store->putInt("tb_pls", flushConfigPulses);
+    _store->putInt("tb_int", flushConfigIntervalSec);
 
     // Save Tank Monitor
-    preferences.putBool("tank_en", tankMonitorEnabled);
-    preferences.putFloat("tank_cap", tankCapacityMl);
-    preferences.putFloat("tank_lvl", currentTankLevelMl);
-    preferences.putInt("drop_ml", dropsPerMl);
-    preferences.putInt("drop_pls", dropsPerPulse);
-    preferences.putInt("tank_warn", tankWarningThresholdPercent);
+    _store->putBool("tank_en", tankMonitorEnabled);
+    _store->putFloat("tank_cap", tankCapacityMl);
+    _store->putFloat("tank_lvl", currentTankLevelMl);
+    _store->putInt("drop_ml", dropsPerMl);
+    _store->putInt("drop_pls", dropsPerPulse);
+    _store->putInt("tank_warn", tankWarningThresholdPercent);
 
     // Save Stats
-    preferences.putDouble("totalDist", totalDistance);
-    preferences.putUInt("pumpCount", pumpCycles);
+    _store->putDouble("totalDist", totalDistance);
+    _store->putUInt("pumpCount", pumpCycles);
     
     // Save Time Stats History
-    preferences.putBytes("statsHist", &history, sizeof(StatsHistory));
+    _store->putBytes("statsHist", &history, sizeof(StatsHistory));
     // Save current interval time
     for(int i=0; i<NUM_RANGES; i++) {
-        preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
+        _store->putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
@@ -751,19 +754,19 @@ void Oiler::saveConfig() {
 
 void Oiler::saveProgress() {
     if (progressChanged) {
-        preferences.putFloat("progress", currentProgress);
+        _store->putFloat("progress", currentProgress);
         // Save Stats
-        preferences.putDouble("totalDist", totalDistance);
-        preferences.putUInt("pumpCount", pumpCycles);
+        _store->putDouble("totalDist", totalDistance);
+        _store->putUInt("pumpCount", pumpCycles);
         
         // Save Time Stats History
-        preferences.putBytes("statsHist", &history, sizeof(StatsHistory));
+        _store->putBytes("statsHist", &history, sizeof(StatsHistory));
         for(int i=0; i<NUM_RANGES; i++) {
-            preferences.putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
+            _store->putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
         }
         
         // Save Tank Level
-        preferences.putFloat("tank_lvl", currentTankLevelMl);
+        _store->putFloat("tank_lvl", currentTankLevelMl);
 
         progressChanged = false;
 #ifdef GPS_DEBUG
@@ -1143,7 +1146,7 @@ void Oiler::processPump() {
     // IMU Safety Cutoff (Latch)
     if (crashTripped) {
         if (PUMP_USE_PWM) ledcWrite(PUMP_PWM_CHANNEL, 0);
-        digitalWrite(pumpPin, PUMP_OFF);
+        digitalWrite(_pumpPin, PUMP_OFF);
         isOiling = false;
         bleedingMode = false;
         pumpState = PUMP_IDLE;
@@ -1158,7 +1161,7 @@ void Oiler::processPump() {
         // Check Safety Cutoff (Pump stuck ON?)
         if ((now - pumpStateStartTime) > PUMP_SAFETY_CUTOFF_MS) {
              Serial.println("[CRITICAL] Safety Cutoff triggered! Pump stuck.");
-             digitalWrite(pumpPin, PUMP_OFF);
+             digitalWrite(_pumpPin, PUMP_OFF);
              ledcWrite(PUMP_PWM_CHANNEL, 0);
              pumpState = PUMP_IDLE;
              isOiling = false;
@@ -1171,7 +1174,7 @@ void Oiler::processPump() {
     if (bleedingMode) {
         if (now - bleedingStartTime > currentBleedingDuration) {
             bleedingMode = false;
-            digitalWrite(pumpPin, PUMP_OFF);
+            digitalWrite(_pumpPin, PUMP_OFF);
 #ifdef GPS_DEBUG
             Serial.printf("Bleeding Finished. Consumed: %.2f ml\n", bleedingSessionConsumed);
             webConsole.log("Bleeding Finished. Consumed: " + String(bleedingSessionConsumed, 2) + " ml");
@@ -1229,7 +1232,7 @@ void Oiler::startPulse(unsigned long durationMs) {
         ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
     } else {
         // Fallback: Hard Switching
-        digitalWrite(pumpPin, PUMP_ON);
+        digitalWrite(_pumpPin, PUMP_ON);
         pumpState = PUMP_HOLD;
     }
 }
@@ -1243,7 +1246,7 @@ void Oiler::updatePumpPulse() {
     if (!PUMP_USE_PWM) {
         // Simple ON/OFF logic
         if (now - pumpStateStartTime >= pumpTargetDuration) {
-            digitalWrite(pumpPin, PUMP_OFF);
+            digitalWrite(_pumpPin, PUMP_OFF);
             pumpState = PUMP_IDLE;
             handlePulseFinished(); 
         }
@@ -1287,7 +1290,7 @@ void Oiler::updatePumpPulse() {
                 if (pumpCurrentDuty <= 130) { // Stop at ~50% to prevent whining
                     pumpCurrentDuty = 0;
                     ledcWrite(PUMP_PWM_CHANNEL, 0);
-                    digitalWrite(pumpPin, PUMP_OFF);
+                    digitalWrite(_pumpPin, PUMP_OFF);
                     pumpState = PUMP_IDLE;
                     handlePulseFinished();
                 } else {

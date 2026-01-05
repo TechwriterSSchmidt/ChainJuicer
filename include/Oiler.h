@@ -5,6 +5,7 @@
 #include <TinyGPS++.h>
 #include <Adafruit_NeoPixel.h>
 #include "ImuHandler.h"
+#include "Persistence.h"
 
 #define SPEED_BUFFER_SIZE 5
 #define LUT_STEP 5
@@ -20,9 +21,9 @@ enum PumpState {
 
 class Oiler {
 public:
-    Oiler();
+    Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin);
     ImuHandler imu;
-    void begin();
+    void begin(int imuSda, int imuScl);
     void update(float speedKmh, double lat, double lon, bool gpsValid);
     void loop(); // Main loop for button and LED
     void saveConfig();
@@ -170,6 +171,7 @@ public:
     void setAuxStatus(int pwm, int mode, bool boost) { auxPwm = pwm; auxMode = mode; auxBoost = boost; }
 
 private:
+    IPersistence* _store;
     // Aux Status for LED
     int auxPwm = 0;
     int auxMode = 0; // 0=OFF, 1=SMART, 2=GRIPS
@@ -177,7 +179,8 @@ private:
 
     void processDistance(double distKm, float speedKmh);
     
-    int pumpPin;
+    int _pumpPin;
+    int _tempPin;
     int currentHour;
     bool updateMode;
     SpeedRange ranges[NUM_RANGES];
