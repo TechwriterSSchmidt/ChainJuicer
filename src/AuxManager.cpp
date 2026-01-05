@@ -17,9 +17,10 @@ void AuxManager::begin(ImuHandler* imu) {
     digitalWrite(AUX_PIN, LOW);
     
     // Setup PWM
-    ledcSetup(AUX_PWM_CHANNEL, AUX_PWM_FREQ, AUX_PWM_RES);
-    ledcAttachPin(AUX_PIN, AUX_PWM_CHANNEL);
-    ledcWrite(AUX_PWM_CHANNEL, 0);
+#ifdef ESP32
+    ledcAttach(AUX_PIN, AUX_PWM_FREQ, AUX_PWM_RES);
+    ledcWrite(AUX_PIN, 0);
+#endif
     
     // Load Preferences
     _store->begin("aux", false);
@@ -149,7 +150,9 @@ void AuxManager::setPwm(int percent) {
     if (percent != _currentPwm) {
         _currentPwm = percent;
         int duty = map(percent, 0, 100, 0, 255);
-        ledcWrite(AUX_PWM_CHANNEL, duty);
+#ifdef ESP32
+        ledcWrite(AUX_PIN, duty);
+#endif
         _isPowered = (percent > 0);
     }
 }

@@ -162,8 +162,9 @@ void Oiler::begin(int imuSda, int imuScl) {
 
     // Initialize PWM for Pump
     if (PUMP_USE_PWM) {
-        ledcSetup(PUMP_PWM_CHANNEL, PUMP_PWM_FREQ, PUMP_PWM_RESOLUTION);
-        ledcAttachPin(_pumpPin, PUMP_PWM_CHANNEL);
+#ifdef ESP32
+        ledcAttach(_pumpPin, PUMP_PWM_FREQ, PUMP_PWM_RESOLUTION);
+#endif
     }
 
     // Initialize Temp Sensor
@@ -1145,7 +1146,11 @@ void Oiler::processPump() {
 
     // IMU Safety Cutoff (Latch)
     if (crashTripped) {
-        if (PUMP_USE_PWM) ledcWrite(PUMP_PWM_CHANNEL, 0);
+        if (PUMP_USE_PWM) {
+#ifdef ESP32
+            ledcWrite(_pumpPin, 0);
+#endif
+        }
         digitalWrite(_pumpPin, PUMP_OFF);
         isOiling = false;
         bleedingMode = false;
@@ -1162,7 +1167,9 @@ void Oiler::processPump() {
         if ((now - pumpStateStartTime) > PUMP_SAFETY_CUTOFF_MS) {
              Serial.println("[CRITICAL] Safety Cutoff triggered! Pump stuck.");
              digitalWrite(_pumpPin, PUMP_OFF);
-             ledcWrite(PUMP_PWM_CHANNEL, 0);
+#ifdef ESP32
+             ledcWrite(_pumpPin, 0);
+#endif
              pumpState = PUMP_IDLE;
              isOiling = false;
              bleedingMode = false;
@@ -1229,7 +1236,9 @@ void Oiler::startPulse(unsigned long durationMs) {
         pumpState = PUMP_RAMP_UP;
         pumpCurrentDuty = 130; // Start at ~50% to prevent whining
         pumpLastStepTime = micros();
-        ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
+#ifdef ESP32
+        ledcWrite(_pumpPin, pumpCurrentDuty);
+#endif
     } else {
         // Fallback: Hard Switching
         digitalWrite(_pumpPin, PUMP_ON);
@@ -1265,7 +1274,9 @@ void Oiler::updatePumpPulse() {
                     // Reset start time for HOLD phase to ensure accurate duration
                     pumpStateStartTime = millis(); 
                 }
-                ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
+#ifdef ESP32
+                ledcWrite(_pumpPin, pumpCurrentDuty);
+#endif
                 pumpLastStepTime = nowMicros;
             }
             break;
@@ -1289,12 +1300,16 @@ void Oiler::updatePumpPulse() {
                 pumpCurrentDuty -= 15;
                 if (pumpCurrentDuty <= 130) { // Stop at ~50% to prevent whining
                     pumpCurrentDuty = 0;
-                    ledcWrite(PUMP_PWM_CHANNEL, 0);
+#ifdef ESP32
+                    ledcWrite(_pumpPin, 0);
+#endif
                     digitalWrite(_pumpPin, PUMP_OFF);
                     pumpState = PUMP_IDLE;
                     handlePulseFinished();
                 } else {
-                    ledcWrite(PUMP_PWM_CHANNEL, pumpCurrentDuty);
+#ifdef ESP32
+                    ledcWrite(_pumpPin, pumpCurrentDuty);
+#endif
                 }
                 pumpLastStepTime = nowMicros;
             }
@@ -1455,7 +1470,7 @@ SpeedRange* Oiler::getRangeConfig(int index) {
 }
 
 bool Oiler::isTempSensorConnected() {
-    return sensors.getDeviceCount() > 0;
+    return sensors->getDeviceCount() > 0;
 }
 
 bool Oiler::isButtonPressed() {
@@ -1525,8 +1540,8 @@ void Oiler::setUpdateMode(bool mode) {
 
 // --- NEW: Temperature Compensation Logic ---
 void Oiler::updateTemperature() {
-    sensors.requestTemperatures(); 
-    float tempC = sensors.getTempCByIndex(0);
+    sensors->requestTemperatures(); 
+    float tempC = sensors->getTempCByIndex(0);
 
     // Check for error (-127 is error)
     if (tempC == DEVICE_DISCONNECTED_C) {

@@ -28,7 +28,7 @@ HardwareSerial gpsSerial(2); // UART2
 WebServer server(80);
 DNSServer dnsServer;
 EspPersistence persistence;
-Oiler oiler(&persistence);
+Oiler oiler(&persistence, PUMP_PIN, LED_PIN, TEMP_SENSOR_PIN);
 AuxManager auxManager(&persistence);
 
 #ifdef SD_LOGGING_ACTIVE
@@ -602,7 +602,12 @@ void setup() {
     if(!Serial) Serial.begin(115200);
     
     // Initialize Watchdog
-    esp_task_wdt_init(WDT_TIMEOUT, true);
+    esp_task_wdt_config_t wdt_config = {
+        .timeout_ms = WDT_TIMEOUT * 1000,
+        .idle_core_mask = (1 << 0) | (1 << 1),    // Bitmask of all cores
+        .trigger_panic = true
+    };
+    esp_task_wdt_init(&wdt_config);
     esp_task_wdt_add(NULL);
 
     // Permanently disable Bluetooth
