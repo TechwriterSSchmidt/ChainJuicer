@@ -1214,19 +1214,22 @@ void Oiler::processPump() {
     
     // Simplified Bleeding Logic
     if (bleedingMode) {
-        // Check for underflow (if lastPulseTime is in future due to clock tick during execution)
+        // Guard against clock tick under/overflow
         if (lastPulseTime > now) {
-             // Wait for clock to catch up
-             return;
+             return; // wait until millis() catches up
         }
 
-        if (now - lastPulseTime >= BLEEDING_PAUSE_MS) {
-#ifdef GPS_DEBUG
-             Serial.printf("BLEED: Pulse %d, Pause %d\n", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
-             webConsole.logf("BLEED: Pulse %d, Pause %d", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
-#endif
-            startPulse(BLEEDING_PULSE_MS);
+        unsigned long nextBleedDue = lastPulseTime + BLEEDING_PAUSE_MS;
+        long remaining = (long)(nextBleedDue - now);
+        if (remaining > 0) {
+            return; // not yet time for next pulse
         }
+
+#ifdef GPS_DEBUG
+        Serial.printf("BLEED: Pulse %d, Pause %d, delta=%lu, remaining=%ld\n", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS, now - lastPulseTime, remaining);
+        webConsole.logf("BLEED: Pulse %d, Pause %d, delta=%lu, remaining=%ld", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS, now - lastPulseTime, remaining);
+#endif
+        startPulse(BLEEDING_PULSE_MS);
         return; // Skip all other logic in Bleeding Mode
     }
 
@@ -1519,8 +1522,8 @@ void Oiler::startBleeding() {
             }
             
 #ifdef GPS_DEBUG
-            Serial.printf("BLEED: Started. lastPulseTime set to %lu (now=%lu)\n", lastPulseTime, now);
-            webConsole.logf("BLEED: Started. lastPulseTime set to %lu (now=%lu)", lastPulseTime, now);
+                Serial.printf("BLEED: Started. lastPulseTime set to %lu (now=%lu) | Pulse=%d Pause=%d\n", lastPulseTime, now, BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
+                webConsole.logf("BLEED: Started. lastPulseTime set to %lu (now=%lu) | Pulse=%d Pause=%d", lastPulseTime, now, BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
 #endif
 
             saveConfig(); // Save immediately
