@@ -27,8 +27,8 @@
 #define PUMP_PWM_FREQ 5000      // 5 kHz is safe for most solenoids
 #define PUMP_PWM_CHANNEL 0      // ESP32 LEDC Channel
 #define PUMP_PWM_RESOLUTION 8   // 8-bit resolution (0-255)
-#define PUMP_RAMP_UP_MS 12      // Soft-Start duration (Generic: 12ms)
-#define PUMP_RAMP_DOWN_MS 12    // Soft-Stop duration (Generic: 12ms)
+#define PUMP_RAMP_UP_MS 0      // Soft-Start duration (Generic: 12ms)
+#define PUMP_RAMP_DOWN_MS 0    // Soft-Stop duration (Generic: 12ms)
 
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 
