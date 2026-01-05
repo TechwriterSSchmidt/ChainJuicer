@@ -12,7 +12,7 @@ This update introduces significant architectural changes to support future platf
     *   Migrated PWM generation from the deprecated `ledcSetup`/`ledcAttachPin` to the new `ledcAttach` API.
     *   Updated Watchdog Timer (WDT) initialization to the new configuration structure.
 
-## v1.1.2 - IMU Calibration Update (2026-01-05)
+## v1.1.2 - IMU Calibration Update + Smart Stop Mode Enhancement (2026-01-05)
 
 Improved the IMU calibration process for better usability and accuracy, especially for solo riders.
 
