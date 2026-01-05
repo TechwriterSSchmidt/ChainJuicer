@@ -1161,6 +1161,9 @@ void Oiler::processPump() {
     // 1. Update State Machine
     updatePumpPulse();
 
+    // Refresh 'now' because updatePumpPulse might have taken time or updated lastPulseTime
+    now = millis();
+
     // If pump is busy, we don't start a new pulse
     if (pumpState != PUMP_IDLE) {
         // Check Safety Cutoff (Pump stuck ON?)
@@ -1211,6 +1214,12 @@ void Oiler::processPump() {
     
     // Simplified Bleeding Logic
     if (bleedingMode) {
+        // Check for underflow (if lastPulseTime is in future due to clock tick during execution)
+        if (lastPulseTime > now) {
+             // Wait for clock to catch up
+             return;
+        }
+
         if (now - lastPulseTime >= BLEEDING_PAUSE_MS) {
 #ifdef GPS_DEBUG
              Serial.printf("BLEED: Pulse %d, Pause %d\n", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
