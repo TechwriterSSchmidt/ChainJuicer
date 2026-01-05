@@ -26,6 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install platformio
 
+      - name: Update PlatformIO platforms and packages
+        run: pio update
+
       - name: Install PlatformIO Project Dependencies
         run: pio pkg install
 
