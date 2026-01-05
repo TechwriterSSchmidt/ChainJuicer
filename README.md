@@ -1,4 +1,4 @@
-# 🍋 Chain Juicer v1.1.1 (ESP32)
+# 🍋 Chain Juicer v1.1.3 (ESP32)
 
 **The Swiss Army Knife for your Motorcycle Chain.**
 
