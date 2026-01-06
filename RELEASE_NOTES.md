@@ -1,5 +1,8 @@
 # Release Notes
 
+## v2.0.1 - Bleeding Timing Fix (2026-01-06)
+*   **Bleeding Mode:** Fixed a millis underflow race that made the pump run at ~6 Hz despite 60/320 ms settings. Bleeding now uses a simple hard-coded scheduler (pulse 60 ms, pause 320 ms) with an underflow guard. Logging noise was reduced for the web/serial console.
+
 ## v2.0.0 - Core Refactoring & Smart Stop (2026-01-05)
 
 This update introduces significant architectural changes to support future platforms (HelLo Juicer) while enhancing the current user experience.

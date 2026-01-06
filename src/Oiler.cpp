@@ -1225,10 +1225,6 @@ void Oiler::processPump() {
             return; // not yet time for next pulse
         }
 
-#ifdef GPS_DEBUG
-        Serial.printf("BLEED: Pulse %d, Pause %d, delta=%lu, remaining=%ld\n", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS, now - lastPulseTime, remaining);
-        webConsole.logf("BLEED: Pulse %d, Pause %d, delta=%lu, remaining=%ld", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS, now - lastPulseTime, remaining);
-#endif
         startPulse(BLEEDING_PULSE_MS);
         return; // Skip all other logic in Bleeding Mode
     }
@@ -1371,15 +1367,7 @@ void Oiler::updatePumpPulse() {
 }
 
 void Oiler::handlePulseFinished() {
-    unsigned long oldTime = lastPulseTime;
     lastPulseTime = millis();
-    
-#ifdef GPS_DEBUG
-    if (bleedingMode) {
-        Serial.printf("BLEED: Finished. lastPulseTime updated: %lu -> %lu\n", oldTime, lastPulseTime);
-        webConsole.logf("BLEED: Finished. lastPulseTime updated: %lu -> %lu", oldTime, lastPulseTime);
-    }
-#endif
 
     if (!bleedingMode) {
         oilingPulsesRemaining--;
@@ -1522,8 +1510,8 @@ void Oiler::startBleeding() {
             }
             
 #ifdef GPS_DEBUG
-                Serial.printf("BLEED: Started. lastPulseTime set to %lu (now=%lu) | Pulse=%d Pause=%d\n", lastPulseTime, now, BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
-                webConsole.logf("BLEED: Started. lastPulseTime set to %lu (now=%lu) | Pulse=%d Pause=%d", lastPulseTime, now, BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
+            Serial.printf("BLEED: Started. Pulse=%d Pause=%d\n", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
+            webConsole.logf("BLEED: Started. Pulse=%d Pause=%d", BLEEDING_PULSE_MS, BLEEDING_PAUSE_MS);
 #endif
 
             saveConfig(); // Save immediately
