@@ -697,6 +697,8 @@ void Oiler::validateConfig() {
 }
 
 void Oiler::saveConfig() {
+    _store->begin("oiler", false); // Fix: Ensure correct namespace is active
+
     for(int i=0; i<NUM_RANGES; i++) {
         String keyBase = "r" + String(i);
         _store->putFloat((keyBase + "_km").c_str(), ranges[i].intervalKm);
@@ -750,11 +752,14 @@ void Oiler::saveConfig() {
         _store->putDouble(("cit" + String(i)).c_str(), currentIntervalTime[i]);
     }
     
+    _store->end();
     rebuildLUT(); // Ensure LUT is up to date when saving (in case ranges changed)
 }
 
 void Oiler::saveProgress() {
     if (progressChanged) {
+        _store->begin("oiler", false); // Fix: Ensure correct namespace is active
+
         _store->putFloat("progress", currentProgress);
         // Save Stats
         _store->putDouble("totalDist", totalDistance);
@@ -768,6 +773,8 @@ void Oiler::saveProgress() {
         
         // Save Tank Level
         _store->putFloat("tank_lvl", currentTankLevelMl);
+
+        _store->end();
 
         progressChanged = false;
 #ifdef GPS_DEBUG
