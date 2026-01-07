@@ -9,6 +9,7 @@ public:
     EspPersistence() {}
     
     void begin(const char* namespaceName, bool readOnly) override {
+        _prefs.end(); // Ensure any previous namespace is closed prevents locking
         _prefs.begin(namespaceName, readOnly);
     }
     
