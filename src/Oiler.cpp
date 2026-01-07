@@ -177,6 +177,7 @@ void Oiler::begin(int imuSda, int imuScl) {
 
     _store->begin("oiler", false);
     loadConfig();
+    _store->end(); // Fix: Close namespace after loading
 
     // Hardware Init
     pinMode(BUTTON_PIN, INPUT_PULLUP);
