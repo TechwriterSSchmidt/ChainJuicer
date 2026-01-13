@@ -8,13 +8,34 @@ An ESP32-based multi-tool featuring GPS-controlled chain lubrication, a Aux Powe
 
 **Easy to Install:** No coding skills required! Use the [Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer/) to flash your ESP32 directly from the browser. Future updates can be done wirelessly via OTA (Over-The-Air) using the [latest firmware file](https://TechwriterSSchmidt.github.io/ChainJuicer/firmware.bin).
 
-> **Note:** Version 2.0.0 introduces a new core architecture to support future hardware platforms (like the Heltec T114 for LoRaWAN). For ESP32 users, functionality remains the same, but the internal structure is now more robust and modular.
+> **Note:** Version 2.0.0 introduces a new core architecture. For optimal stability and to prevent boot loops, please follow the **Recommended Pin Layout** below when building new hardware.
 
 ## Support my projects
 
 If you like this project, consider a tip. Your tip motivates me to continue developing useful stuff for the DIY community. Thank you very much for your support!
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D01HVT9A)
+
+## 🔧 Recommended Pin Layout (Hardware v2.0)
+
+For the most stable operation (avoiding "Boot Loops" and conflicts with internal ESP32 Strapping Pins), use the following connection scheme for new builds. 
+
+| Component | ESP32 Pin (GPIO) | Notes |
+| :--- | :--- | :--- |
+| **PUMP (MOSFET)** | **GPIO 26** | Safe Output (or GPIO 13 if 26 used) |
+| **LED (WS2812B)** | **GPIO 32** | Standard |
+| **BUTTON** | **GPIO 0** | Use Boot Button or external btn to GND |
+| **TEMP (DS18B20)** | **GPIO 4** | **Important:** Requires 4.7kΩ Pull-Up Resistor. Do not use GPIO 2! |
+| **GPS RX** | **GPIO 16 (RX2)** | Connect to GPS TX. Alternative: GPIO 34 (Input Only) |
+| **GPS TX** | **GPIO 17 (TX2)** | Connect to GPS RX. Alternative: GPIO 27 |
+| **IMU (SDA)** | **GPIO 21** | Standard Hardware I2C |
+| **IMU (SCL)** | **GPIO 22** | Standard Hardware I2C |
+| **SD Card (CS)** | **GPIO 5** | VSPI CS |
+| **SD Card (CLK)** | **GPIO 18** | VSPI CLK |
+| **SD Card (MISO)** | **GPIO 19** | VSPI MISO |
+| **SD Card (MOSI)** | **GPIO 23** | VSPI MOSI (Alternative: GPIO 13) |
+
+> **Warning:** Avoid using **GPIO 12**, as it determines the flash voltage during boot (High = Boot Loop). Avoid **GPIO 2** for sensors with pull-ups for the same reason.
 
 ## Table of Contents
 * [Features](#-features)
