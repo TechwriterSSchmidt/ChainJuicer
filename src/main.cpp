@@ -838,16 +838,25 @@ void loop() {
     if (oiler.checkWifiToggleRequest()) {
         if (!wifiActive) {
             // Activate WiFi
-            WiFi.softAP(AP_SSID);
-            IPAddress IP = WiFi.softAPIP();
-#ifdef GPS_DEBUG
-            Serial.print("WiFi activated via Button. IP: ");
-            Serial.println(IP);
-#endif
-            dnsServer.start(53, "*", IP);
-            server.begin();
-            wifiActive = true;
-            wifiStartTime = currentMillis;
+            // FIX: Explicitly set mode and channel to prevent disconnects
+            WiFi.mode(WIFI_AP); 
+            bool res = WiFi.softAP(AP_SSID, NULL, 1, 0, 4); // Channel 1, Hidden 0, MaxConn 4
+            
+            if (res) {
+                IPAddress IP = WiFi.softAPIP();
+                #ifdef GPS_DEBUG
+                Serial.print("WiFi activated via Button. IP: ");
+                Serial.println(IP);
+                #endif
+                dnsServer.start(53, "*", IP);
+                server.begin();
+                wifiActive = true;
+                wifiStartTime = currentMillis;
+            } else {
+                #ifdef GPS_DEBUG
+                Serial.println("WiFi Start Failed!");
+                #endif
+            }
         } else {
             // WiFi is already active.
             // Prevent accidental deactivation via button (User Request).
