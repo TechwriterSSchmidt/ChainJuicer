@@ -597,8 +597,8 @@ void setup() {
 
     // Safety: Ensure Pump is OFF immediately
     // Set level LOW before switching to OUTPUT to prevent glitches
-    digitalWrite(PUMP_PIN, PUMP_OFF);
     pinMode(PUMP_PIN, OUTPUT);
+    digitalWrite(PUMP_PIN, PUMP_OFF);
 
     if(!Serial) Serial.begin(115200);
     

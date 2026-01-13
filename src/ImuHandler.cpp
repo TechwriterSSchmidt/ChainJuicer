@@ -15,7 +15,11 @@ bool ImuHandler::begin(int sda, int scl) {
     Wire.begin(sda, scl);
     Wire.setTimeOut(10); // 10ms Timeout verhindert Hängenbleiben
     
-    if (!_bno.begin_I2C()) {
+    // FIX: Try address 0x4B first, then fallback to default (0x4A)
+    bool imuFound = _bno.begin_I2C(0x4B);
+    if (!imuFound) imuFound = _bno.begin_I2C(); // Default attempt
+
+    if (!imuFound) {
         Serial.println("IMU: Not found. Attempting Bus Recovery...");
         
         // 2. Bus Recovery Sequenz

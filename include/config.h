@@ -33,8 +33,8 @@
 #define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
 
 // Temperature Sensor (DS18B20)
-#define TEMP_SENSOR_PIN 15 // GPIO 15 for DS18B20 Data
-#define TEMP_UPDATE_INTERVAL_MS 900000 // Measure every 15 minutes
+#define TEMP_SENSOR_PIN 2      // GPIO 2 (Fix für falsche Verdrahtung)
+#define TEMP_UPDATE_INTERVAL_MS 120000 // Measure every 120s (Verhindert Button-Blockade)
 
 // IMU Configuration (BNO085)
 #define IMU_SDA 21

@@ -157,8 +157,8 @@ Oiler::Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin)
 void Oiler::begin(int imuSda, int imuScl) {
     // Hardware Init
     // Ensure Pump is OFF immediately
-    digitalWrite(_pumpPin, PUMP_OFF);
     pinMode(_pumpPin, OUTPUT);
+    digitalWrite(_pumpPin, PUMP_OFF);
 
     // Initialize PWM for Pump
     if (PUMP_USE_PWM) {
