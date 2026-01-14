@@ -512,22 +512,6 @@ void Oiler::updateLED() {
             color = 0; // Off
         }
     }
-    else if (!hasFix) {
-        // No GPS
-        unsigned long timeSinceLoss = (lastEmergUpdate > 0) ? (now - lastEmergUpdate) : 0;
-        
-        if (emergencyModeForced) {
-             // Forced Emergency: Cyan
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255); 
-        } else if (emergencyMode) {
-             // Auto Emergency Active: Cyan Dim
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255);
-        } else {
-            color = 0; // Off
-        }
-    }
     // 5. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
     else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
          int phase = now % LED_PERIOD_EMERGENCY; // 1.5s Cycle
@@ -545,13 +529,13 @@ void Oiler::updateLED() {
         strip.setBrightness(currentDimBrightness);
         color = strip.Color(0, 0, 255);
     }
-    // 7. No GPS (Searching) -> MAGENTA Pulsing
+    // 7. No GPS (Searching) -> CYAN Breathing
     else if (!hasFix) {
         float pulse = getPulse(LED_PERIOD_GPS);
         uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
         if (bri < 5) bri = 5;
         strip.setBrightness(bri);
-        color = strip.Color(255, 0, 255);
+        color = strip.Color(0, 255, 255);
     }
     // 8. Idle / Ready -> GREEN Static
     else {
