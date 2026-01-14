@@ -16,7 +16,7 @@ If you like this project, consider a tip. Your tip motivates me to continue deve
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/D1D01HVT9A)
 
-## 🔧 Recommended Pin Layout (Hardware v2.0)
+## Recommended Pin Layout (Hardware v2.0)
 
 For the most stable operation (avoiding "Boot Loops" and conflicts with internal ESP32 Strapping Pins), use the following connection scheme for new builds. 
 
@@ -51,7 +51,7 @@ For the most stable operation (avoiding "Boot Loops" and conflicts with internal
 * [BOM & Costs](#-bom--costs-approx-2025)
 * [Release Notes](RELEASE_NOTES.md)
 
-## 🚀 Features
+## Features
 
 | Feature | Description | Details |
 | :--- | :--- | :--- |
@@ -75,7 +75,7 @@ For the most stable operation (avoiding "Boot Loops" and conflicts with internal
 | **Auto-Save** | Persistent storage. | Saves settings & odometer to NVS at standstill (< 7 km/h). |
 | **Factory Reset** | Reset to defaults. | **WebUI:** Maintenance Page. |
 
-## 🧭 Optional IMU Features
+## Optional IMU Features
 
 By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" and advanced safety features. The system automatically detects if the sensor is connected.
 
@@ -90,7 +90,7 @@ By adding a **BNO085** (or BNO080) 9-Axis IMU, the system gains "Intelligence" a
 *   **Calibration:** A dedicated Web Interface page allows zeroing the sensor. Includes a 5-second countdown and 3-second averaging for easy solo calibration.
 *   **Logging:** All IMU data will be logged to the SD card (if active) for analysis.
 
-## 💾 Optional SD Card Logging
+## Optional SD Card Logging
 
 For advanced users and data analysis, you can connect a standard **MicroSD Card Module** (SPI). The system automatically detects the card at boot and starts logging telemetry data.
 
@@ -128,7 +128,7 @@ For advanced users and data analysis, you can connect a standard **MicroSD Card 
 | **Message** | System messages or debug info |
 | **Flush_Mode** | 1 = Active, 0 = Inactive |
 
-## 🛠️ Hardware & Functionality Matrix
+## Hardware & Functionality Matrix
 
 This table shows which features are available depending on the connected hardware components.
 
@@ -155,7 +155,7 @@ This table shows which features are available depending on the connected hardwar
 *   **IMU:** BNO085 (I2C).
 *   **SD Card / Flash:** SPI Flash / MicroSD for Logging.
 
-## 🌡️ Automatic Temperature Compensation
+## Automatic Temperature Compensation
 
 This system uses a **DS18B20** temperature sensor to adjust the pump mechanics based on the viscosity of the oil.
 
@@ -182,7 +182,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **GND:** GND
 *   **Data:** GPIO 15 (Default) - Requires 4.7kΩ Pull-Up Resistor to VCC.
 
-## 🧭 IMU Features (BNO085)
+## IMU Features (BNO085)
 
 If an IMU is connected, the system enables advanced safety and convenience features:
 
@@ -192,7 +192,7 @@ If an IMU is connected, the system enables advanced safety and convenience featu
 *   **Garage Guard:** Detects if the bike is on the side stand or center stand and prevents oiling (even if GPS drifts).
 *   **Smart Stop:** Uses accelerometer data to detect standstill faster than GPS.
 
-## 🔌 Aux Port Manager (GPIO 17)
+## Aux Port Manager (GPIO 17)
 
 The system features a versatile Auxiliary Output (MOSFET/Relay driver) that can be configured for two main purposes:
 
@@ -222,7 +222,7 @@ Advanced PWM control for heated grips, far superior to simple "Low/High" switche
 All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays, Reaction) are fully configurable via the new "Aux Config" web page.
 **Default Mode:** The Aux Port is **OFF** by default and must be enabled in the Web Interface.
 
-## � Data Logging (SPI Flash)
+## Data Logging (SPI Flash)
 
 For vibration-heavy environments or integrated builds, the system supports SPI Flash memory (simulated as SD card) for durable data logging.
 
@@ -246,7 +246,7 @@ The system logs GPS tracks, speed, and events to `gps_log.csv`.
 Since the chip is soldered, you cannot remove it.
 *   **Web Download:** Use the "Maintenance" page in the Web Interface to download the full log file as `gps_log.csv`.
 
-## �🛠 Hardware
+## Hardware
 
 *   **MCU:** [LCTECH ESP32 Relay X1](http://www.chinalctech.com/cpzx/Programmer/Relay_Module/866.html).
     *   *Specs:* ESP32-WROOM-32E, Wide Range Input (7-30V), 2x Onboard MOSFET (**NCE6020AK**).
@@ -298,7 +298,7 @@ ESP32 GPIO (the one that switches the MOSFET
 *   **200R (Series):** Protects the ESP32 pin from current spikes (Gate capacitance).
 *   **10k (Pull-Down):** Keeps the Gate at GND (0V) while the ESP32 is booting.
 
-## 📖 Operation
+## Operation
 
 ### Button Functions
 
@@ -326,18 +326,18 @@ If multiple modes are active simultaneously, the system follows this priority lo
 
 | Color / Pattern | LED 1 (Main System) | LED 2 (Aux Port) |
 | :--- | :--- | :--- |
-| 🟢 **Green** | Normal Operation (GPS Fix) | Aux Power: **ON** (12V Active) |
-| 🔵 **Blue** | Rain Mode Active | Heated Grips: **Level 1** (Low) |
-| 🟡 **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
-| 🟠 **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
-| 🔴 **Red** | Bleeding Mode (Blink) | Heated Grips: **Level 4** (Max) |
-| 🌈 **Cycle** | - | Heated Grips: **Boost** (Blue->Red) |
-| 🟣 **Magenta** | No GPS (Solid) / Offroad (Blink) | - |
-| 🔵 **Cyan** | Emergency Mode (Solid) / Flush (Blink) | - |
-| ⚪ **White** | WiFi Config Mode (Pulse) | - |
-| ⚫ **Off** | - | Aux Port: **OFF** |
+| **Green** | Normal Operation (GPS Fix) | Aux Power: **ON** (12V Active) |
+| **Blue** | Rain Mode Active | Heated Grips: **Level 1** (Low) |
+| **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
+| **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
+| **Red** | Bleeding Mode (Blink) | Heated Grips: **Level 4** (Max) |
+| **Cycle** | - | Heated Grips: **Boost** (Blue->Red) |
+| **Magenta** | No GPS (Solid) / Offroad (Blink) | - |
+| **Cyan** | Emergency Mode (Solid) / Flush (Blink) | - |
+| **White** | WiFi Config Mode (Pulse) | - |
+| **Off** | - | Aux Port: **OFF** |
 
-## 📱 Web Interface
+## Web Interface
 
 Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after activating it. Open `192.168.4.1` in your browser.
 
@@ -350,9 +350,9 @@ Connect to the WiFi network (Default SSID: `ChainJuicer`, no password) after act
     *   **Juices:** Counter for oilings per range.
     *   **Reset:** Reset stats or refill tank.
 
-👀 **Screenshots:** Check out the [web-ui examples](web-ui%20screenshots/)  folder to see what the interface looks like.
+**Screenshots:** Check out the [web-ui examples](web-ui%20screenshots/)  folder to see what the interface looks like.
 
-## 💡 Usage Scenarios & LED Status
+## Usage Scenarios & LED Status
 
 The system uses two LEDs to communicate its status.
 *   **LED 1 (Main):** System Status, Oiling, Warnings.
@@ -373,7 +373,7 @@ The system uses two LEDs to communicate its status.
 | **Aux Port: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
 
-## ⚙️ Technical Details
+## Technical Details
 
 *   **Non-Blocking:** Pump control is asynchronous.
 *   **Adaptive Smoothing:** Combination of Lookup Table and Low-Pass Filter.
@@ -381,15 +381,15 @@ The system uses two LEDs to communicate its status.
 *   **Auto-Save:** The odometer is saved intelligently (at standstill < 7 km/h, but max. every 2 minutes).
 *   **Timezone:** Automatic calculation of Central European Time (CET/CEST).
 
-## 💻 Installation
+## Installation
 
 ### Option A: Web Installer (Recommended)
 Flash the firmware directly from your browser (Chrome/Edge) without installing any software.
-👉 **[Open Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer/)**
+**[Open Web Installer](https://TechwriterSSchmidt.github.io/ChainJuicer/)**
 
 ### Option B: PlatformIO (For Developers)
 
-**⚠️ Important:** The recommended ESP32-32E board does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the initial firmware once. For updates, you can use the OTA page to upload new firmware via the webinterface.
+**Important:** The recommended ESP32-32E board does **not** have a built-in USB-to-Serial converter. You need an external **USB-to-UART Adapter** (e.g., CP2102, CH340) to flash the initial firmware once. For updates, you can use the OTA page to upload new firmware via the webinterface.
 
 *   **Connections:** TX->RX, RX->TX, GND->GND, 3.3V->3.3V (or 5V->5V).
 *   **Boot Mode:** You might need to bridge GPIO0 to GND during power-up to enter bootloader mode.
@@ -400,7 +400,7 @@ Flash the firmware directly from your browser (Chrome/Edge) without installing a
 4.  Compile and upload project (`Upload`).
 5.  File system is not necessary (Data is saved in NVS/Preferences).
 
-## 🛒 BOM & Costs (approx. 2025)
+## BOM & Costs (approx. 2025)
 
 The total project cost is very low compared to commercial alternatives (~150€+).
 
@@ -436,7 +436,7 @@ The total project cost is very low compared to commercial alternatives (~150€+
     3.  **Add:** A **220 Ohm** resistor between GPIO 16 and the Gate of the MOSFET.
     *   *See `Docs/SCHEMATIC.txt` for details.*
 
-## ⚠️ Disclaimer & Safety
+## Disclaimer & Safety
 
 **READ CAREFULLY BEFORE BUILDING OR USING THIS SYSTEM!**
 
