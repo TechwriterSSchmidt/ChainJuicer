@@ -232,9 +232,9 @@ void Oiler::loop() {
         
         if (now - lastOffroadOilTime > intervalMs) {
             // SAFETY: Only oil if moving! 
-            // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
-            if (currentSpeed >= 7.0) {
-                triggerOil(offroadPulses, "offroad-mode juicing started"); // Use configured pulses
+            // User requested minimum speed of 4 km/h for offroad mode to prevent oiling at standstill/idling.
+            if (currentSpeed >= FLUSH_OFFROAD_MIN_SPEED_KMH) {
+                triggerOil(offroadPulses, "Offroad-mode juicing started"); // Use configured pulses
                 lastOffroadOilTime = now;
             }
         }
@@ -248,8 +248,8 @@ void Oiler::loop() {
         if (now - lastFlushOilTime > intervalMs) {
             // SAFETY: Only oil if moving!
             // Similar to Cross-Country, we require movement to avoid puddles.
-            if (currentSpeed >= 2.0) {
-                triggerOil(flushConfigPulses, "flush-mode juicing started");
+            if (currentSpeed >= FLUSH_OFFROAD_MIN_SPEED_KMH) {
+                triggerOil(flushConfigPulses, "Flush-mode juicing started");
                 lastFlushOilTime = now;
                 flushEventsRemaining--;
 
@@ -326,24 +326,24 @@ void Oiler::handleButton() {
         }
     }
 
-    // Delayed Action Handler
-    // Wait 600ms to see if more clicks follow
-    if (buttonClickCount > 0 && (millis() - lastClickTime > 600)) {
-        if (buttonClickCount == 1) {
+    // Delayed Action Handler (Multi-Click Sequence)
+    // Wait BUTTON_SEQUENCE_TIMEOUT_MS to see if more clicks follow
+    if (buttonClickCount > 0 && (millis() - lastClickTime > BUTTON_SEQUENCE_TIMEOUT_MS)) {
+        if (buttonClickCount == FLUSH_PRESS_COUNT) {
+             // Toggle Chain Flush Mode (e.g. 4 Clicks)
+            setFlushMode(!flushMode);
+            webConsole.log("BTN: Flush Mode " + String(flushMode ? "ON" : "OFF"));
+        } else if (buttonClickCount == OFFROAD_PRESS_COUNT) {
+            // Toggle Offroad Mode (e.g. 3 Clicks)
+            setOffroadMode(!offroadMode);
+            webConsole.log("BTN: Offroad Mode " + String(offroadMode ? "ON" : "OFF"));
+        } else if (buttonClickCount == 1) {
             // 1 Click -> Toggle Rain Mode
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
                 webConsole.log("BTN: Rain Mode " + String(rainMode ? "ON" : "OFF"));
             }
-        } else if (buttonClickCount == 3) {
-            // 3 Clicks -> Toggle Offroad Mode
-            setOffroadMode(!offroadMode);
-            webConsole.log("BTN: Offroad Mode " + String(offroadMode ? "ON" : "OFF"));
-        } else if (buttonClickCount == 4) {
-            // 4 Clicks -> Toggle Chain Flush Mode
-            setFlushMode(!flushMode);
-            webConsole.log("BTN: Flush Mode " + String(flushMode ? "ON" : "OFF"));
-        } else if (buttonClickCount == 5) {
+        } else if (buttonClickCount == WIFI_PRESS_COUNT) {
             // 5 Clicks -> Toggle WiFi
             wifiToggleRequested = true;
             webConsole.log("BTN: WiFi Toggle Requested");
@@ -355,7 +355,7 @@ void Oiler::handleButton() {
 
     // Check Long Press (> 2s) for Aux Toggle
     if (buttonState && !longPressHandled) {
-        if (millis() - buttonPressStartTime > 2000) {
+        if (millis() - buttonPressStartTime > AUX_HOLD_MS) {
             auxToggleRequested = true;
             longPressHandled = true; // Prevent repeat
             webConsole.log("BTN: Aux Toggle Requested (Long Press)");
@@ -874,6 +874,10 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             if (dt > 1000) dt = 1000;
 
             float simSpeed = 50.0;
+            
+            // BUGFIX: Update global currentSpeed so Flush/Offroad functions correctly
+            currentSpeed = simSpeed; 
+            
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
             
             // Update Usage Stats for 50km/h
@@ -1049,7 +1053,7 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             history.head = (head + 1) % 20;
             if (history.count < 20) history.count++;
 
-            const char* reason = emergencyMode ? "emergency-mode juicing started" : "normal-mode juicing started";
+            const char* reason = emergencyMode ? "Emergency-mode juicing started" : "Normal-mode juicing started";
             triggerOil(ranges[activeRangeIndex].pulses, reason);
             currentProgress -= 1.0; // Carry over remainder
             if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
@@ -1398,7 +1402,15 @@ void Oiler::setRainMode(bool mode) {
 void Oiler::setFlushMode(bool mode) {
     if (mode && !flushMode) {
         flushModeStartTime = millis();
-        lastFlushOilTime = millis(); // Reset interval timer
+        // FORCE START: Trick the timer to fire immediately in the next loop
+        // Avoid underflow by checking current time
+        unsigned long intervalMs = (unsigned long)flushConfigIntervalSec * 1000;
+        if (millis() > intervalMs + 100) {
+            lastFlushOilTime = millis() - intervalMs - 100; 
+        } else {
+            lastFlushOilTime = 0; 
+        }
+        
         flushEventsRemaining = flushConfigEvents; // Reset counter
 #ifdef GPS_DEBUG
         Serial.println("Chain Flush Mode ACTIVATED");
@@ -1422,7 +1434,14 @@ void Oiler::setFlushMode(bool mode) {
 
 void Oiler::setOffroadMode(bool mode) {
     if (mode && !offroadMode) {
-        lastOffroadOilTime = millis(); // Reset timer on start
+        // FORCE START: Trick the timer to fire immediately in the next loop
+        unsigned long intervalMs = (unsigned long)offroadIntervalMin * 60 * 1000;
+        if (millis() > intervalMs + 100) {
+            lastOffroadOilTime = millis() - intervalMs - 100;
+        } else {
+            lastOffroadOilTime = 0;
+        }
+
 #ifdef GPS_DEBUG
         Serial.println("Offroad Mode ACTIVATED");
 #endif

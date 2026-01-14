@@ -1,11 +1,6 @@
 # Release Notes
 
-## v2.0.3 - Logging & State Logic Fixes (2026-01-14)
-*   **Enhanced WebConsole Logging:** Added detailed logging for every pump actuation, specifying the active mode (e.g., "normal-mode juicing started", "offroad-mode juicing started"). Flush Mode deactivation is now also logged.
-*   **Logic Fix - Mode Transition:** Fixed a bug where the system would get stuck in a "Searching" state after Flush, Bleeding, or Offroad mode ended if no GPS signal was present. It now correctly hands over to Emergency Mode immediately if the timeout condition is met.
-*   **Stability:** Fixed compilation errors related to variable scope in LED update logic.
-
-## v2.0.2 - New Color Scheme & Offroad Config (2026-01-14)
+## v2.0.2 - Feature Update & Critical Fixes (2026-01-14)
 *   **New Intuitive LED Colors:**
     *   **Green:** Normal (Ready).
     *   **Yellow (Flash):** Active Oiling Event (Pump Stroke).
@@ -15,8 +10,16 @@
     *   **Red (Pulsing):** Emergency Mode (No GPS / Forced).
     *   **Red/Yellow (Alternating):** Tank Empty!
     *   **Magenta (Blink):** Maintenance (Flush / Bleed).
-*   **Offroad Configuration:** Added "Pulses per Event" setting to Offroad Mode.
-*   **Emergency Fix:** Emergency Mode (Forced) no longer auto-disables Offroad Mode (allowing manual timer-based oiling in deep woods).
+*   **Enhanced WebConsole Logging:** Added detailed logging for every pump actuation, specifying the active mode (e.g., "normal-mode juicing started", "offroad-mode juicing started"). Flush Mode deactivation is now also logged.
+*   **Offroad & Flush Improvements:**
+    *   **Unified Speed Thresholds:** Set minimum speed activation threshold to 4.0 km/h for both Flush Mode and Offroad Mode.
+    *   **Offroad Configuration:** Added "Pulses per Event" setting to Offroad Mode.
+    *   **Immediate Action:** Flush Mode and Offroad Mode now trigger their first oiling event immediately upon activation.
+*   **Critical Logic Fixes:**
+    *   **Emergency Simulation Fix:** Fixed a bug where `currentSpeed` remained at 0 during Emergency Mode (GPS Simulation), enabling Flush/Offroad checks to pass even without real GPS.
+    *   **Mode Transition:** Fixed stuck "Searching" state after Flush/Bleeding/Offroad modes ended.
+    *   **Emergency Handover:** Emergency Mode (Forced) no longer auto-disables Offroad Mode (allowing manual timer-based oiling usage).
+*   **Stability:** Fixed compilation errors in LED logic and various state machine refinements.
 
 ## v2.0.1 - Bleeding Timing Fix (2026-01-06)
 *   **Bleeding Mode:** Fixed a millis underflow race that made the pump run at ~6 Hz despite 60/320 ms settings. Bleeding now uses a simple hard-coded scheduler (pulse 60 ms, pause 320 ms) with an underflow guard. Logging noise was reduced for the web/serial console.

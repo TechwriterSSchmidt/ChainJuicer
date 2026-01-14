@@ -3,122 +3,129 @@
 
 #include <Arduino.h>
 
-#define FIRMWARE_VERSION "2.0.0"
+#define FIRMWARE_VERSION "2.0.4"
 
-// Hardware Pins
-#define PUMP_PIN 16        // Pin for MOSFET (Pump) - RIGHT SIDE
-#define LED_PIN 32         // WS2812B Data Pin - LEFT SIDE (Bottom)
-#define GPS_RX_PIN 27      // GPS RX to ESP TX - LEFT SIDE (Middle)
-#define GPS_TX_PIN 26      // GPS TX to ESP RX - LEFT SIDE (Middle)
-#define BUTTON_PIN 4      // Handlebar button - LEFT SIDE (Top of block)
-#define RAIN_SENSOR_PIN 34 // Analog Input for Rain Sensor
-#define AUX_PIN 17         // Auxiliary Output (Aux Power / Heated Grips)
-
-// Pump Logic Configuration
-// Normal Logic: HIGH = Pump ON, LOW = Pump OFF
-// Use a Pull-DOWN Resistor (10k to GND) to prevent boot glitches.
-#define PUMP_ON HIGH
-#define PUMP_OFF LOW
-
-// PWM Soft-Start / Soft-Stop (Silent Mode)
-// Instead of hard 12V pulses, we ramp the voltage up and down.
-// This reduces mechanical noise ("clack") and wear.
-#define PUMP_USE_PWM true
-#define PUMP_PWM_FREQ 5000      // 5 kHz is safe for most solenoids
-#define PUMP_PWM_CHANNEL 0      // ESP32 LEDC Channel
-#define PUMP_PWM_RESOLUTION 8   // 8-bit resolution (0-255)
-#define PUMP_RAMP_UP_MS 12       // Soft-Start duration (Generic: 12ms)
-#define PUMP_RAMP_DOWN_MS 12    // Soft-Stop duration (Generic: 12ms)
-
-#define BOOT_BUTTON_PIN 0  // Onboard Boot Button (GPIO 0)
-
-// Temperature Sensor (DS18B20)
-#define TEMP_SENSOR_PIN 33      // GPIO 2 (Fix für falsche Verdrahtung)
-#define TEMP_UPDATE_INTERVAL_MS 60000 // Measure every 60s (Verhindert Button-Blockade)
-
-// IMU Configuration (BNO085)
-#define IMU_SDA 21
-#define IMU_SCL 22
-
-// PWM Safety Check:
-// Pulse Width must be > PUMP_RAMP_UP_MS (12ms) to ensure the pump actually opens.
-// The configured Pulse values above include the Ramp-Up time.
-
-#define GPS_BAUD 9600  // GPS Baud Rate
-
-// Debug Configuration
-#define GPS_DEBUG          // Uncomment to enable GPS debug output on Serial
-
-// LED Configuration
-#define NUM_LEDS 2
-#define LED_BRIGHTNESS_DIM 64   // Brightness for status LED during normal operation (0-255)
-#define LED_BRIGHTNESS_HIGH 153  // Brightness for events (0-255)
-
-// SD Logging Configuration
-// Uncomment to enable SD Card Logging
-#define SD_LOGGING_ACTIVE 
+// ==========================================
+// 1. HARDWARE PINS (ESP32)
+// ==========================================
+#define PUMP_PIN            16   // MOSFET Gate - RIGHT SIDE
+#define LED_PIN             32   // WS2812B Data - LEFT SIDE (Bottom)
+#define GPS_RX_PIN          27   // GPS RX -> ESP TX - LEFT SIDE (Middle)
+#define GPS_TX_PIN          26   // GPS TX -> ESP RX - LEFT SIDE (Middle)
+#define BUTTON_PIN          4    // Handlebar Button - LEFT SIDE (Top)
+#define BOOT_BUTTON_PIN     0    // Onboard Boot Button (GPIO 0)
+#define RAIN_SENSOR_PIN     34   // Analog Input
+#define AUX_PIN             17   // Aux Power Relay / Heated Grips
+#define TEMP_SENSOR_PIN     33   // DS18B20 Data Line
+#define IMU_SDA             21   // BNO085 I2C SDA
+#define IMU_SCL             22   // BNO085 I2C SCL
 
 #ifdef SD_LOGGING_ACTIVE
-    #define SD_CS_PIN 5
-    #define SD_MOSI_PIN 23
-    #define SD_MISO_PIN 19
-    #define SD_CLK_PIN 18
-    #define LOG_FILE_PREFIX "/log_"
-    #define LOG_INTERVAL_MS 1000 // Log every 1 second
+    #define SD_CS_PIN       5
+    #define SD_MOSI_PIN     23
+    #define SD_MISO_PIN     19
+    #define SD_CLK_PIN      18
 #endif
 
-// LED Timings
-#define LED_PERIOD_OILING 1000      // Breathing duration for Oiling
-#define LED_PERIOD_EMERGENCY 1500   // Pulse cycle for Emergency Mode
-#define LED_PERIOD_WIFI 1500        // Pulse cycle for WiFi
-#define LED_PERIOD_GPS 1000         // Pulse cycle for GPS Search
-#define LED_BLINK_FAST 100          // Fast blink (Bleeding/Reset)
-#define LED_BLINK_TANK 2000         // Tank warning cycle
-#define LED_PERIOD_FLUSH 500        // Fast blink for Chain Flush Mode
-#define LED_WIFI_SHOW_DURATION 10000 // How long to show WiFi LED after activation
+// ==========================================
+// 2. PUMP CONTROL & PWM
+// ==========================================
+#define PUMP_ON             HIGH
+#define PUMP_OFF            LOW
+#define PUMP_USE_PWM        true    // Enable Soft-Start/Stop
+#define PUMP_PWM_FREQ       5000    // 5 kHz (Safe for most solenoids)
+#define PUMP_PWM_CHANNEL    0       // LEDC Channel
+#define PUMP_PWM_RESOLUTION 8       // 8-bit (0-255)
+#define PUMP_RAMP_UP_MS     12      // Soft-Start Duration
+#define PUMP_RAMP_DOWN_MS   12      // Soft-Stop Duration
+#define PUMP_SAFETY_CUTOFF_MS 30000 // HARD LIMIT: Max continuous run
 
-// Default Values
-#define PULSE_DURATION_MS 55       // Duration in ms of the pump impulse (HIGH) - Calibrated for reliability
-#define PAUSE_DURATION_MS 2000    // Pause in ms between impulses (LOW)
-#define MIN_SPEED_KMH 7.0         // Minimum speed for oiling (Standstill threshold)
-#define MIN_ODOMETER_SPEED_KMH 2.0 // Minimum speed to count distance for odometer (less restrictive than MIN_SPEED_KMH for more accurate reading)
-#define MAX_SPEED_KMH 250.0        // Maximum speed of the motorcycle (Plausibility Check)
-#define BLEEDING_DURATION_MS 20000 // Pumping time in ms for bleeding
-#define BLEEDING_PULSE_MS 60       // Pulse duration for bleeding
-#define BLEEDING_PAUSE_MS 320      // Pause duration for bleeding
-// Chain Flush Mode Defaults
-#define FLUSH_DEFAULT_EVENTS 15       // Run 15 times
-#define FLUSH_DEFAULT_PULSES 2        // 2 Pulses per event
-#define FLUSH_DEFAULT_INTERVAL_SEC 60 // Every 60 seconds
-#define FLUSH_PRESS_COUNT 3           // 3 Clicks
-#define FLUSH_PRESS_WINDOW_MS 2000    // 2 Seconds window
+// ==========================================
+// 3. CORE OILING LOGIC & SPEEDS
+// ==========================================
+// Standard Oiling
+#define PULSE_DURATION_MS   55      // Time the pump stays OPEN
+#define PAUSE_DURATION_MS   2000    // Time between multiple pulses
+#define MIN_SPEED_KMH       7.0     // Minimum speed to trigger oiling
+#define MIN_ODOMETER_SPEED_KMH 2.0  // Count distance above this speed
 
-#define STARTUP_DELAY_METERS_DEFAULT 250.0  // Default startup delay in meters
-#define OFFROAD_INTERVAL_MIN_DEFAULT 5 // Default Offroad interval in minutes
-#define OFFROAD_PULSES_DEFAULT 2
-#define OFFROAD_PRESS_COUNT 6   // 6 Clicks for Offroad Mode
+// Limits
+#define MAX_SPEED_KMH       250.0   // Plausibility Ceiling
 
-// Button Timings
-#define RAIN_TOGGLE_MS 1500       // < 1.5s: Toggle Rain Mode
-#define WIFI_PRESS_MS 3000        // > 3s: Activate WiFi (if standing still)
-#define FACTORY_RESET_PRESS_MS 10000 // > 10s at Boot: Factory Reset
+// ==========================================
+// 4. SPECIAL MODES CONFIGURATION
+// ==========================================
+// Shared Settings
+#define FLUSH_OFFROAD_MIN_SPEED_KMH 4.0 // Minimum speed for Flush & Offroad
 
-// Safety
-// STARTUP_DELAY_MS removed as hardware pull-down handles boot glitches
-#define PUMP_SAFETY_CUTOFF_MS 30000 // HARD LIMIT: Max continuous pump run (10s)
+// Chain Flush Mode
+#define FLUSH_DEFAULT_EVENTS    15    // Total cycles
+#define FLUSH_DEFAULT_PULSES    2     // Pulses per cycle
+#define FLUSH_DEFAULT_INTERVAL_SEC 60 // Seconds between cycles
+#define FLUSH_PRESS_COUNT       4     // Button clicks to activate? (See code logic)
 
-// Timeouts & Intervals
-#define WIFI_TIMEOUT_MS 300000    // 5 Minutes (5 * 60 * 1000)
-#define RAIN_MODE_AUTO_OFF_MS 1800000 // 30 Minutes (30 * 60 * 1000)
-#define SAVE_INTERVAL_MS 300000   // 5 Minutes (Regular Save)
-#define STANDSTILL_SAVE_MS 120000 // 2 Minutes (Min interval for standstill save)
-#define EMERGENCY_TIMEOUT_MS 180000 // 3 Minutes (Timeout for Auto-Emergency)
+// Offroad Mode
+#define OFFROAD_INTERVAL_MIN_DEFAULT 5 // Minutes between cycles
+#define OFFROAD_PULSES_DEFAULT       2
+#define OFFROAD_PRESS_COUNT          3 // Button clicks (See code logic)
 
-// AP Configuration
-#define AP_SSID "ChainJuicer"
-// No password required
+// Bleeding (Maintenance)
+#define BLEEDING_DURATION_MS    25000 // Total run time (25s)
+#define BLEEDING_PULSE_MS       60    // Pulse length (Needs to match/exceed ramp)
+#define BLEEDING_PAUSE_MS       320   // Cycle pause
 
+// Startup Delay
+#define STARTUP_DELAY_METERS_DEFAULT 250.0 // Distance before first oiling allowed
 
+// ==========================================
+// 5. TIMINGS & TIMEOUTS
+// ==========================================
+#define WIFI_TIMEOUT_MS         300000   // 5 Min: Disable AP
+#define RAIN_MODE_AUTO_OFF_MS   1800000  // 30 Min: Auto-reset Rain Mode
+#define SAVE_INTERVAL_MS        300000   // 5 Min: Save progress to NVS
+#define STANDSTILL_SAVE_MS      120000   // 2 Min: Save if stopped
+#define EMERGENCY_TIMEOUT_MS    180000   // 3 Min: Switch to Emergency Mode if NO GPS
+#define TEMP_UPDATE_INTERVAL_MS 60000    // 1 Min: Read Temperature
+
+// Button Interactions
+#define BUTTON_SEQUENCE_TIMEOUT_MS 500   // Time to wait after last click before processing
+#define WIFI_PRESS_COUNT        5        // 5 Clicks: WiFi Config
+#define AUX_HOLD_MS             2000     // Hold >2s: Toggle Aux
+#define FACTORY_RESET_PRESS_MS  10000    // Hold >10s at boot
+
+// ==========================================
+// 6. LED / UI CONFIGURATION
+// ==========================================
+#define NUM_LEDS                2
+#define LED_BRIGHTNESS_DIM      64    // Standard status
+#define LED_BRIGHTNESS_HIGH     153   // Active event
+
+// Animation Timings (ms)
+#define LED_PERIOD_OILING       1000
+#define LED_PERIOD_EMERGENCY    1500
+#define LED_PERIOD_WIFI         1500
+#define LED_PERIOD_GPS          1000
+#define LED_BLINK_FAST          100
+#define LED_BLINK_TANK          2000
+#define LED_PERIOD_FLUSH        500
+#define LED_WIFI_SHOW_DURATION  10000
+
+// ==========================================
+// 7. SYSTEM & DEBUG
+// ==========================================
+#define GPS_BAUD                9600
+#define AP_SSID                 "ChainJuicer"
+// #define SD_LOGGING_ACTIVE      // Uncomment for SD Support
+#define GPS_DEBUG                 // Uncomment for Serial Debug
+
+#ifdef SD_LOGGING_ACTIVE
+    #define LOG_FILE_PREFIX     "/log_"
+    #define LOG_INTERVAL_MS     1000
+#endif
+
+// ==========================================
+// 8. DATA STRUCTURES
+// ==========================================
 struct SpeedRange {
     float minSpeed;
     float maxSpeed;
@@ -126,8 +133,6 @@ struct SpeedRange {
     int pulses;
 };
 
-// 5 Speed Ranges
-// Default: 15km interval, 2 pulses
 const int NUM_RANGES = 5;
 
 #endif
