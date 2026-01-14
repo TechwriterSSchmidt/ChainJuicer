@@ -33,6 +33,9 @@ Oiler::Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin)
     // Range 4: High Speed (135+ km/h) -> 3.0 km (-40% from Base)
     ranges[4] = {135, MAX_SPEED_KMH, 3.0, 2};
     
+    // Default Offroad Pulse Count
+    offroadPulses = 2;
+
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability
     tempConfig.basePulse25 = (float)PULSE_DURATION_MS;
@@ -231,7 +234,7 @@ void Oiler::loop() {
             // SAFETY: Only oil if moving! 
             // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
             if (currentSpeed >= 7.0) {
-                triggerOil(ranges[0].pulses); // Use pulses from first range
+                triggerOil(offroadPulses); // Use configured pulses
                 lastOffroadOilTime = now;
             }
         }
@@ -633,6 +636,7 @@ void Oiler::loadConfig() {
 
     // Load Offroad & Startup
     offroadIntervalMin = _store->getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
+    offroadPulses = _store->getInt("off_pls", 2); // Default 2 pulses
     startupDelayMeters = _store->getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
@@ -727,6 +731,7 @@ void Oiler::saveConfig() {
 
     // Save Offroad & Startup
     _store->putInt("off_int", offroadIntervalMin);
+    _store->putInt("off_pls", offroadPulses);
     _store->putFloat("start_dly_m", startupDelayMeters);
 
     // Save Chain Flush Mode
@@ -918,6 +923,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                     setRainMode(false);
                     saveConfig();
                 }
+
 #ifdef GPS_DEBUG
                 Serial.println("Emergency Mode ACTIVATED (50km/h Sim)");
                 webConsole.log("Emergency Mode ACTIVATED");

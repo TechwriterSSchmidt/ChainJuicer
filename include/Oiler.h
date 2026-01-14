@@ -148,6 +148,7 @@ public:
     // Offroad Settings
     bool offroadMode;
     int offroadIntervalMin;
+    int offroadPulses; 
     unsigned long lastOffroadOilTime;
 
     // Chain Flush Mode Settings

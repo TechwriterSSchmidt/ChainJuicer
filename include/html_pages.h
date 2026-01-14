@@ -169,6 +169,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (m)</td><td><input type='number' step='1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Offroad Interval (min)</td><td><input type='number' name='offroad_int' value='%OFFROAD_INT%' class='num-input'></td></tr>
+            <tr><td>Offroad Pulses</td><td><input type='number' name='offroad_pls' value='%OFFROAD_PLS%' class='num-input'></td></tr>
             <tr><td colspan='2' style='height:20px;border-bottom:none'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>

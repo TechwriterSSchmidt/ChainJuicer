@@ -313,6 +313,7 @@ void handleSettings() {
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
     footer.replace("%START_DLY%", String(oiler.startupDelayMeters, 0));
     footer.replace("%OFFROAD_INT%", String(oiler.offroadIntervalMin));
+    footer.replace("%OFFROAD_PLS%", String(oiler.offroadPulses));
     
     footer.replace("%FLUSH_EV%", String(oiler.flushConfigEvents));
     footer.replace("%FLUSH_PLS%", String(oiler.flushConfigPulses));
@@ -440,6 +441,7 @@ void handleSave() {
     
     if(server.hasArg("start_dly")) oiler.startupDelayMeters = server.arg("start_dly").toFloat();
     if(server.hasArg("offroad_int")) oiler.offroadIntervalMin = server.arg("offroad_int").toInt();
+    if(server.hasArg("offroad_pls")) oiler.offroadPulses = server.arg("offroad_pls").toInt();
     
     if(server.hasArg("flush_ev")) oiler.flushConfigEvents = server.arg("flush_ev").toInt();
     if(server.hasArg("flush_pls")) oiler.flushConfigPulses = server.arg("flush_pls").toInt();

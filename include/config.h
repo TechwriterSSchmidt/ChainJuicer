@@ -95,6 +95,7 @@
 
 #define STARTUP_DELAY_METERS_DEFAULT 250.0  // Default startup delay in meters
 #define OFFROAD_INTERVAL_MIN_DEFAULT 5 // Default Offroad interval in minutes
+#define OFFROAD_PULSES_DEFAULT 2
 #define OFFROAD_PRESS_COUNT 6   // 6 Clicks for Offroad Mode
 
 // Button Timings
