@@ -169,6 +169,7 @@ const char* htmlFooter = R"rawliteral(
             <tr><td>Force Emergency Mode (simulates 50km/h constant speed)</td><td><input type='checkbox' name='emerg_mode' %EMERG_CHECKED%></td></tr>
             <tr><td>Start Delay (m)</td><td><input type='number' step='1' name='start_dly' value='%START_DLY%' class='num-input'></td></tr>
             <tr><td>Offroad Interval (min)</td><td><input type='number' name='offroad_int' value='%OFFROAD_INT%' class='num-input'></td></tr>
+            <tr><td>Offroad Pulses</td><td><input type='number' name='offroad_pls' value='%OFFROAD_PLS%' class='num-input'></td></tr>
             <tr><td colspan='2' style='height:20px;border-bottom:none'></td></tr>
             <tr><td colspan='2'><b>Chain Flush Mode:</b></td></tr>
             <tr><td>Events (Total)</td><td><input type='number' name='flush_ev' value='%FLUSH_EV%' class='num-input'></td></tr>
@@ -360,20 +361,15 @@ const char* htmlHelp = R"rawliteral(
     </ul>
     <h3>LED Status</h3>
     <ul>
-        <li><span class='color-box' style='background:green'></span> <b>Green:</b> GPS OK (Ready).</li>
-        <li><span class='color-box' style='background:green'></span> <b>Green (pulse):</b> Smart Stop (Stationary & OK).</li>
-        <li><span class='color-box' style='background:blue'></span> <b>Blue:</b> 'Rain Mode' Active.</li>
-        <li><span class='color-box' style='background:blue'></span> <b>Blue (pulse):</b> Smart Stop (Rain Mode).</li>
-        <li><span class='color-box' style='background:cyan'></span> <b>Cyan (blink):</b> 'Chain Flush Mode' Active.</li>
-        <li><span class='color-box' style='background:magenta'></span> <b>Magenta (blink):</b> 'Offroad Mode' Active.</li>
-        <li><span class='color-box' style='background:magenta'></span> <b>Magenta:</b> No GPS Signal.</li>
-        <li><span class='color-box' style='background:cyan'></span> <b>Cyan:</b> 'Emergency Mode' (No GPS > 3 min).</li>
-        <li><span class='color-box' style='background:yellow'></span> <b>Yellow:</b> Oiling (3s, breathes 3x).</li>
-        <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White pulse:</b> 'WiFi Config' Active.</li>
-        <li><span class='color-box' style='background:red'></span> <b>Red (2x blink):</b> 'Tank Warning'.</li>
-        <li><span class='color-box' style='background:red'></span> <b>Red (pulse):</b> 'Tank Empty' (Stationary).</li>
-        <li><span class='color-box' style='background:red'></span> <b>Red blink:</b> 'Bleeding Mode'.</li>
-        <li><span class='color-box' style='background:cyan'></span> <b>Cyan (fast blink):</b> Firmware Update.</li>
+        <li><span class='color-box' style='background:green'></span> <b>Green Static:</b> Normal Operation (Standby).</li>
+        <li><span class='color-box' style='background:yellow'></span> <b>Yellow Flash:</b> Oiling Active (Pump Stroke).</li>
+        <li><span class='color-box' style='background:blue'></span> <b>Blue Static:</b> Rain Mode (2x Oil).</li>
+        <li><span class='color-box' style='background:orange'></span> <b>Amber Static:</b> Offroad Mode.</li>
+        <li><span class='color-box' style='background:cyan'></span> <b>Cyan Breathing:</b> GPS Searching.</li>
+        <li><span class='color-box' style='background:red'></span> <b>Red Pulsing:</b> Emergency Mode.</li>
+        <li><span class='color-box' style='background:linear-gradient(90deg, red, yellow)'></span> <b>Red/Yel Blink:</b> Tank Empty!</li>
+        <li><span class='color-box' style='background:magenta'></span> <b>Magenta Blink:</b> Maintenance (Flush / Bleed).</li>
+        <li><span class='color-box' style='border:1px solid #ccc'></span> <b>White Blink:</b> WiFi Config Active.</li>
     </ul>
 </body>
 </html>

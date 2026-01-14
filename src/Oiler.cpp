@@ -33,6 +33,9 @@ Oiler::Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin)
     // Range 4: High Speed (135+ km/h) -> 3.0 km (-40% from Base)
     ranges[4] = {135, MAX_SPEED_KMH, 3.0, 2};
     
+    // Default Offroad Pulse Count
+    offroadPulses = 2;
+
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability
     tempConfig.basePulse25 = (float)PULSE_DURATION_MS;
@@ -229,9 +232,9 @@ void Oiler::loop() {
         
         if (now - lastOffroadOilTime > intervalMs) {
             // SAFETY: Only oil if moving! 
-            // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
-            if (currentSpeed >= 7.0) {
-                triggerOil(ranges[0].pulses); // Use pulses from first range
+            // User requested minimum speed of 4 km/h for offroad mode to prevent oiling at standstill/idling.
+            if (currentSpeed >= FLUSH_OFFROAD_MIN_SPEED_KMH) {
+                triggerOil(offroadPulses, "Offroad-mode juicing started"); // Use configured pulses
                 lastOffroadOilTime = now;
             }
         }
@@ -245,8 +248,8 @@ void Oiler::loop() {
         if (now - lastFlushOilTime > intervalMs) {
             // SAFETY: Only oil if moving!
             // Similar to Cross-Country, we require movement to avoid puddles.
-            if (currentSpeed >= 2.0) {
-                triggerOil(flushConfigPulses);
+            if (currentSpeed >= FLUSH_OFFROAD_MIN_SPEED_KMH) {
+                triggerOil(flushConfigPulses, "Flush-mode juicing started");
                 lastFlushOilTime = now;
                 flushEventsRemaining--;
 
@@ -323,24 +326,24 @@ void Oiler::handleButton() {
         }
     }
 
-    // Delayed Action Handler
-    // Wait 600ms to see if more clicks follow
-    if (buttonClickCount > 0 && (millis() - lastClickTime > 600)) {
-        if (buttonClickCount == 1) {
+    // Delayed Action Handler (Multi-Click Sequence)
+    // Wait BUTTON_SEQUENCE_TIMEOUT_MS to see if more clicks follow
+    if (buttonClickCount > 0 && (millis() - lastClickTime > BUTTON_SEQUENCE_TIMEOUT_MS)) {
+        if (buttonClickCount == FLUSH_PRESS_COUNT) {
+             // Toggle Chain Flush Mode (e.g. 4 Clicks)
+            setFlushMode(!flushMode);
+            webConsole.log("BTN: Flush Mode " + String(flushMode ? "ON" : "OFF"));
+        } else if (buttonClickCount == OFFROAD_PRESS_COUNT) {
+            // Toggle Offroad Mode (e.g. 3 Clicks)
+            setOffroadMode(!offroadMode);
+            webConsole.log("BTN: Offroad Mode " + String(offroadMode ? "ON" : "OFF"));
+        } else if (buttonClickCount == 1) {
             // 1 Click -> Toggle Rain Mode
             if (!emergencyMode && !emergencyModeForced) {
                 setRainMode(!rainMode);
                 webConsole.log("BTN: Rain Mode " + String(rainMode ? "ON" : "OFF"));
             }
-        } else if (buttonClickCount == 3) {
-            // 3 Clicks -> Toggle Offroad Mode
-            setOffroadMode(!offroadMode);
-            webConsole.log("BTN: Offroad Mode " + String(offroadMode ? "ON" : "OFF"));
-        } else if (buttonClickCount == 4) {
-            // 4 Clicks -> Toggle Chain Flush Mode
-            setFlushMode(!flushMode);
-            webConsole.log("BTN: Flush Mode " + String(flushMode ? "ON" : "OFF"));
-        } else if (buttonClickCount == 5) {
+        } else if (buttonClickCount == WIFI_PRESS_COUNT) {
             // 5 Clicks -> Toggle WiFi
             wifiToggleRequested = true;
             webConsole.log("BTN: WiFi Toggle Requested");
@@ -352,7 +355,7 @@ void Oiler::handleButton() {
 
     // Check Long Press (> 2s) for Aux Toggle
     if (buttonState && !longPressHandled) {
-        if (millis() - buttonPressStartTime > 2000) {
+        if (millis() - buttonPressStartTime > AUX_HOLD_MS) {
             auxToggleRequested = true;
             longPressHandled = true; // Prevent repeat
             webConsole.log("BTN: Aux Toggle Requested (Long Press)");
@@ -400,160 +403,93 @@ void Oiler::updateLED() {
         return (sin(angle) + 1.0) / 2.0;
     };
 
+    // --- PRIORITY 1: Actions & Warnings (Blinking/Pulsing) ---
+
     // 0. Update Mode (Critical) -> CYAN Fast Blink
     if (updateMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_BLINK_FAST) % 2 == 0) {
-            color = strip.Color(0, 255, 255); // Cyan
-        } else {
-            color = 0; // Off
-        }
+        color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(0, 255, 255) : 0;
     }
     // 0.1 Crash Detected (Latch) -> RED/WHITE Fast Alternating
     else if (crashTripped) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 100) % 2 == 0) {
-            color = strip.Color(255, 0, 0); // Red
-        } else {
-            color = strip.Color(255, 255, 255); // White
-        }
+        color = ((now / 100) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 255, 255);
     }
-    // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
+    // 1. Bleeding Mode (Highest Priority) -> MAGENTA Blinking Fast
     else if (bleedingMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_BLINK_FAST) % 2 == 0) {
-            color = strip.Color(255, 0, 0);
-        } else {
-            color = 0; // Off
-        }
+        color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
     } 
-    // 1.5 Chain Flush Mode (High Priority) -> CYAN Blinking
+    // 1.5 Chain Flush Mode (High Priority) -> MAGENTA Blinking
     else if (flushMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_PERIOD_FLUSH) % 2 == 0) {
-            color = strip.Color(0, 255, 255); // Cyan
-        } else {
-            color = 0; // Off
-        }
+        color = ((now / LED_PERIOD_FLUSH) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
     }
-    // 1.6 Offroad Mode -> MAGENTA Blinking
-    else if (offroadMode) {
+    // 2. WiFi Active (Config Mode) -> WHITE Blinking
+    else if (wifiActive) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 1000) % 2 == 0) { // Slow blink (1s on, 1s off)
-            color = strip.Color(255, 0, 255); // Magenta
-        } else {
-            color = 0; // Off
-        }
+        // Slow Blink (1Hz)
+        color = ((now / 500) % 2 == 0) ? strip.Color(200, 200, 200) : 0; // White (dimmed)
     }
-    // 2. WiFi Active (High Priority Indication) -> WHITE Pulsing
-    else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
-        float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
-        uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(255, 255, 255);
+    // 3. Tank Empty (Critical) -> RED / YELLOW Alternating
+    else if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
+        strip.setBrightness(currentHighBrightness);
+        // Alternate Red/Yellow every 500ms
+        color = ((now / 500) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 200, 0);
     }
-    // 3. Oiling Event -> YELLOW Breathing
+    // 4. Oiling Event (Action) -> YELLOW Flash
     else if (isOiling || millis() < ledOilingEndTimestamp) {
-        float breath = getPulse(LED_PERIOD_OILING); 
-        uint8_t bri = (uint8_t)(breath * currentHighBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(255, 200, 0);
-    } 
-    // 3.5 Smart Stop (Stationary) -> Status Indication
-    // Show detailed status when standing still (e.g. at traffic lights)
-    else if (currentSpeed < 3.0) {
-        float pulse = getPulse(2000); // Slow pulse 2s
-        
-        // Tank Empty? (Critical) -> RED Pulsing
-        if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
-             uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
-             if (bri < 10) bri = 10;
-             strip.setBrightness(bri);
-             color = strip.Color(255, 0, 0); 
-        }
-        // Tank Warning? -> ORANGE 2x Blink
-        else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-             strip.setBrightness(currentHighBrightness);
-             int phase = now % LED_BLINK_TANK; 
-             if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
-                color = strip.Color(255, 69, 0); 
-             } else {
-                color = 0; 
-             }
-        }
-        // Rain Mode? -> BLUE Pulsing
-        else if (rainMode) {
-             uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
-             if (bri < 5) bri = 5;
-             strip.setBrightness(bri);
-             color = strip.Color(0, 0, 255);
-        }
-        // Normal OK -> GREEN Pulsing
-        else {
-             uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
-             if (bri < 5) bri = 5;
-             strip.setBrightness(bri);
-             color = strip.Color(0, 255, 0);
-        }
-    }
-    // 4. Tank Warning (Moving) -> ORANGE Blinking (2x fast)
-    else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
         strip.setBrightness(currentHighBrightness);
-        int phase = now % LED_BLINK_TANK; // 2s cycle
-        // Blink 1: 0-200, Blink 2: 400-600
-        if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
-            color = strip.Color(255, 69, 0); // OrangeRed
-        } else {
-            color = 0; // Off
-        }
-    }
-    else if (!hasFix) {
-        // No GPS
-        unsigned long timeSinceLoss = (lastEmergUpdate > 0) ? (now - lastEmergUpdate) : 0;
-        
-        if (emergencyModeForced) {
-             // Forced Emergency: Cyan
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255); 
-        } else if (emergencyMode) {
-             // Auto Emergency Active: Cyan Dim
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 255);
-        } else {
-            color = 0; // Off
-        }
-    }
-    // 5. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
-    else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
-         int phase = now % LED_PERIOD_EMERGENCY; // 1.5s Cycle
-         // Pulse 1: 0-100, Pulse 2: 200-300
-         if ((phase >= 0 && phase < 100) || (phase >= 200 && phase < 300)) {
-             strip.setBrightness(currentHighBrightness);
-             color = strip.Color(255, 140, 0); // Orange
-         } else {
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 0); // Green
-         }
-    }
-    // 6. Rain Mode -> BLUE Static
-    else if (rainMode) {
-        strip.setBrightness(currentDimBrightness);
-        color = strip.Color(0, 0, 255);
-    }
-    // 7. No GPS (Searching) -> MAGENTA Pulsing
-    else if (!hasFix) {
-        float pulse = getPulse(LED_PERIOD_GPS);
-        uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(255, 0, 255);
-    }
-    // 8. Idle / Ready -> GREEN Static
+        color = strip.Color(255, 220, 0); // Saturated Yellow
+    } 
+    
+    // --- PRIORITY 2: Status & Modes (Static/Dimmed) ---
+    
     else {
         strip.setBrightness(currentDimBrightness);
-        color = strip.Color(0, 255, 0);
+
+        // 5. Emergency Mode (Warning) -> RED Pulsing
+        if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
+            float breath = getPulse(LED_PERIOD_EMERGENCY); 
+            // Pulse Red
+            // Manually scale brightness for breathing effect on Red channel only
+            uint8_t r = (uint8_t)(breath * 255); 
+            if (r < 20) r = 20; // Min brightness
+            color = strip.Color(r, 0, 0); 
+        }
+        // 6. Offroad Mode -> AMBER/ORANGE Static
+        else if (offroadMode) {
+            color = strip.Color(255, 140, 0); // Amber
+        }
+        // 7. Tank Warning (Low) -> ORANGE Blinking (Status Overlay)
+        // If moving or stationary, show warning if tank is low but not empty
+        else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+             // 2x Fast Blink every 2s
+             int phase = now % LED_BLINK_TANK; 
+             if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
+                strip.setBrightness(currentHighBrightness); // Alert brightness
+                color = strip.Color(255, 69, 0); // OrangeRed
+             } else {
+                color = 0; // Off
+             }
+        }
+        // 8. Rain Mode -> BLUE Static
+        else if (rainMode) {
+            color = strip.Color(0, 0, 255); // Blue
+        }
+        // 9. No GPS (Searching) -> CYAN Breathing
+        else if (!hasFix) {
+            float breath = getPulse(LED_PERIOD_GPS);
+            uint8_t b = (uint8_t)(breath * 255);
+            if (b < 20) b = 20;
+            // Cyan: Green + Blue
+            color = strip.Color(0, b, b); 
+        }
+        // 10. Normal Operation -> GREEN Static (Dimmed)
+        else {
+             // Default state: Green
+             color = strip.Color(0, 150, 0); 
+        }
     }
 
     for(int i=0; i<NUM_LEDS; i++) {
@@ -633,6 +569,7 @@ void Oiler::loadConfig() {
 
     // Load Offroad & Startup
     offroadIntervalMin = _store->getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
+    offroadPulses = _store->getInt("off_pls", 2); // Default 2 pulses
     startupDelayMeters = _store->getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
@@ -727,6 +664,7 @@ void Oiler::saveConfig() {
 
     // Save Offroad & Startup
     _store->putInt("off_int", offroadIntervalMin);
+    _store->putInt("off_pls", offroadPulses);
     _store->putFloat("start_dly_m", startupDelayMeters);
 
     // Save Chain Flush Mode
@@ -918,6 +856,7 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
                     setRainMode(false);
                     saveConfig();
                 }
+
 #ifdef GPS_DEBUG
                 Serial.println("Emergency Mode ACTIVATED (50km/h Sim)");
                 webConsole.log("Emergency Mode ACTIVATED");
@@ -935,6 +874,10 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             if (dt > 1000) dt = 1000;
 
             float simSpeed = 50.0;
+            
+            // BUGFIX: Update global currentSpeed so Flush/Offroad functions correctly
+            currentSpeed = simSpeed; 
+            
             double distKm = (double)simSpeed * ((double)dt / 3600000.0);
             
             // Update Usage Stats for 50km/h
@@ -1110,7 +1053,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             history.head = (head + 1) % 20;
             if (history.count < 20) history.count++;
 
-            triggerOil(ranges[activeRangeIndex].pulses);
+            const char* reason = emergencyMode ? "Emergency-mode juicing started" : "Normal-mode juicing started";
+            triggerOil(ranges[activeRangeIndex].pulses, reason);
             currentProgress -= 1.0; // Carry over remainder
             if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
             saveProgress(); // Save progress
@@ -1118,11 +1062,18 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     }
 }
 
-void Oiler::triggerOil(int pulses) {
+void Oiler::triggerOil(int pulses, const char* reason) {
+    if (reason) {
+        webConsole.log(String(reason));
 #ifdef GPS_DEBUG
-    Serial.println("OILING START (Non-Blocking)");
-    webConsole.log("OILING START");
+        Serial.println(reason);
 #endif
+    } else {
+#ifdef GPS_DEBUG
+        Serial.println("OILING START (Non-Blocking)");
+        webConsole.log("OILING START");
+#endif
+    }
     
     pumpCycles++; // Stats
     progressChanged = true; // Mark for saving
@@ -1192,6 +1143,15 @@ void Oiler::processPump() {
     if (bleedingMode) {
         if (now - bleedingStartTime > currentBleedingDuration) {
             bleedingMode = false;
+            
+            // Handover Logic: Check if we should be in Emergency Mode
+            if (!hasFix && lastEmergUpdate > 0 && (now - lastEmergUpdate > EMERGENCY_TIMEOUT_MS)) {
+                if (!emergencyMode) {
+                    emergencyMode = true;
+                    webConsole.log("Bleeding Ended -> Emergency Mode");
+                }
+            }
+
             digitalWrite(_pumpPin, PUMP_OFF);
 #ifdef GPS_DEBUG
             Serial.printf("Bleeding Finished. Consumed: %.2f ml\n", bleedingSessionConsumed);
@@ -1442,26 +1402,58 @@ void Oiler::setRainMode(bool mode) {
 void Oiler::setFlushMode(bool mode) {
     if (mode && !flushMode) {
         flushModeStartTime = millis();
-        lastFlushOilTime = millis(); // Reset interval timer
+        // FORCE START: Trick the timer to fire immediately in the next loop
+        // Avoid underflow by checking current time
+        unsigned long intervalMs = (unsigned long)flushConfigIntervalSec * 1000;
+        if (millis() > intervalMs + 100) {
+            lastFlushOilTime = millis() - intervalMs - 100; 
+        } else {
+            lastFlushOilTime = 0; 
+        }
+        
         flushEventsRemaining = flushConfigEvents; // Reset counter
 #ifdef GPS_DEBUG
         Serial.println("Chain Flush Mode ACTIVATED");
 #endif
     } else if (!mode && flushMode) {
+        // Handover Logic: Check if we should be in Emergency Mode
+        unsigned long now = millis();
+        if (!hasFix && lastEmergUpdate > 0 && (now - lastEmergUpdate > EMERGENCY_TIMEOUT_MS)) {
+            if (!emergencyMode) {
+                emergencyMode = true;
+                webConsole.log("Flush Ended -> Emergency Mode");
+            }
+        }
 #ifdef GPS_DEBUG
         Serial.println("Chain Flush Mode DEACTIVATED");
 #endif
+        webConsole.log("Chain Flush Mode DEACTIVATED");
     }
     flushMode = mode;
 }
 
 void Oiler::setOffroadMode(bool mode) {
     if (mode && !offroadMode) {
-        lastOffroadOilTime = millis(); // Reset timer on start
+        // FORCE START: Trick the timer to fire immediately in the next loop
+        unsigned long intervalMs = (unsigned long)offroadIntervalMin * 60 * 1000;
+        if (millis() > intervalMs + 100) {
+            lastOffroadOilTime = millis() - intervalMs - 100;
+        } else {
+            lastOffroadOilTime = 0;
+        }
+
 #ifdef GPS_DEBUG
         Serial.println("Offroad Mode ACTIVATED");
 #endif
     } else if (!mode && offroadMode) {
+        // Handover Logic: Check if we should be in Emergency Mode
+        unsigned long now = millis();
+        if (!hasFix && lastEmergUpdate > 0 && (now - lastEmergUpdate > EMERGENCY_TIMEOUT_MS)) {
+            if (!emergencyMode) {
+                emergencyMode = true;
+                webConsole.log("Offroad Ended -> Emergency Mode");
+            }
+        }
 #ifdef GPS_DEBUG
         Serial.println("Offroad Mode DEACTIVATED");
 #endif

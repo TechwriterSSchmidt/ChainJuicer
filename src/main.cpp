@@ -313,6 +313,7 @@ void handleSettings() {
     footer.replace("%EMERG_CHECKED%", oiler.isEmergencyModeForced() ? "checked" : "");
     footer.replace("%START_DLY%", String(oiler.startupDelayMeters, 0));
     footer.replace("%OFFROAD_INT%", String(oiler.offroadIntervalMin));
+    footer.replace("%OFFROAD_PLS%", String(oiler.offroadPulses));
     
     footer.replace("%FLUSH_EV%", String(oiler.flushConfigEvents));
     footer.replace("%FLUSH_PLS%", String(oiler.flushConfigPulses));
@@ -440,6 +441,7 @@ void handleSave() {
     
     if(server.hasArg("start_dly")) oiler.startupDelayMeters = server.arg("start_dly").toFloat();
     if(server.hasArg("offroad_int")) oiler.offroadIntervalMin = server.arg("offroad_int").toInt();
+    if(server.hasArg("offroad_pls")) oiler.offroadPulses = server.arg("offroad_pls").toInt();
     
     if(server.hasArg("flush_ev")) oiler.flushConfigEvents = server.arg("flush_ev").toInt();
     if(server.hasArg("flush_pls")) oiler.flushConfigPulses = server.arg("flush_pls").toInt();
@@ -660,8 +662,8 @@ void setup() {
     // Maintenance Routes
     server.on("/maintenance", handleMaintenance);
     server.on("/test_pump", HTTP_GET, []() {
-        webConsole.log("CMD: Test Pump (1 Pulse)");
-        oiler.triggerOil(1); // Fire 1 pulse
+        // webConsole.log("CMD: Test Pump (1 Pulse)"); // Redundant with triggerOil log
+        oiler.triggerOil(1, "Manual-test juicing started"); // Fire 1 pulse
         server.sendHeader("Location", "/maintenance");
         server.send(303);
     });
