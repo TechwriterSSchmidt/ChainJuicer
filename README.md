@@ -38,17 +38,18 @@ For the most stable operation (avoiding "Boot Loops" and conflicts with internal
 > **Warning:** Avoid using **GPIO 12**, as it determines the flash voltage during boot (High = Boot Loop). Avoid **GPIO 2** for sensors with pull-ups for the same reason.
 
 ## Table of Contents
-* [Features](#-features)
-* [Optional IMU Features](#-optional-imu-features)
-* [Optional SD Card Logging](#-optional-sd-card-logging)
-* [Hardware & Functionality Matrix](#-hardware--functionality-matrix)
-* [Automatic Temperature Compensation](#-automatic-temperature-compensation)
-* [Aux Port Manager](#-aux-port-manager-gpio-17)
-* [Hardware](#-hardware)
-* [Operation](#-operation)
-* [Web Interface](#-web-interface)
-* [Installation](#-installation)
-* [BOM & Costs](#-bom--costs-approx-2025)
+* [Features](#features)
+* [Optional IMU Features](#optional-imu-features)
+* [Optional SD Card Logging](#optional-sd-card-logging)
+* [Hardware & Functionality Matrix](#hardware--functionality-matrix)
+* [Automatic Temperature Compensation](#automatic-temperature-compensation)
+* [Aux Port Manager](#aux-port-manager-gpio-17)
+* [Data Logging (SPI Flash)](#data-logging-spi-flash)
+* [Hardware](#hardware)
+* [Operation](#operation)
+* [Web Interface](#web-interface)
+* [Installation](#installation)
+* [BOM & Costs](#bom--costs-approx-2025)
 * [Release Notes](RELEASE_NOTES.md)
 
 ## Features
