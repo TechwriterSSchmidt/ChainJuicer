@@ -62,9 +62,9 @@ For the most stable operation (avoiding "Boot Loops" and conflicts with internal
 | **Start Delay** | Distance driven before first oiling. | Default **250 m**. Keeps garage floor clean. |
 | **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
 | **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** 1x Click. **Auto-Off:** 30 min or restart. |
-| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 4x Click. **Action:** Time-based (Configurable). LED: Cyan Blink. |
-| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 3x Click. **Action:** Time-based (e.g. 5 min). LED: Magenta Blink. |
-| **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation (resets on reboot). |
+| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 4x Click. **Action:** Time-based (Configurable). LED: Magenta Blink. |
+| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 3x Click. **Action:** Time-based (e.g. 5 min). LED: Amber Static. |
+| **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation. LED: Red Pulsing. |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** 5x Click. **Features:** OTA Update, LED config, Stats, Test functions. |
 | **Night Mode** | Auto-dimming of LED. | **Default:** ON (20:00-06:00). Brightness: 5% (Dim) / 25% (Event). |
 | **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (20s). **Additive:** Trigger again to extend (max 60s). |

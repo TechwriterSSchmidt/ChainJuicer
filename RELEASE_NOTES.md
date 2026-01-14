@@ -1,5 +1,18 @@
 # Release Notes
 
+## v2.0.2 - New Color Scheme & Offroad Config (2026-01-14)
+*   **New Intuitive LED Colors:**
+    *   **Green:** Normal (Ready).
+    *   **Yellow (Flash):** Active Oiling Event (Pump Stroke).
+    *   **Blue:** Rain Mode.
+    *   **Amber/Orange:** Offroad Mode.
+    *   **Cyan (Breathing):** GPS Searching.
+    *   **Red (Pulsing):** Emergency Mode (No GPS / Forced).
+    *   **Red/Yellow (Alternating):** Tank Empty!
+    *   **Magenta (Blink):** Maintenance (Flush / Bleed).
+*   **Offroad Configuration:** Added "Pulses per Event" setting to Offroad Mode.
+*   **Emergency Fix:** Emergency Mode (Forced) no longer auto-disables Offroad Mode (allowing manual timer-based oiling in deep woods).
+
 ## v2.0.1 - Bleeding Timing Fix (2026-01-06)
 *   **Bleeding Mode:** Fixed a millis underflow race that made the pump run at ~6 Hz despite 60/320 ms settings. Bleeding now uses a simple hard-coded scheduler (pulse 60 ms, pause 320 ms) with an underflow guard. Logging noise was reduced for the web/serial console.
 

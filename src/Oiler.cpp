@@ -397,150 +397,104 @@ void Oiler::updateLED() {
         }
     }
 
+// In Oiler::loop() (inside update() or dedicated function)
+
+    unsigned long now = millis();
+    uint32_t color = 0;
+
     // Helper for sine wave pulse (0.0 to 1.0)
     auto getPulse = [&](int periodMs) -> float {
         float angle = (now % periodMs) * 2.0 * PI / periodMs;
         return (sin(angle) + 1.0) / 2.0;
     };
 
+    // --- PRIORITY 1: Actions & Warnings (Blinking/Pulsing) ---
+
     // 0. Update Mode (Critical) -> CYAN Fast Blink
     if (updateMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_BLINK_FAST) % 2 == 0) {
-            color = strip.Color(0, 255, 255); // Cyan
-        } else {
-            color = 0; // Off
-        }
+        color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(0, 255, 255) : 0;
     }
     // 0.1 Crash Detected (Latch) -> RED/WHITE Fast Alternating
     else if (crashTripped) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 100) % 2 == 0) {
-            color = strip.Color(255, 0, 0); // Red
-        } else {
-            color = strip.Color(255, 255, 255); // White
-        }
+        color = ((now / 100) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 255, 255);
     }
-    // 1. Bleeding Mode (Highest Priority) -> RED Blinking fast
+    // 1. Bleeding Mode (Highest Priority) -> MAGENTA Blinking Fast
     else if (bleedingMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_BLINK_FAST) % 2 == 0) {
-            color = strip.Color(255, 0, 0);
-        } else {
-            color = 0; // Off
-        }
+        color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
     } 
-    // 1.5 Chain Flush Mode (High Priority) -> CYAN Blinking
+    // 1.5 Chain Flush Mode (High Priority) -> MAGENTA Blinking
     else if (flushMode) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / LED_PERIOD_FLUSH) % 2 == 0) {
-            color = strip.Color(0, 255, 255); // Cyan
-        } else {
-            color = 0; // Off
-        }
+        color = ((now / LED_PERIOD_FLUSH) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
     }
-    // 1.6 Offroad Mode -> MAGENTA Blinking
-    else if (offroadMode) {
+    // 2. WiFi Active (Config Mode) -> WHITE Blinking
+    else if (wifiActive) {
         strip.setBrightness(currentHighBrightness);
-        if ((now / 1000) % 2 == 0) { // Slow blink (1s on, 1s off)
-            color = strip.Color(255, 0, 255); // Magenta
-        } else {
-            color = 0; // Off
-        }
+        // Slow Blink (1Hz)
+        color = ((now / 500) % 2 == 0) ? strip.Color(200, 200, 200) : 0; // White (dimmed)
     }
-    // 2. WiFi Active (High Priority Indication) -> WHITE Pulsing
-    else if (wifiActive && (now - wifiActivationTime < LED_WIFI_SHOW_DURATION)) {
-        float pulse = getPulse(LED_PERIOD_WIFI) * 0.8 + 0.2;
-        uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(255, 255, 255);
+    // 3. Tank Empty (Critical) -> RED / YELLOW Alternating
+    else if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
+        strip.setBrightness(currentHighBrightness);
+        // Alternate Red/Yellow every 500ms
+        color = ((now / 500) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 200, 0);
     }
-    // 3. Oiling Event -> YELLOW Breathing
+    // 4. Oiling Event (Action) -> YELLOW Flash
     else if (isOiling || millis() < ledOilingEndTimestamp) {
-        float breath = getPulse(LED_PERIOD_OILING); 
-        uint8_t bri = (uint8_t)(breath * currentHighBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(255, 200, 0);
-    } 
-    // 3.5 Smart Stop (Stationary) -> Status Indication
-    // Show detailed status when standing still (e.g. at traffic lights)
-    else if (currentSpeed < 3.0) {
-        float pulse = getPulse(2000); // Slow pulse 2s
-        
-        // Tank Empty? (Critical) -> RED Pulsing
-        if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
-             uint8_t bri = (uint8_t)(pulse * currentHighBrightness);
-             if (bri < 10) bri = 10;
-             strip.setBrightness(bri);
-             color = strip.Color(255, 0, 0); 
-        }
-        // Tank Warning? -> ORANGE 2x Blink
-        else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-             strip.setBrightness(currentHighBrightness);
-             int phase = now % LED_BLINK_TANK; 
-             if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
-                color = strip.Color(255, 69, 0); 
-             } else {
-                color = 0; 
-             }
-        }
-        // Rain Mode? -> BLUE Pulsing
-        else if (rainMode) {
-             uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
-             if (bri < 5) bri = 5;
-             strip.setBrightness(bri);
-             color = strip.Color(0, 0, 255);
-        }
-        // Normal OK -> GREEN Pulsing
-        else {
-             uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
-             if (bri < 5) bri = 5;
-             strip.setBrightness(bri);
-             color = strip.Color(0, 255, 0);
-        }
-    }
-    // 4. Tank Warning (Moving) -> ORANGE Blinking (2x fast)
-    else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
         strip.setBrightness(currentHighBrightness);
-        int phase = now % LED_BLINK_TANK; // 2s cycle
-        // Blink 1: 0-200, Blink 2: 400-600
-        if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
-            color = strip.Color(255, 69, 0); // OrangeRed
-        } else {
-            color = 0; // Off
-        }
-    }
-    // 5. Emergency Mode (Forced or Auto) -> ORANGE Double Pulse over GREEN
-    else if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
-         int phase = now % LED_PERIOD_EMERGENCY; // 1.5s Cycle
-         // Pulse 1: 0-100, Pulse 2: 200-300
-         if ((phase >= 0 && phase < 100) || (phase >= 200 && phase < 300)) {
-             strip.setBrightness(currentHighBrightness);
-             color = strip.Color(255, 140, 0); // Orange
-         } else {
-             strip.setBrightness(currentDimBrightness);
-             color = strip.Color(0, 255, 0); // Green
-         }
-    }
-    // 6. Rain Mode -> BLUE Static
-    else if (rainMode) {
-        strip.setBrightness(currentDimBrightness);
-        color = strip.Color(0, 0, 255);
-    }
-    // 7. No GPS (Searching) -> CYAN Breathing
-    else if (!hasFix) {
-        float pulse = getPulse(LED_PERIOD_GPS);
-        uint8_t bri = (uint8_t)(pulse * currentDimBrightness);
-        if (bri < 5) bri = 5;
-        strip.setBrightness(bri);
-        color = strip.Color(0, 255, 255);
-    }
-    // 8. Idle / Ready -> GREEN Static
+        color = strip.Color(255, 220, 0); // Saturated Yellow
+    } 
+    
+    // --- PRIORITY 2: Status & Modes (Static/Dimmed) ---
+    
     else {
         strip.setBrightness(currentDimBrightness);
-        color = strip.Color(0, 255, 0);
+
+        // 5. Emergency Mode (Warning) -> RED Pulsing
+        if (emergencyModeForced || emergencyMode || (!hasFix && (lastEmergUpdate > 0 && (now - lastEmergUpdate) > EMERGENCY_TIMEOUT_MS))) {
+            float breath = getPulse(LED_PERIOD_EMERGENCY); 
+            // Pulse Red
+            // Manually scale brightness for breathing effect on Red channel only
+            uint8_t r = (uint8_t)(breath * 255); 
+            if (r < 20) r = 20; // Min brightness
+            color = strip.Color(r, 0, 0); 
+        }
+        // 6. Offroad Mode -> AMBER/ORANGE Static
+        else if (offroadMode) {
+            color = strip.Color(255, 140, 0); // Amber
+        }
+        // 7. Tank Warning (Low) -> ORANGE Blinking (Status Overlay)
+        // If moving or stationary, show warning if tank is low but not empty
+        else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
+             // 2x Fast Blink every 2s
+             int phase = now % LED_BLINK_TANK; 
+             if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
+                strip.setBrightness(currentHighBrightness); // Alert brightness
+                color = strip.Color(255, 69, 0); // OrangeRed
+             } else {
+                color = 0; // Off
+             }
+        }
+        // 8. Rain Mode -> BLUE Static
+        else if (rainMode) {
+            color = strip.Color(0, 0, 255); // Blue
+        }
+        // 9. No GPS (Searching) -> CYAN Breathing
+        else if (!hasFix) {
+            float breath = getPulse(LED_PERIOD_GPS);
+            uint8_t b = (uint8_t)(breath * 255);
+            if (b < 20) b = 20;
+            // Cyan: Green + Blue
+            color = strip.Color(0, b, b); 
+        }
+        // 10. Normal Operation -> GREEN Static (Dimmed)
+        else {
+             // Default state: Green
+             color = strip.Color(0, 150, 0); 
+        }
     }
 
     for(int i=0; i<NUM_LEDS; i++) {
