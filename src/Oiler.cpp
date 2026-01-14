@@ -830,77 +830,89 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
             lastEmergUpdate = now;
             emergencyOilCount = 0;
         }
+    }
 
+    // Determine Emergency State (Auto or Forced)
+    bool autoEmergencyActive = false;
+    if (!gpsValid) { 
         unsigned long timeSinceLoss = now - lastEmergUpdate;
-        bool autoEmergencyActive = (timeSinceLoss > EMERGENCY_TIMEOUT_MS);
+        autoEmergencyActive = (timeSinceLoss > EMERGENCY_TIMEOUT_MS);
+    }
 
-        // Static variable for simulation step (shared across calls)
-        static unsigned long lastSimStep = 0;
+    // Static variable for simulation step (shared across calls)
+    static unsigned long lastSimStep = 0;
 
-        if (emergencyModeForced || autoEmergencyActive) {
-            // We are in Emergency Mode (either Forced or Auto Timeout)
-
-            // IMU Check: If we have an IMU, pause Emergency Mode if no motion/vibration is detected
-            if (!imu.isMotionDetected()) {
-                lastSimStep = now; // Keep timer fresh so we don't jump
-                return;
-            }
+    // EMERGENCY MODE LOGIC (Forced OR Auto)
+    // Runs regardless of GPS signal if Forced Mode is ON
+    if (emergencyModeForced || (!gpsValid && autoEmergencyActive)) {
+        
+        // IMU Check: If we have an IMU, pause Emergency Mode if no motion/vibration is detected
+        if (!imu.isMotionDetected()) {
+            lastSimStep = now; // Keep timer fresh so we don't jump
+            return;
+        }
+        
+        if (!emergencyMode) {
+            // Just entered Emergency Mode
+            emergencyMode = true;
+            lastSimStep = now; // Initialize timer
             
-            if (!emergencyMode) {
-                // Just entered Emergency Mode
-                emergencyMode = true;
-                lastSimStep = now; // Initialize timer
-                
-                // Auto-Disable Rain Mode
-                if (rainMode) {
-                    setRainMode(false);
-                    saveConfig();
-                }
+            // Auto-Disable Rain Mode
+            if (rainMode) {
+                setRainMode(false);
+                saveConfig();
+            }
 
 #ifdef GPS_DEBUG
-                Serial.println("Emergency Mode ACTIVATED (50km/h Sim)");
-                webConsole.log("Emergency Mode ACTIVATED");
+            Serial.println(emergencyModeForced ? "Emergency Mode (FORCED) ACTIVATED" : "Emergency Mode (AUTO) ACTIVATED");
+            webConsole.log(emergencyModeForced ? "Emergency Mode (FORCED) ACTIVATED" : "Emergency Mode (AUTO) ACTIVATED");
 #endif
-            } else {
-                // Already in Emergency Mode
-                // Ensure Rain Mode stays OFF
-                if (rainMode) setRainMode(false);
-            }
-            
-            // Simulation Logic (50 km/h)
-            if (lastSimStep == 0) lastSimStep = now;
-            unsigned long dt = now - lastSimStep;
-            lastSimStep = now;
-            if (dt > 1000) dt = 1000;
-
-            float simSpeed = 50.0;
-            
-            // BUGFIX: Update global currentSpeed so Flush/Offroad functions correctly
-            currentSpeed = simSpeed; 
-            
-            double distKm = (double)simSpeed * ((double)dt / 3600000.0);
-            
-            // Update Usage Stats for 50km/h
-            double dtSeconds = (double)dt / 1000.0;
-            for(int i=0; i<NUM_RANGES; i++) {
-                if (simSpeed >= ranges[i].minSpeed && simSpeed < ranges[i].maxSpeed) {
-                    currentIntervalTime[i] += dtSeconds;
-                    break;
-                }
-            }
-
-            processDistance(distKm, simSpeed);
-
         } else {
-            // Waiting for timeout...
+            // Already in Emergency Mode
+            // Ensure Rain Mode stays OFF
+            if (rainMode) setRainMode(false);
+        }
+        
+        // Simulation Logic (50 km/h)
+        if (lastSimStep == 0) lastSimStep = now;
+        unsigned long dt = now - lastSimStep;
+        lastSimStep = now;
+        if (dt > 1000) dt = 1000;
+
+        float simSpeed = 50.0;
+        
+        currentSpeed = simSpeed; 
+        
+        double distKm = (double)simSpeed * ((double)dt / 3600000.0);
+        
+        // Update Usage Stats for 50km/h
+        double dtSeconds = (double)dt / 1000.0;
+        for(int i=0; i<NUM_RANGES; i++) {
+            if (simSpeed >= ranges[i].minSpeed && simSpeed < ranges[i].maxSpeed) {
+                currentIntervalTime[i] += dtSeconds;
+                break;
+            }
+        }
+
+        processDistance(distKm, simSpeed);
+        return; // Skip normal GPS processing
+    } else {
+        // Not in Emergency or Forced Mode
+        if (emergencyMode) {
+            // Waiting/Recovery phase or normal op
+            //// Do not disable immediately if waiting for timeout, but here we are in the "else" of "forced || autoActive"
+            //// If we are here, it means:
+            //// 1. Not Forced
+            //// AND
+            //// 2. (GPS is Valid OR (GPS Invalid BUT not yet Timeout))
+            
             emergencyMode = false;
             lastSimStep = 0; // Reset sim timer
         }
-        return;
     }
 
     // First Fix?
-    if (!hasFix) {
+    if (gpsValid && !hasFix) {
         lastLat = lat;
         lastLon = lon;
         hasFix = true;
@@ -908,6 +920,10 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
         emergencyOilCount = 0;
         emergencyMode = false;
         return;
+    }
+
+    if (!gpsValid) {
+        return; // Wait for timeout
     }
 
     // Reset Emergency Timer if we have valid GPS

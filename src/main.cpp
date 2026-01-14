@@ -86,6 +86,7 @@ void handleHelp() {
 }
 
 void handleResetStats() {
+    resetWifiTimer();
 #ifdef GPS_DEBUG
     Serial.println("CMD: Reset Stats");
 #endif
@@ -96,6 +97,7 @@ void handleResetStats() {
 }
 
 void handleResetTimeStats() {
+    resetWifiTimer();
 #ifdef GPS_DEBUG
     Serial.println("CMD: Reset Time Stats");
 #endif
@@ -106,6 +108,7 @@ void handleResetTimeStats() {
 }
 
 void handleRefill() {
+    resetWifiTimer();
 #ifdef GPS_DEBUG
     Serial.println("CMD: Refill Tank");
 #endif
@@ -662,6 +665,7 @@ void setup() {
     // Maintenance Routes
     server.on("/maintenance", handleMaintenance);
     server.on("/test_pump", HTTP_GET, []() {
+        resetWifiTimer();
         // webConsole.log("CMD: Test Pump (1 Pulse)"); // Redundant with triggerOil log
         oiler.triggerOil(1, "Manual-test juicing started"); // Fire 1 pulse
         server.sendHeader("Location", "/maintenance");
@@ -669,6 +673,7 @@ void setup() {
     });
     
     server.on("/bleeding", HTTP_GET, []() {
+        resetWifiTimer();
         webConsole.log("CMD: Start Bleeding");
         oiler.startBleeding();
         server.sendHeader("Location", "/maintenance");
@@ -782,7 +787,8 @@ void loop() {
         
         String logMsg = String("GPS: Fix=") + (gps.location.isValid() ? "OK" : "NO") + 
                         ", Sats=" + String(gps.satellites.value()) + 
-                        ", HDOP=" + String(gps.hdop.hdop(), 1);
+                        ", HDOP=" + String(gps.hdop.hdop(), 1) +
+                        ", Spd=" + String(currentSpeed, 1);
         webConsole.log(logMsg);
 
         Serial.printf("GPS Status: Fix=%s, Sats=%d, Speed=%.1f km/h, Lat=%.6f, Lon=%.6f, HDOP=%.1f %s\n", 
