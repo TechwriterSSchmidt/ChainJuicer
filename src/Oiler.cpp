@@ -234,7 +234,7 @@ void Oiler::loop() {
             // SAFETY: Only oil if moving! 
             // User requested minimum speed of 7 km/h for offroad mode to prevent oiling at standstill/idling.
             if (currentSpeed >= 7.0) {
-                triggerOil(offroadPulses); // Use configured pulses
+                triggerOil(offroadPulses, "offroad-mode juicing started"); // Use configured pulses
                 lastOffroadOilTime = now;
             }
         }
@@ -249,7 +249,7 @@ void Oiler::loop() {
             // SAFETY: Only oil if moving!
             // Similar to Cross-Country, we require movement to avoid puddles.
             if (currentSpeed >= 2.0) {
-                triggerOil(flushConfigPulses);
+                triggerOil(flushConfigPulses, "flush-mode juicing started");
                 lastFlushOilTime = now;
                 flushEventsRemaining--;
 
@@ -396,11 +396,6 @@ void Oiler::updateLED() {
             currentHighBrightness = nightBrightnessHigh;
         }
     }
-
-// In Oiler::loop() (inside update() or dedicated function)
-
-    unsigned long now = millis();
-    uint32_t color = 0;
 
     // Helper for sine wave pulse (0.0 to 1.0)
     auto getPulse = [&](int periodMs) -> float {
@@ -1054,7 +1049,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
             history.head = (head + 1) % 20;
             if (history.count < 20) history.count++;
 
-            triggerOil(ranges[activeRangeIndex].pulses);
+            const char* reason = emergencyMode ? "emergency-mode juicing started" : "normal-mode juicing started";
+            triggerOil(ranges[activeRangeIndex].pulses, reason);
             currentProgress -= 1.0; // Carry over remainder
             if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
             saveProgress(); // Save progress
@@ -1062,11 +1058,18 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     }
 }
 
-void Oiler::triggerOil(int pulses) {
+void Oiler::triggerOil(int pulses, const char* reason) {
+    if (reason) {
+        webConsole.log(String(reason));
 #ifdef GPS_DEBUG
-    Serial.println("OILING START (Non-Blocking)");
-    webConsole.log("OILING START");
+        Serial.println(reason);
 #endif
+    } else {
+#ifdef GPS_DEBUG
+        Serial.println("OILING START (Non-Blocking)");
+        webConsole.log("OILING START");
+#endif
+    }
     
     pumpCycles++; // Stats
     progressChanged = true; // Mark for saving
@@ -1136,6 +1139,15 @@ void Oiler::processPump() {
     if (bleedingMode) {
         if (now - bleedingStartTime > currentBleedingDuration) {
             bleedingMode = false;
+            
+            // Handover Logic: Check if we should be in Emergency Mode
+            if (!hasFix && lastEmergUpdate > 0 && (now - lastEmergUpdate > EMERGENCY_TIMEOUT_MS)) {
+                if (!emergencyMode) {
+                    emergencyMode = true;
+                    webConsole.log("Bleeding Ended -> Emergency Mode");
+                }
+            }
+
             digitalWrite(_pumpPin, PUMP_OFF);
 #ifdef GPS_DEBUG
             Serial.printf("Bleeding Finished. Consumed: %.2f ml\n", bleedingSessionConsumed);
@@ -1392,9 +1404,18 @@ void Oiler::setFlushMode(bool mode) {
         Serial.println("Chain Flush Mode ACTIVATED");
 #endif
     } else if (!mode && flushMode) {
+        // Handover Logic: Check if we should be in Emergency Mode
+        unsigned long now = millis();
+        if (!hasFix && lastEmergUpdate > 0 && (now - lastEmergUpdate > EMERGENCY_TIMEOUT_MS)) {
+            if (!emergencyMode) {
+                emergencyMode = true;
+                webConsole.log("Flush Ended -> Emergency Mode");
+            }
+        }
 #ifdef GPS_DEBUG
         Serial.println("Chain Flush Mode DEACTIVATED");
 #endif
+        webConsole.log("Chain Flush Mode DEACTIVATED");
     }
     flushMode = mode;
 }
@@ -1406,6 +1427,14 @@ void Oiler::setOffroadMode(bool mode) {
         Serial.println("Offroad Mode ACTIVATED");
 #endif
     } else if (!mode && offroadMode) {
+        // Handover Logic: Check if we should be in Emergency Mode
+        unsigned long now = millis();
+        if (!hasFix && lastEmergUpdate > 0 && (now - lastEmergUpdate > EMERGENCY_TIMEOUT_MS)) {
+            if (!emergencyMode) {
+                emergencyMode = true;
+                webConsole.log("Offroad Ended -> Emergency Mode");
+            }
+        }
 #ifdef GPS_DEBUG
         Serial.println("Offroad Mode DEACTIVATED");
 #endif

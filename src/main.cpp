@@ -662,8 +662,8 @@ void setup() {
     // Maintenance Routes
     server.on("/maintenance", handleMaintenance);
     server.on("/test_pump", HTTP_GET, []() {
-        webConsole.log("CMD: Test Pump (1 Pulse)");
-        oiler.triggerOil(1); // Fire 1 pulse
+        // webConsole.log("CMD: Test Pump (1 Pulse)"); // Redundant with triggerOil log
+        oiler.triggerOil(1, "manual-test juicing started"); // Fire 1 pulse
         server.sendHeader("Location", "/maintenance");
         server.send(303);
     });

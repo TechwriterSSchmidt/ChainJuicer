@@ -77,7 +77,7 @@ public:
 
     // Manual Actions
     void startBleeding();
-    void triggerOil(int pulses); // Made public for manual trigger
+    void triggerOil(int pulses, const char* reason = nullptr); // Made public for manual trigger
 
     // Factory Reset
     void performFactoryReset();

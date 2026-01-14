@@ -1,5 +1,10 @@
 # Release Notes
 
+## v2.0.3 - Logging & State Logic Fixes (2026-01-14)
+*   **Enhanced WebConsole Logging:** Added detailed logging for every pump actuation, specifying the active mode (e.g., "normal-mode juicing started", "offroad-mode juicing started"). Flush Mode deactivation is now also logged.
+*   **Logic Fix - Mode Transition:** Fixed a bug where the system would get stuck in a "Searching" state after Flush, Bleeding, or Offroad mode ended if no GPS signal was present. It now correctly hands over to Emergency Mode immediately if the timeout condition is met.
+*   **Stability:** Fixed compilation errors related to variable scope in LED update logic.
+
 ## v2.0.2 - New Color Scheme & Offroad Config (2026-01-14)
 *   **New Intuitive LED Colors:**
     *   **Green:** Normal (Ready).
