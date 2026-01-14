@@ -61,12 +61,12 @@
 // Chain Flush Mode
 #define FLUSH_DEFAULT_EVENTS    15    // Total cycles
 #define FLUSH_DEFAULT_PULSES    2     // Pulses per cycle
-#define FLUSH_DEFAULT_INTERVAL_SEC 60 // Seconds between cycles
+#define FLUSH_DEFAULT_INTERVAL_SEC 5 // Seconds between cycles
 #define FLUSH_PRESS_COUNT       4     // Button clicks to activate? (See code logic)
 
 // Offroad Mode
 #define OFFROAD_INTERVAL_MIN_DEFAULT 5 // Minutes between cycles
-#define OFFROAD_PULSES_DEFAULT       2
+#define OFFROAD_PULSES_DEFAULT       3
 #define OFFROAD_PRESS_COUNT          3 // Button clicks (See code logic)
 
 // Bleeding (Maintenance)
@@ -88,7 +88,7 @@
 #define TEMP_UPDATE_INTERVAL_MS 60000    // 1 Min: Read Temperature
 
 // Button Interactions
-#define BUTTON_SEQUENCE_TIMEOUT_MS 500   // Time to wait after last click before processing
+#define BUTTON_SEQUENCE_TIMEOUT_MS 600   // Time to wait after last click before processing
 #define WIFI_PRESS_COUNT        5        // 5 Clicks: WiFi Config
 #define AUX_HOLD_MS             2000     // Hold >2s: Toggle Aux
 #define FACTORY_RESET_PRESS_MS  10000    // Hold >10s at boot
