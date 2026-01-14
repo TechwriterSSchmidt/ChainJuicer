@@ -188,22 +188,21 @@ void initSD() {
         return;
     }
 
-    // Find next available log file
-    int logIndex = 0;
-    do {
-        logIndex++;
-        currentLogFileName = String(LOG_FILE_PREFIX) + String(logIndex) + ".csv";
-    } while (SD.exists(currentLogFileName));
-
+    // Use single log file for easy download
+    currentLogFileName = "/gps_log.csv";
     Serial.print("Logging to: ");
     Serial.println(currentLogFileName);
 
+    bool needHeader = !SD.exists(currentLogFileName);
     logFile = SD.open(currentLogFileName, FILE_WRITE);
     if (logFile) {
         // Write Header
-        logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Flush_Mode");
+        if (needHeader) {
+            logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Flush_Mode");
+        }
         
         // Dump Config
+        logFile.println("EVENT,0,,,,,,,,,,SESSION START");
         logFile.println("EVENT,0,,,,,,,,,,CONFIG DUMP START");
         logFile.printf("EVENT,0,,,,,,,,,,Rain Multiplier: %d\n", (oiler.isRainMode() ? 2 : 1));
         for(int i=0; i<5; i++) {
@@ -664,6 +663,27 @@ void setup() {
     
     // Maintenance Routes
     server.on("/maintenance", handleMaintenance);
+
+    server.on("/download_log", HTTP_GET, []() {
+        resetWifiTimer();
+#ifdef SD_LOGGING_ACTIVE
+        if (sdInitialized && SD.exists("/gps_log.csv")) {
+            File file = SD.open("/gps_log.csv", FILE_READ);
+            if (file) {
+                server.sendHeader("Content-Type", "text/csv");
+                server.sendHeader("Content-Disposition", "attachment; filename=gps_log.csv");
+                server.streamFile(file, "text/csv");
+                file.close();
+                webConsole.log("Log download started");
+                return;
+            }
+        }
+        server.send(404, "text/plain", "Log file not found or SD not ready");
+#else
+        server.send(501, "text/plain", "SD Logging disabled");
+#endif
+    });
+
     server.on("/test_pump", HTTP_GET, []() {
         resetWifiTimer();
         // webConsole.log("CMD: Test Pump (1 Pulse)"); // Redundant with triggerOil log

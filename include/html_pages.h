@@ -112,6 +112,12 @@ const char* htmlMaintenance = R"rawliteral(
     </div>
 
     <div class='card'>
+        <h3>Logs</h3>
+        <p>Download the latest GPS track history.</p>
+        <a href='/download_log' class='btn' target='_blank' style='background:#007bff; margin-bottom:10px'>Download Log (CSV)</a>
+    </div>
+
+    <div class='card'>
         <h3>Danger Zone</h3>
         
         <a id='btn-reset' href='javascript:void(0)' class='btn btn-sec' style='background:#800; color:#fff; margin-bottom:10px' onclick="confirmAction('reset', '/factory_reset', 'btn-reset', 'Factory Reset (3x click)')">Factory Reset (3x click)</a>

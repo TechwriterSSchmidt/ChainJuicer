@@ -153,7 +153,7 @@ This table shows which features are available depending on the connected hardwar
 *   **Basic Setup:** ESP32, GPS Module, Pump, Button, LED.
 *   **Temp Sensor:** DS18B20 (OneWire).
 *   **IMU:** BNO085 (I2C).
-*   **SD Card:** MicroSD Module (SPI).
+*   **SD Card / Flash:** SPI Flash / MicroSD for Logging.
 
 ## 🌡️ Automatic Temperature Compensation
 
@@ -222,7 +222,31 @@ Advanced PWM control for heated grips, far superior to simple "Low/High" switche
 All parameters (Base %, Speed Factor, Temp Factor, Boosts, Delays, Reaction) are fully configurable via the new "Aux Config" web page.
 **Default Mode:** The Aux Port is **OFF** by default and must be enabled in the Web Interface.
 
-## 🛠 Hardware
+## � Data Logging (SPI Flash)
+
+For vibration-heavy environments or integrated builds, the system supports SPI Flash memory (simulated as SD card) for durable data logging.
+
+**Recommended Hardware:**
+*   **Adafruit SPI Flash SD Socket Adapter** (Product ID: 4899)
+    *   *Why?* It acts like an SD card but is a soldered chip. Completely vibration-proof.
+    *   *Capacity:* 512 MB (plenty for years of logs).
+
+**Storage Capacity (512 MB Example):**
+The system logs GPS tracks, speed, and events to `gps_log.csv`.
+
+| Metric | Value |
+| :--- | :--- |
+| **Log Format** | CSV (Timestamp, Lat, Lon, Speed, Satellites, Alt) |
+| **Data Rate** | 1 log entry per second (approx. 60 bytes) |
+| **Storage per Hour** | ~216 KB |
+| **Storage per 1000km** | ~3.6 MB (Avg. 60km/h) |
+| **Total Capacity** | **> 140,000 km** of riding history |
+
+**Data Retrieval:**
+Since the chip is soldered, you cannot remove it.
+*   **Web Download:** Use the "Maintenance" page in the Web Interface to download the full log file as `gps_log.csv`.
+
+## �🛠 Hardware
 
 *   **MCU:** [LCTECH ESP32 Relay X1](http://www.chinalctech.com/cpzx/Programmer/Relay_Module/866.html).
     *   *Specs:* ESP32-WROOM-32E, Wide Range Input (7-30V), 2x Onboard MOSFET (**NCE6020AK**).

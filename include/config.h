@@ -115,7 +115,7 @@
 // ==========================================
 #define GPS_BAUD                9600
 #define AP_SSID                 "ChainJuicer"
-// #define SD_LOGGING_ACTIVE      // Uncomment for SD Support
+#define SD_LOGGING_ACTIVE      // Uncomment for SD Support
 #define GPS_DEBUG                 // Uncomment for Serial Debug
 
 #ifdef SD_LOGGING_ACTIVE
