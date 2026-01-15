@@ -847,7 +847,8 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
     if (emergencyModeForced || (!gpsValid && autoEmergencyActive)) {
         
         // IMU Check: If we have an IMU, pause Emergency Mode if no motion/vibration is detected
-        if (!imu.isMotionDetected()) {
+        // EXCEPTION: If manually forced, we assume the user knows what they are doing (e.g. bench testing)
+        if (!emergencyModeForced && !imu.isMotionDetected()) {
             lastSimStep = now; // Keep timer fresh so we don't jump
             return;
         }
@@ -1051,6 +1052,12 @@ void Oiler::processDistance(double distKm, float speedKmh) {
                     unsafeToOil = true;
                     oilingDelayed = true;
                 }
+            }
+
+            // EXCEPTION: Forced Mode overrides safety checks
+            if (emergencyModeForced) {
+                unsafeToOil = false;
+                oilingDelayed = false;
             }
 
             if (unsafeToOil) {
