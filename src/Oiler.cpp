@@ -598,6 +598,8 @@ void Oiler::loadConfig() {
     dropsPerMl = _store->getInt("drop_ml", 50);
     dropsPerPulse = _store->getInt("drop_pls", 1);
     tankWarningThresholdPercent = _store->getInt("tank_warn", 10);
+    
+    timezoneOffset = _store->getInt("tz_offset", 1); // Default UTC+1
 
     // Load Emergency Mode forced setting
     // SAFETY: Previously we forced this OFF. Now we allow persistence for long trips with broken GPS.
@@ -679,6 +681,8 @@ void Oiler::saveConfig() {
     _store->putInt("drop_ml", dropsPerMl);
     _store->putInt("drop_pls", dropsPerPulse);
     _store->putInt("tank_warn", tankWarningThresholdPercent);
+    
+    _store->putInt("tz_offset", timezoneOffset);
 
     // Save Stats
     _store->putDouble("totalDist", totalDistance);
@@ -746,23 +750,17 @@ void Oiler::resetTimeStats() {
 }
 
 int Oiler::calculateLocalHour(int utcHour, int day, int month, int year) {
-    // Simple CET/CEST Rule:
-    // CEST (UTC+2) starts last Sunday in March, ends last Sunday in October.
-    
-    bool isSummer = false;
-    if (month > 3 && month < 10) isSummer = true; // April to September
-    else if (month == 3) {
-        int lastSunday = 31 - ((5 * year / 4 + 4) % 7);
-        if (day > lastSunday || (day == lastSunday && utcHour >= 1)) isSummer = true;
-    }
-    else if (month == 10) {
-        int lastSunday = 31 - ((5 * year / 4 + 1) % 7);
-        if (day < lastSunday || (day == lastSunday && utcHour < 1)) isSummer = true;
+    // Simple logic: UTC + Offset (from settings)
+    int local = utcHour + timezoneOffset; 
+
+    // Correction for day rollover
+    if (local > 23) {
+        local -= 24;
+    } else if (local < 0) {
+        local += 24;
     }
     
-    int offset = isSummer ? 2 : 1;
-    int localH = (utcHour + offset) % 24;
-    return localH;
+    return local;
 }
 
 void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
@@ -1023,6 +1021,14 @@ void Oiler::processDistance(double distKm, float speedKmh) {
         }
 
         currentProgress += progressDelta;
+        
+        // --- OVERFLOW PROTECTION ---
+        // Max 2.0 to prevent massive oiling after long turns/drifts
+        if (currentProgress > 2.0f) {
+            currentProgress = 2.0f;
+        }
+        // ---------------------------
+        
         progressChanged = true;
 
         // Oiling Trigger
@@ -1312,8 +1318,10 @@ void Oiler::updatePumpPulse() {
             if (bleedingMode) {
                 holdTime = pumpTargetDuration;
             } else if (pumpTargetDuration > PUMP_RAMP_UP_MS) {
+                // UNDERFLOW PROTECTION
                 holdTime = pumpTargetDuration - PUMP_RAMP_UP_MS;
             }
+            // Else holdTime remains 0 -> Immediate Ramp Down
             
             if (now - pumpStateStartTime >= holdTime) {
                 if (bleedingMode || PUMP_RAMP_DOWN_MS == 0) {

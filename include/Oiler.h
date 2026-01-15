@@ -141,6 +141,9 @@ public:
     int dropsPerMl;
     int dropsPerPulse;
     int tankWarningThresholdPercent;
+    
+    // Timezone 
+    int timezoneOffset;
 
     void setTankFill(float levelMl); // Manually set level (e.g. refill)
     void resetTankToFull();
