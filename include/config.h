@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #define FIRMWARE_VERSION "2.0.4"
+#define SD_LOGGING_ACTIVE      // Uncomment for SD Support
 
 // ==========================================
 // 1. HARDWARE PINS (ESP32)
@@ -115,7 +116,6 @@
 // ==========================================
 #define GPS_BAUD                9600
 #define AP_SSID                 "ChainJuicer"
-#define SD_LOGGING_ACTIVE      // Uncomment for SD Support
 #define GPS_DEBUG                 // Uncomment for Serial Debug
 
 #ifdef SD_LOGGING_ACTIVE
