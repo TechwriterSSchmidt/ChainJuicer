@@ -1,5 +1,12 @@
 # Release Notes
 
+## v2.0.3 - Safety Hardening & Timezone Logic (2026-01-15)
+*   **Safety & Reliability:**
+    *   **Oiling Overflow Protection:** Implemented a cap (200%) on the oiling progress accumulator. This prevents a massive "backlog" of oiling pulses from building up during long sequences of corners (where oiling is paused for safety).
+    *   **PWM Underflow Guard:** Added protection against integer underflow in the pump control logic, ensuring stability even with very short pulse durations.
+*   **Timezone Logic:**
+    *   **Configurable Offset:** Removed hardcoded Central Europe daylight saving rules in favor of a simple, robust UTC Offset setting. This cleans up the code and allows for global usage.
+
 ## v2.0.2 - Feature Update & Critical Fixes (2026-01-14)
 *   **New Intuitive LED Colors:**
     *   **Green:** Normal (Ready).
