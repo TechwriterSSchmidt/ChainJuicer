@@ -9,15 +9,15 @@
 // ==========================================
 // 1. HARDWARE PINS (ESP32)
 // ==========================================
-#define PUMP_PIN            16   // MOSFET Gate - RIGHT SIDE
-#define LED_PIN             32   // WS2812B Data - LEFT SIDE (Bottom)
-#define GPS_RX_PIN          27   // GPS RX -> ESP TX - LEFT SIDE (Middle)
-#define GPS_TX_PIN          26   // GPS TX -> ESP RX - LEFT SIDE (Middle)
-#define BUTTON_PIN          4    // Handlebar Button - LEFT SIDE (Top)
+#define PUMP_PIN            26   // MOSFET Gate - Safe Output
+#define LED_PIN             32   // WS2812B Data
+#define GPS_RX_PIN          16   // GPS RX -> ESP TX (RX2)
+#define GPS_TX_PIN          27   // GPS TX -> ESP RX (Alternative to 17)
+#define BUTTON_PIN          0    // Handlebar Button (Boot Button)
 #define BOOT_BUTTON_PIN     0    // Onboard Boot Button (GPIO 0)
 #define RAIN_SENSOR_PIN     34   // Analog Input
 #define AUX_PIN             17   // Aux Power Relay / Heated Grips
-#define TEMP_SENSOR_PIN     33   // DS18B20 Data Line
+#define TEMP_SENSOR_PIN     4    // DS18B20 Data Line
 #define IMU_SDA             21   // BNO085 I2C SDA
 #define IMU_SCL             22   // BNO085 I2C SCL
 

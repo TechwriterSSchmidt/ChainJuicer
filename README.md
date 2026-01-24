@@ -22,18 +22,18 @@ For the most stable operation (avoiding "Boot Loops" and conflicts with internal
 
 | Component | ESP32 Pin (GPIO) | Notes |
 | :--- | :--- | :--- |
-| **PUMP (MOSFET)** | **GPIO 26** | Safe Output (or GPIO 13 if 26 used) |
+| **PUMP (MOSFET)** | **GPIO 26** | Safe Output |
 | **LED (WS2812B)** | **GPIO 32** | Standard |
 | **BUTTON** | **GPIO 0** | Use Boot Button or external btn to GND |
 | **TEMP (DS18B20)** | **GPIO 4** | **Important:** Requires 4.7kΩ Pull-Up Resistor. Do not use GPIO 2! |
-| **GPS RX** | **GPIO 16 (RX2)** | Connect to GPS TX. Alternative: GPIO 34 (Input Only) |
-| **GPS TX** | **GPIO 17 (TX2)** | Connect to GPS RX. Alternative: GPIO 27 |
+| **GPS RX** | **GPIO 16 (RX2)** | Connect to GPS TX |
+| **GPS TX** | **GPIO 27** | Connect to GPS RX |
 | **IMU (SDA)** | **GPIO 21** | Standard Hardware I2C |
 | **IMU (SCL)** | **GPIO 22** | Standard Hardware I2C |
 | **SD Card (CS)** | **GPIO 5** | VSPI CS |
 | **SD Card (CLK)** | **GPIO 18** | VSPI CLK |
 | **SD Card (MISO)** | **GPIO 19** | VSPI MISO |
-| **SD Card (MOSI)** | **GPIO 23** | VSPI MOSI (Alternative: GPIO 13) |
+| **SD Card (MOSI)** | **GPIO 23** | VSPI MOSI |
 
 > **Warning:** Avoid using **GPIO 12**, as it determines the flash voltage during boot (High = Boot Loop). Avoid **GPIO 2** for sensors with pull-ups for the same reason.
 
@@ -182,7 +182,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 **Wiring:**
 *   **VCC:** Board dependent (e.g. 5V-12V for Wide Range boards, or 3.3V/5V for standard)
 *   **GND:** GND
-*   **Data:** GPIO 15 (Default) - Requires 4.7kΩ Pull-Up Resistor to VCC.
+*   **Data:** GPIO 4 - Requires 4.7kΩ Pull-Up Resistor to VCC.
 
 ## IMU Features (BNO085)
 
