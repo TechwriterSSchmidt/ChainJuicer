@@ -198,7 +198,7 @@ void initSD() {
     if (logFile) {
         // Write Header
         if (needHeader) {
-            logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Flush_Mode");
+            logFile.println("Type,Time_ms,Speed_GPS,Speed_Smooth,Odo_Total,Dist_Accum,Target_Int,Pump_State,Rain_Mode,Temp_C,Sats,HDOP,Message,Flush_Mode,Offroad_Mode,Bleeding_Mode,Emerg_Mode,Progress,Blocked_Reason");
         }
         
         // Dump Config
@@ -229,7 +229,7 @@ void writeLogLine(String type, String message = "") {
 
     File f = SD.open(currentLogFileName, FILE_APPEND);
     if (f) {
-        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%.1f,%d,%.2f,%s,%d\n",
+        f.printf("%s,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%d,%d,%.1f,%d,%.2f,%s,%d,%d,%.2f,%s\n",
             type.c_str(),
             millis(),
             gps.speed.kmph(),
@@ -243,7 +243,12 @@ void writeLogLine(String type, String message = "") {
             gps.satellites.value(),
             gps.hdop.hdop(),
             message.c_str(),
-            oiler.isFlushMode()
+            oiler.isFlushMode(),
+            oiler.offroadMode, // Status
+            oiler.isBleedingMode(), // Bleeding
+            oiler.isEmergencyMode(), // Emergency
+            oiler.getCurrentProgress(), // Progress
+            oiler.getBlockedReason().c_str() // Blocked Reason
         );
         f.close();
     }

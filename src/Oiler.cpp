@@ -703,6 +703,10 @@ void Oiler::saveProgress() {
     if (progressChanged) {
         _store->begin("oiler", false); // Fix: Ensure correct namespace is active
 
+        // SAFETY CAP: Prevent invalid values from persisting
+        if (currentProgress > 10.0f) currentProgress = 10.0f;
+        if (isnan(currentProgress)) currentProgress = 0.0f;
+
         _store->putFloat("progress", currentProgress);
         // Save Stats
         _store->putDouble("totalDist", totalDistance);
@@ -955,11 +959,24 @@ void Oiler::update(float rawSpeedKmh, double lat, double lon, bool gpsValid) {
 
 void Oiler::processDistance(double distKm, float speedKmh) {
     // IMU Safety Checks
-    if (crashTripped) return; // Crash detected (Latched)!
+    if (crashTripped) {
+        blockedReason = "Crash";
+#ifdef GPS_DEBUG
+        static unsigned long lastCrashLog = 0;
+        if (millis() - lastCrashLog > 10000) { Serial.println("Oiling Blocked: Crash Tripped"); lastCrashLog = millis(); }
+#endif
+        return; // Crash detected (Latched)!
+    }
     
     // Garage Guard: Only relevant if speed is low (e.g. < 10 km/h) to prevent GPS drift oiling.
     // If we are riding fast, we don't want "isStationary" (which triggers at low variance) to stop oiling.
-    if (speedKmh < 10.0 && imu.isStationary()) return;
+    if (speedKmh < 10.0 && imu.isStationary()) {
+        blockedReason = "GarageGuard";
+        return;
+    }
+    
+    // Reset block reason if passing early checks
+    blockedReason = "Active";
 
     // 1. Add to Total Odometer
     totalDistance += distKm;
@@ -968,6 +985,14 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     // Convert currentStartupDistance (km) to meters for comparison
     if ((currentStartupDistance * 1000.0) < startupDelayMeters) {
         currentStartupDistance += distKm;
+        blockedReason = "StartupDelay";
+#ifdef GPS_DEBUG
+        static unsigned long lastDelayLog = 0;
+        if (millis() - lastDelayLog > 10000) { 
+            Serial.printf("Oiling Blocked: Startup Delay (%.1fm / %dm)\n", currentStartupDistance * 1000.0, startupDelayMeters); 
+            lastDelayLog = millis(); 
+        }
+#endif
         return; // Skip oiling logic until delay is reached
     }
 
@@ -975,6 +1000,11 @@ void Oiler::processDistance(double distKm, float speedKmh) {
     // If Offroad Mode is active, we ignore distance-based oiling here.
     // Oiling is handled by time in loop().
     if (offroadMode) {
+        blockedReason = "OffroadMode";
+#ifdef GPS_DEBUG
+        static unsigned long lastOffroadLog = 0;
+        if (millis() - lastOffroadLog > 10000) { Serial.println("Oiling Blocked: Offroad Mode"); lastOffroadLog = millis(); }
+#endif
         return; 
     }
     progressChanged = true; // So Odometer gets saved
@@ -997,6 +1027,11 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
     // Check Chain Flush Mode
     if (flushMode) {
+        blockedReason = "FlushMode";
+#ifdef GPS_DEBUG
+        static unsigned long lastFlushLog = 0;
+        if (millis() - lastFlushLog > 10000) { Serial.println("Oiling Blocked: Flush Mode"); lastFlushLog = millis(); }
+#endif
         return; // Handled in loop()
     } else {
         // 1. Get Target Interval from LUT (Linear Interpolation)
@@ -1023,9 +1058,9 @@ void Oiler::processDistance(double distKm, float speedKmh) {
         currentProgress += progressDelta;
         
         // --- OVERFLOW PROTECTION ---
-        // Max 2.0 to prevent massive oiling after long turns/drifts
-        if (currentProgress > 2.0f) {
-            currentProgress = 2.0f;
+        // Max 10.0 to allow catch-up (e.g. after long tunnels), but prevent unlimited growth
+        if (currentProgress > 10.0f) {
+            currentProgress = 10.0f;
         }
         // ---------------------------
         
@@ -1065,10 +1100,21 @@ void Oiler::processDistance(double distKm, float speedKmh) {
                 unsafeToOil = false;
                 oilingDelayed = false;
             }
+            
+            // EXCEPTION: Watchdog override (Force oiling if backing up too much)
+            if (currentProgress > 5.0f && unsafeToOil) {
+                unsafeToOil = false; // Force it
+                webConsole.log("Watchdog: Progress > 500% - Forcing Oil!");
+            }
 
             if (unsafeToOil) {
                 // Skip oiling for now. 
                 // currentProgress remains >= 1.0, so we will check again on next update.
+                blockedReason = "UnsafeTurn";
+#ifdef GPS_DEBUG
+                static unsigned long lastUnsafeLog = 0;
+                if (millis() - lastUnsafeLog > 5000) { Serial.println("Oiling Blocked: Unsafe / Lean / Turn"); lastUnsafeLog = millis(); }
+#endif
                 return;
             }
 

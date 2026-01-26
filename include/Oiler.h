@@ -132,6 +132,12 @@ public:
     void setOilDistance(unsigned long distance);
     unsigned long getOilDistance();
     
+    float getCurrentProgress() { return currentProgress; }
+    String getBlockedReason() { return blockedReason; }
+
+    bool isBleedingMode() { return bleedingMode; }
+    bool isEmergencyMode() { return emergencyMode; }
+
     bool isButtonPressed(); // Expose button state for main.cpp
 
     // Tank Monitor
@@ -192,6 +198,7 @@ private:
     void rebuildLUT(); // Helper to fill LUT
 
     float currentProgress; // 0.0 to 1.0 (1.0 = Oiling due)
+    String blockedReason; // Reason why oiling is currently blocked
     
     double lastLat;
     double lastLon;
