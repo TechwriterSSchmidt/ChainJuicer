@@ -4,6 +4,7 @@
 #include <DNSServer.h>
 #include <TinyGPS++.h>
 #include <esp_task_wdt.h>
+#include <esp_system.h>
 #include <Update.h>
 #include <Preferences.h>
 #include "config.h"
@@ -601,6 +602,13 @@ void handleIMUZero() {
 
 
 
+void logResetReason() {
+    esp_reset_reason_t reason = esp_reset_reason();
+    String msg = "Reset Reason: " + String((int)reason);
+    Serial.println(msg);
+    webConsole.log(msg);
+}
+
 void setup() {
     Serial.begin(115200);
 
@@ -610,15 +618,7 @@ void setup() {
     digitalWrite(PUMP_PIN, PUMP_OFF);
 
     if(!Serial) Serial.begin(115200);
-    
-    // Initialize Watchdog
-    esp_task_wdt_config_t wdt_config = {
-        .timeout_ms = WDT_TIMEOUT * 1000,
-        .idle_core_mask = (1 << 0) | (1 << 1),    // Bitmask of all cores
-        .trigger_panic = true
-    };
-    esp_task_wdt_init(&wdt_config);
-    esp_task_wdt_add(NULL);
+    logResetReason();
 
     // Permanently disable Bluetooth
     btStop();
@@ -748,6 +748,15 @@ void setup() {
             handleRoot(); // Redirect others to root
         }
     });
+
+    // Initialize Watchdog (after heavy init to avoid early boot loops)
+    esp_task_wdt_config_t wdt_config = {
+        .timeout_ms = WDT_TIMEOUT * 1000,
+        .idle_core_mask = (1 << 0) | (1 << 1),    // Bitmask of all cores
+        .trigger_panic = true
+    };
+    esp_task_wdt_init(&wdt_config);
+    esp_task_wdt_add(NULL);
 
     wifiStartTime = millis();
 }
