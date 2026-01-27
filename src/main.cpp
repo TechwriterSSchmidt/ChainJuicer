@@ -796,15 +796,15 @@ void loop() {
     while (gpsSerial.available() > 0) {
         char c = gpsSerial.read();
         gps.encode(c);
-        // Optional: Uncomment to see raw data if needed
-        // Serial.write(c); 
+        // Optional: raw NMEA output
+        // Serial.write(c);
     }
 
     float currentSpeed = gps.speed.isValid() ? gps.speed.kmph() : 0.0;
 
-    // GPS Filter: Ignore data if signal is poor (Multipath/Indoor protection)
-    // 1. Minimum 6 Satellites (Outdoors usually > 8)
-    // 2. HDOP must be good (< 5.0).
+    // GPS filter: ignore data with poor signal quality
+    // 1. Minimum 5 satellites
+    // 2. HDOP < 5.0
     bool signalPoor = false;
     if (gps.location.isValid()) {
         if (gps.satellites.value() < 5 || gps.hdop.hdop() > 5.0) {
@@ -848,12 +848,15 @@ void loop() {
     // Ensure update is called at least every 1000ms to handle Emergency Mode (Forced or Auto)
     static unsigned long lastOilerUpdate = 0;
     bool gpsFresh = gps.location.isUpdated() || gps.speed.isUpdated();
+    bool gpsValid = gps.location.isValid() && !signalPoor;
+    bool gpsValidForUpdate = gpsFresh && gpsValid;
+    double gpsLat = gpsValid ? gps.location.lat() : 0.0;
+    double gpsLon = gpsValid ? gps.location.lng() : 0.0;
     
     if (gpsFresh || (millis() - lastOilerUpdate > 1000)) {
-        // If called due to timeout (gpsFresh=false), we pass false as validity
-        // This allows the Oiler to detect signal loss and trigger Auto-Emergency Mode
-        // Also treat poor signal as invalid to ensure we don't get stuck in "0 km/h" state while driving
-        oiler.update(currentSpeed, gps.location.lat(), gps.location.lng(), gpsFresh && !signalPoor);
+        // When called due to timeout, validity is false to enable signal-loss handling
+        // Poor signal quality is treated as invalid
+        oiler.update(currentSpeed, gpsLat, gpsLon, gpsValidForUpdate);
         lastOilerUpdate = millis();
     }
     
@@ -880,7 +883,7 @@ void loop() {
     if (oiler.checkWifiToggleRequest()) {
         if (!wifiActive) {
             // Activate WiFi
-            // FIX: Explicitly set mode and channel to prevent disconnects
+            // Set mode and channel to reduce disconnects
             WiFi.mode(WIFI_AP); 
             bool res = WiFi.softAP(AP_SSID, NULL, 1, 0, 4); // Channel 1, Hidden 0, MaxConn 4
             
@@ -900,9 +903,7 @@ void loop() {
                 #endif
             }
         } else {
-            // WiFi is already active.
-            // Prevent accidental deactivation via button (User Request).
-            // Instead, we extend the timer.
+            // WiFi already active; extend timer
             wifiStartTime = currentMillis;
             webConsole.log("BTN: WiFi Timer Extended");
         }

@@ -29,7 +29,7 @@ public:
     float getYaw() const { return _yaw; }
     
     // Features
-    bool isStationary(); // Garage Guard: Returns true if bike is stable (not moving) for 3 seconds
+    bool isStationary(); // Stationary detection based on roll/pitch variance (~5s window)
     bool isCrashed(); // Lean > 70
     bool isMotionDetected(); // Smart Stop helper (Vibration/Accel)
     bool isLeaningTowardsTire(float thresholdDeg); // Returns true if leaning towards the tire (Unsafe to oil)
@@ -62,7 +62,7 @@ private:
     unsigned long _lastMotionTime = 0;
 
     // Stability Check (Garage Guard)
-    static const int HISTORY_SIZE = 100; // 5 seconds at ~20Hz (50ms update)
+    static const int HISTORY_SIZE = 100; // ~5 seconds at ~20Hz
     float _rollHistory[HISTORY_SIZE];
     float _pitchHistory[HISTORY_SIZE];
     int _historyIndex = 0;

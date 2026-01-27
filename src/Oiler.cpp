@@ -33,8 +33,8 @@ Oiler::Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin)
     // Range 4: High Speed (135+ km/h) -> 3.0 km (-40% from Base)
     ranges[4] = {135, MAX_SPEED_KMH, 3.0, 2};
     
-    // Default Offroad Pulse Count
-    offroadPulses = 2;
+    // Offroad pulse count default
+    offroadPulses = OFFROAD_PULSES_DEFAULT;
 
     // Initialize Temperature Configuration (Defaults)
     // Updated based on Calibration: 55ms Pulse for reliability
@@ -130,8 +130,8 @@ Oiler::Oiler(IPersistence* store, int pumpPin, int ledPin, int tempPin)
     nightBrightnessHigh = 64; // 25%
     currentHour = 12;    // Default noon
 
-    // Tank Monitor Defaults
-    tankMonitorEnabled = false;
+    // Tank monitor defaults
+    tankMonitorEnabled = true;
     tankCapacityMl = 100.0;
     currentTankLevelMl = 100.0;
     dropsPerMl = 50; // Calibrated: 6200 drops / 125ml = 49.6
@@ -231,9 +231,9 @@ void Oiler::loop() {
         unsigned long intervalMs = (unsigned long)offroadIntervalMin * 60 * 1000;
         
         if (now - lastOffroadOilTime > intervalMs) {
-            // SAFETY: Only oil if moving! 
-            // User requested minimum speed of 4 km/h for offroad mode to prevent oiling at standstill/idling.
-            if (currentSpeed >= FLUSH_OFFROAD_MIN_SPEED_KMH) {
+            // SAFETY: Offroad mode is time-based and GPS can be unreliable.
+            // If IMU is available, only oil when motion is detected.
+            if (!imu.isAvailable() || imu.isMotionDetected()) {
                 triggerOil(offroadPulses, "Offroad-mode juicing started"); // Use configured pulses
                 lastOffroadOilTime = now;
             }
@@ -246,9 +246,8 @@ void Oiler::loop() {
         unsigned long intervalMs = (unsigned long)flushConfigIntervalSec * 1000;
 
         if (now - lastFlushOilTime > intervalMs) {
-            // SAFETY: Only oil if moving!
-            // Similar to Cross-Country, we require movement to avoid puddles.
-            if (currentSpeed >= FLUSH_OFFROAD_MIN_SPEED_KMH) {
+            // Flush mode requires movement to avoid pooling
+            if (currentSpeed >= MIN_SPEED_KMH) {
                 triggerOil(flushConfigPulses, "Flush-mode juicing started");
                 lastFlushOilTime = now;
                 flushEventsRemaining--;
@@ -376,6 +375,8 @@ void Oiler::updateLED() {
     // LED Update
     uint32_t color = 0;
     unsigned long now = millis();
+    bool isRiding = currentSpeed >= MIN_SPEED_KMH;
+    bool allowBlink = !isRiding;
 
     // Determine Brightness
     uint8_t currentDimBrightness = ledBrightnessDim;
@@ -408,39 +409,83 @@ void Oiler::updateLED() {
     // 0. Update Mode (Critical) -> CYAN Fast Blink
     if (updateMode) {
         strip.setBrightness(currentHighBrightness);
-        color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(0, 255, 255) : 0;
+        if (allowBlink) {
+            color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(0, 255, 255) : 0;
+        } else {
+            float breath = getPulse(LED_PERIOD_WIFI);
+            uint8_t v = (uint8_t)(breath * 255);
+            if (v < 20) v = 20;
+            color = strip.Color(0, v, v);
+        }
     }
     // 0.1 Crash Detected (Latch) -> RED/WHITE Fast Alternating
     else if (crashTripped) {
         strip.setBrightness(currentHighBrightness);
-        color = ((now / 100) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 255, 255);
+        if (allowBlink) {
+            color = ((now / 100) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 255, 255);
+        } else {
+            float breath = getPulse(LED_PERIOD_EMERGENCY);
+            uint8_t r = (uint8_t)(breath * 255);
+            if (r < 20) r = 20;
+            color = strip.Color(r, 0, 0);
+        }
     }
-    // 1. Bleeding Mode (Highest Priority) -> MAGENTA Blinking Fast
+    // 1. Bleeding Mode (Highest Priority) -> YELLOW Blinking Fast
     else if (bleedingMode) {
         strip.setBrightness(currentHighBrightness);
-        color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
+        if (allowBlink) {
+            color = ((now / LED_BLINK_FAST) % 2 == 0) ? strip.Color(255, 220, 0) : 0; // Yellow
+        } else {
+            float breath = getPulse(LED_PERIOD_OILING);
+            uint8_t r = (uint8_t)(breath * 255);
+            uint8_t g = (uint8_t)(breath * 220);
+            if (r < 20) r = 20;
+            if (g < 15) g = 15;
+            color = strip.Color(r, g, 0);
+        }
     } 
-    // 1.5 Chain Flush Mode (High Priority) -> MAGENTA Blinking
+    // 1.5 Chain Flush Mode (High Priority) -> CYAN Blinking
     else if (flushMode) {
         strip.setBrightness(currentHighBrightness);
-        color = ((now / LED_PERIOD_FLUSH) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
+        if (allowBlink) {
+            color = ((now / LED_PERIOD_FLUSH) % 2 == 0) ? strip.Color(0, 255, 255) : 0; // Cyan
+        } else {
+            float breath = getPulse(LED_PERIOD_WIFI);
+            uint8_t v = (uint8_t)(breath * 255);
+            if (v < 20) v = 20;
+            color = strip.Color(0, v, v);
+        }
     }
-    // 2. WiFi Active (Config Mode) -> WHITE Blinking
+    // 2. WiFi Active (Config Mode) -> WHITE Pulsing
     else if (wifiActive) {
         strip.setBrightness(currentHighBrightness);
-        // Slow Blink (1Hz)
-        color = ((now / 500) % 2 == 0) ? strip.Color(200, 200, 200) : 0; // White (dimmed)
+        float breath = getPulse(LED_PERIOD_WIFI);
+        uint8_t w = (uint8_t)(breath * 200);
+        if (w < 20) w = 20;
+        color = strip.Color(w, w, w); // White (pulsing)
     }
     // 3. Tank Empty (Critical) -> RED / YELLOW Alternating
     else if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
         strip.setBrightness(currentHighBrightness);
-        // Alternate Red/Yellow every 500ms
-        color = ((now / 500) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 200, 0);
+        if (allowBlink) {
+            // Alternate Red/Yellow every 500ms
+            color = ((now / 500) % 2 == 0) ? strip.Color(255, 0, 0) : strip.Color(255, 200, 0);
+        } else {
+            float breath = getPulse(LED_PERIOD_EMERGENCY);
+            uint8_t r = (uint8_t)(breath * 255);
+            if (r < 20) r = 20;
+            color = strip.Color(r, 0, 0);
+        }
     }
-    // 4. Oiling Event (Action) -> YELLOW Flash
+    // 4. Oiling Event (Action) -> YELLOW Breathing
     else if (isOiling || millis() < ledOilingEndTimestamp) {
         strip.setBrightness(currentHighBrightness);
-        color = strip.Color(255, 220, 0); // Saturated Yellow
+        float breath = getPulse(LED_PERIOD_OILING);
+        uint8_t r = (uint8_t)(breath * 255);
+        uint8_t g = (uint8_t)(breath * 220);
+        if (r < 20) r = 20;
+        if (g < 15) g = 15;
+        color = strip.Color(r, g, 0); // Yellow breathing
     } 
     
     // --- PRIORITY 2: Status & Modes (Static/Dimmed) ---
@@ -457,35 +502,59 @@ void Oiler::updateLED() {
             if (r < 20) r = 20; // Min brightness
             color = strip.Color(r, 0, 0); 
         }
-        // 6. Offroad Mode -> AMBER/ORANGE Static
+        // 6. Offroad Mode -> MAGENTA Blinking (Standstill) / MAGENTA Pulsing (Riding)
         else if (offroadMode) {
-            color = strip.Color(255, 140, 0); // Amber
+            strip.setBrightness(currentHighBrightness);
+            if (allowBlink) {
+                color = ((now / LED_PERIOD_FLUSH) % 2 == 0) ? strip.Color(255, 0, 255) : 0; // Magenta
+            } else {
+                float breath = getPulse(LED_PERIOD_WIFI);
+                uint8_t v = (uint8_t)(breath * 255);
+                if (v < 20) v = 20;
+                color = strip.Color(v, 0, v);
+            }
         }
         // 7. Tank Warning (Low) -> ORANGE Blinking (Status Overlay)
         // If moving or stationary, show warning if tank is low but not empty
         else if (tankMonitorEnabled && (currentTankLevelMl / tankCapacityMl * 100.0) < tankWarningThresholdPercent) {
-             // 2x Fast Blink every 2s
-             int phase = now % LED_BLINK_TANK; 
-             if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
-                strip.setBrightness(currentHighBrightness); // Alert brightness
-                color = strip.Color(255, 69, 0); // OrangeRed
+             strip.setBrightness(currentHighBrightness); // Alert brightness
+             if (allowBlink) {
+                 // 2x Fast Blink every 2s
+                 int phase = now % LED_BLINK_TANK; 
+                 if ((phase >= 0 && phase < 200) || (phase >= 400 && phase < 600)) {
+                     color = strip.Color(255, 69, 0); // OrangeRed
+                 } else {
+                     color = 0; // Off
+                 }
              } else {
-                color = 0; // Off
+                 float breath = getPulse(LED_PERIOD_WIFI);
+                 uint8_t r = (uint8_t)(breath * 255);
+                 uint8_t g = (uint8_t)(breath * 69);
+                 if (r < 20) r = 20;
+                 if (g < 10) g = 10;
+                 color = strip.Color(r, g, 0);
              }
         }
         // 8. Rain Mode -> BLUE Static
         else if (rainMode) {
             color = strip.Color(0, 0, 255); // Blue
         }
-        // 9. No GPS (Searching) -> CYAN Breathing
-        else if (!hasFix) {
+        // 9. Smart Stop (Standstill) -> GREEN/RED Pulsing
+        else if (imu.isAvailable() && imu.isStationary() && currentSpeed < MIN_SPEED_KMH) {
             float breath = getPulse(LED_PERIOD_GPS);
-            uint8_t b = (uint8_t)(breath * 255);
-            if (b < 20) b = 20;
-            // Cyan: Green + Blue
-            color = strip.Color(0, b, b); 
+            uint8_t v = (uint8_t)(breath * 255);
+            if (v < 20) v = 20;
+            if (tankMonitorEnabled && currentTankLevelMl <= 1.0) {
+                color = strip.Color(v, 0, 0); // Red pulse if empty
+            } else {
+                color = strip.Color(0, v, 0); // Green pulse if OK
+            }
         }
-        // 10. Normal Operation -> GREEN Static (Dimmed)
+        // 10. No GPS (Searching) -> MAGENTA Solid
+        else if (!hasFix) {
+            color = strip.Color(255, 0, 255); // Magenta
+        }
+        // 11. Normal Operation -> GREEN Static (Dimmed)
         else {
              // Default state: Green
              color = strip.Color(0, 150, 0); 
@@ -567,9 +636,9 @@ void Oiler::loadConfig() {
     
     emergencyMode = _store->getBool("emerg_mode", false);
 
-    // Load Offroad & Startup
+    // Load offroad and startup settings
     offroadIntervalMin = _store->getInt("off_int", OFFROAD_INTERVAL_MIN_DEFAULT);
-    offroadPulses = _store->getInt("off_pls", 2); // Default 2 pulses
+    offroadPulses = _store->getInt("off_pls", OFFROAD_PULSES_DEFAULT);
     startupDelayMeters = _store->getFloat("start_dly_m", STARTUP_DELAY_METERS_DEFAULT);
 
     // Load Chain Flush Mode
@@ -1067,9 +1136,12 @@ void Oiler::processDistance(double distKm, float speedKmh) {
         progressChanged = true;
 
         // Oiling Trigger
-        // Changed to 100% (1.0) to ensure accurate intervals
+        // Trigger remains at 100% (1.0), but the start threshold is offset to 95%
+        // so that 95% + 5% = 100%.
+        const float progressStartThreshold = 0.95f;
+        float triggerProgress = currentProgress + (1.0f - progressStartThreshold);
         // We subtract 1.0 instead of resetting to 0.0 to carry over any remainder
-        if (currentProgress >= 1.0) {
+        if (triggerProgress >= 1.0f) {
             
             // Turn Safety Logic (Delayed Oiling)
             // If we are leaning significantly towards the tire (unsafe side), we delay the oiling.
@@ -1130,8 +1202,8 @@ void Oiler::processDistance(double distKm, float speedKmh) {
 
             const char* reason = emergencyMode ? "Emergency-mode juicing started" : "Normal-mode juicing started";
             triggerOil(ranges[activeRangeIndex].pulses, reason);
-            currentProgress -= 1.0; // Carry over remainder
-            if (currentProgress < 0.0) currentProgress = 0.0; // Safety clamp
+            currentProgress = triggerProgress - 1.0f; // Carry over remainder
+            if (currentProgress < 0.0f) currentProgress = 0.0f; // Safety clamp
             saveProgress(); // Save progress
         }
     }

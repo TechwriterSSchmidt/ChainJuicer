@@ -64,12 +64,12 @@ For the most stable operation (avoiding "Boot Loops" and conflicts with internal
 | **Start Delay** | Distance driven before first oiling. | Default **250 m**. Keeps garage floor clean. |
 | **GPS Precision** | Exact distance measurement. | Uses TinyGPS++ library. |
 | **Rain Mode** | Doubles oil amount in wet conditions. | **Button:** 1x Click. **Auto-Off:** 30 min or restart. LED: Blue Static. |
-| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 4x Click. **Action:** Time-based (Configurable). LED: Magenta Blink. |
-| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 3x Click. **Action:** Time-based (Pulses configurable). LED: Amber Static. |
+| **Chain Flush Mode** | Intensive oiling for cleaning/re-lubing. | **Button:** 4x Click. **Action:** Time-based (Configurable). LED: Cyan Blink (pulses while riding). |
+| **Offroad Mode** | Time-based oiling for slow offroad riding. | **Button:** 3x Click. **Action:** Time-based (Pulses configurable). LED: Magenta Blink (pulses while riding). |
 | **Emergency Mode** | Simulates speed if GPS fails. | **Auto:** After 3 min no signal (50 km/h sim). **Forced:** Manual activation. LED: Red Pulsing. |
 | **WiFi & WebUI** | Configuration via Smartphone. | **Activation:** 5x Click. **Features:** OTA Update, LED config, Stats, Test functions. |
 | **Night Mode** | Auto-dimming of LED. | **Default:** ON (20:00-06:00). Brightness: 5% (Dim) / 25% (Event). |
-| **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (20s). **Additive:** Trigger again to extend (max 60s). LED: Magenta Fast Blink. |
+| **Bleeding Mode** | Continuous pumping for maintenance. | **WebUI:** "Start Bleeding Mode" Button. Fills oil line (25s). **Additive:** Trigger again to extend (max 75s). LED: Yellow Fast Blink. |
 | **Tank Monitor** | Virtual oil level tracking. | **Default:** ON. Warns (Orange Fast Blink) when low (< Warning%). Red/Yellow Alt when empty. |
 | **Aux Port Manager** | Smart control for accessories. | **Aux Power:** Auto-ON after boot (Delay). **Heated Grips:** Auto-PWM based on Speed/Temp/Rain. **Toggle:** Hold > 2s. |
 | **Web Console** | Debugging without USB. | View live logs (GPS, Oiler, System) via WiFi on `/console`. |
@@ -173,7 +173,7 @@ Instead of complex tables, the system uses the Arrhenius equation to model oil v
 *   **Calculation:** The ESP32 automatically calculates the required energy for any temperature.
 *   **Safety Limits:**
     *   **Minimum Pulse:** The system enforces a hard limit of **50ms** for the pulse duration to ensure the solenoid always moves, preventing "stuck" states at high temperatures.
-*   **Update Interval:** Temperature is measured every 15 minutes to ensure stable operation.
+*   **Update Interval:** Temperature is measured every 1 minute to ensure stable operation.
 
 **Configuration:**
 *   **Web Interface:** Simply enter your 25°C values and select the oil type.
@@ -190,7 +190,7 @@ If an IMU is connected, the system enables advanced safety and convenience featu
 
 *   **Turn Safety:** Prevents oiling while significant cornering.
     *   **Logic:** Oiling is paused if the bike leans > 20° towards the **tire side** (unsafe zone). Leaning towards the chain side is considered safe (oil drops on chain, not tire).
-*   **Crash Detection:** Stops the pump immediately if the lean angle exceeds 60° (bike on ground).
+*   **Crash Detection:** Stops the pump immediately if the lean angle exceeds 70° (bike on ground).
 *   **Garage Guard:** Detects if the bike is on the side stand or center stand and prevents oiling (even if GPS drifts).
 *   **Smart Stop:** Uses accelerometer data to detect standstill faster than GPS.
 
@@ -265,13 +265,13 @@ Since the chip is soldered, you cannot remove it.
 
 | Component | ESP32 Pin | Description |
 | :--- | :--- | :--- |
-| **Pump** | GPIO 16 | MOSFET Gate (Direct Drive) |
-| **GPS RX** | GPIO 27 | Connected to GPS TX |
-| **GPS TX** | GPIO 26 | Connected to GPS RX |
-| **Button** | GPIO 4 | Switched against GND |
+| **Pump** | GPIO 26 | MOSFET Gate (Direct Drive) |
+| **GPS RX** | GPIO 16 | Connected to GPS TX |
+| **GPS TX** | GPIO 27 | Connected to GPS RX |
+| **Button** | GPIO 0 | Switched against GND |
 | **Boot Button** | GPIO 0 | Onboard Button (Parallel function) |
 | **LED** | GPIO 32 | WS2812B Data In |
-| **Temp Sensor** | GPIO 15 | DS18B20 Data (with 4k7 resistor between VCC and Data!) |
+| **Temp Sensor** | GPIO 4 | DS18B20 Data (with 4k7 resistor between VCC and Data!) |
 | **IMU SDA** | GPIO 21 | I2C Data |
 | **IMU SCL** | GPIO 22 | I2C Clock |
 
@@ -319,9 +319,9 @@ If multiple modes are active simultaneously, the system follows this priority lo
 
 | Priority | Mode | LED Indication | Interaction Notes |
 | :--- | :--- | :--- | :--- |
-| **1 (Highest)** | **Chain Flush** | **Cyan Blink** | Runs in parallel with Offroad Mode. Requires Speed > 2 km/h. |
-| **2** | **Offroad** | **Magenta Blink** | Runs in parallel with Flush Mode. Requires Speed > 7 km/h. |
-| **3** | **Emergency** | **Cyan / Orange** | Active if GPS is lost. **Disables Rain Mode.** Note: Flush/Offroad will NOT oil because GPS speed is 0. |
+| **1 (Highest)** | **Chain Flush** | **Cyan Blink** | Runs in parallel with Offroad Mode. Requires Speed > 7 km/h. |
+| **2** | **Offroad** | **Magenta Blink** | Runs in parallel with Flush Mode. GPS speed is ignored; if IMU is present, oiling happens only when motion is detected. |
+| **3** | **Emergency** | **Red Pulsing** | Active if GPS is lost. **Disables Rain Mode.** Note: Flush/Offroad will NOT oil because GPS speed is 0. |
 | **4 (Lowest)** | **Rain** | **Blue** | Disabled by Emergency Mode. |
 
 ### LED Status Codes
@@ -330,14 +330,17 @@ If multiple modes are active simultaneously, the system follows this priority lo
 | :--- | :--- | :--- |
 | **Green** | Normal Operation (GPS Fix) | Aux Power: **ON** (12V Active) |
 | **Blue** | Rain Mode Active | Heated Grips: **Level 1** (Low) |
-| **Yellow** | Oiling Event (Breathing) | Heated Grips: **Level 2** (Medium) |
-| **Orange** | Tank Warning (2x Blink) | Heated Grips: **Level 3** (High) |
-| **Red** | Bleeding Mode (Blink) | Heated Grips: **Level 4** (Max) |
+| **Yellow** | Oiling Event (Breathing) / Bleeding Mode (Fast Blink) | Heated Grips: **Level 2** (Medium) |
+| **Orange** | Tank Warning (2x Blink; pulses while riding) | Heated Grips: **Level 3** (High) |
+| **Red** | Emergency Mode (Pulsing) | Heated Grips: **Level 4** (Max) |
 | **Cycle** | - | Heated Grips: **Boost** (Blue->Red) |
-| **Magenta** | No GPS (Solid) / Offroad (Blink) | - |
-| **Cyan** | Emergency Mode (Solid) / Flush (Blink) | - |
+| **Magenta** | No GPS (Solid) / Offroad (Blink; pulses while riding) | - |
+| **Cyan** | Flush (Blink; pulses while riding) | - |
 | **White** | WiFi Config Mode (Pulse) | - |
+| **Red/Yellow** | Tank Empty (Alternating) | - |
 | **Off** | - | Aux Port: **OFF** |
+
+**Safety Note:** While riding, the system uses only **steady** or **pulsing** LED patterns to reduce distraction. Hard blinking is limited to standstill, maintenance, or warnings.
 
 ## Web Interface
 
@@ -364,13 +367,13 @@ The system uses two LEDs to communicate its status.
 | :--- | :--- | :--- | :--- | :--- |
 | **Normal Ride** | GPS Fix, Speed > 7 km/h | **Green** | *State dependent* | System oils automatically based on speed and configured distance intervals. |
 | **Oiling Event** | Distance reached | **Yellow Breathing** | *State dependent* | Pump releases oil pulse. |
-| **Tunnel / Signal Loss** | No GPS signal > 3 min | **Cyan** | *State dependent* | Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
+| **Tunnel / Signal Loss** | No GPS signal > 3 min | **Red Pulsing** | *State dependent* | Enters **Auto Emergency Mode**. Assumes 50 km/h for oiling. Returns to Green when GPS is back. |
 | **Rain Ride** | 1x Click | **Blue** | *State dependent* | **Rain Mode** active. Oiling amount is doubled (or interval halved). Auto-off after 30 min or restart. |
 | **Aux Port: Manual Toggle** | Hold > 2s | *State dependent* | **Off / On** | Manually toggles the Aux Port (Override). |
-| **Offroad / Enduro** | 3x Click | **Magenta Blink** | *State dependent* | **Offroad Mode** active. Oils based on time (e.g. every 5 min) instead of distance. |
+| **Offroad / Enduro** | 3x Click | **Magenta Blink** | *State dependent* | **Offroad Mode** active. Oils based on time. If IMU is present, oiling happens only when motion is detected (GPS speed is ignored). |
 | **Dust / Flushing** | 4x Click | **Cyan Blink** | *State dependent* | **Chain Flush Mode** active. Oils based on time (e.g. every 60s). Good for flushing dust or after cleaning. |
 | **Configuration** | 5x Click | **White Pulse** | *State dependent* | Activates WiFi AP `ChainJuicer`. Open `192.168.4.1` to config. |
-| **Tank Empty** | Reserve reached | **Orange 2x Blink** | *State dependent* | **Tank Warning**. Refill tank and reset counter via Web Interface. |
+| **Tank Empty** | Reserve reached | **Red/Yellow Alternating** | *State dependent* | **Tank Empty**. Refill tank and reset counter via Web Interface. |
 | **Aux Port: Aux Power** | Ignition ON (Delay) | *State dependent* | **Green** | Aux Port is ON (12V). Powers accessories like Dashcam/Navi. |
 | **Aux Port: Heated Grips** | Auto-Control | *State dependent* | **Blue &rarr; Red** | **Blue:** Low Heat<br>**Yellow:** Medium Heat<br>**Orange:** High Heat<br>**Red:** Max Heat |
 | **Hardware Debug** | Pump runs at boot | **Check Wiring!** | **Check Wiring!** | Ensure 10k Pull-Down resistor is installed between Gate and GND. |
@@ -379,7 +382,7 @@ The system uses two LEDs to communicate its status.
 
 *   **Non-Blocking:** Pump control is asynchronous.
 *   **Adaptive Smoothing:** Combination of Lookup Table and Low-Pass Filter.
-*   **Smart Oiling (Hysteresis):** Oiling is triggered at **95% of the calculated distance**.
+*   **Smart Oiling (Hysteresis):** Start threshold at **95%**, trigger at **100%** (95% + 5% = 100%).
 *   **Auto-Save:** The odometer is saved intelligently (at standstill < 7 km/h, but max. every 2 minutes).
 *   **Timezone:** Automatic calculation of Central European Time (CET/CEST).
 

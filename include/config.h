@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #define FIRMWARE_VERSION "2.0.4"
-#define SD_LOGGING_ACTIVE      // Uncomment for SD Support
+#define SD_LOGGING_ACTIVE      // SD logging enabled
 
 // ==========================================
 // 1. HARDWARE PINS (ESP32)
@@ -15,7 +15,6 @@
 #define GPS_TX_PIN          27   // GPS TX -> ESP RX (Alternative to 17)
 #define BUTTON_PIN          0    // Handlebar Button (Boot Button)
 #define BOOT_BUTTON_PIN     0    // Onboard Boot Button (GPIO 0)
-#define RAIN_SENSOR_PIN     34   // Analog Input
 #define AUX_PIN             17   // Aux Power Relay / Heated Grips
 #define TEMP_SENSOR_PIN     4    // DS18B20 Data Line
 #define IMU_SDA             21   // BNO085 I2C SDA
@@ -56,9 +55,6 @@
 // ==========================================
 // 4. SPECIAL MODES CONFIGURATION
 // ==========================================
-// Shared Settings
-#define FLUSH_OFFROAD_MIN_SPEED_KMH 4.0 // Minimum speed for Flush & Offroad
-
 // Chain Flush Mode
 #define FLUSH_DEFAULT_EVENTS    15    // Total cycles
 #define FLUSH_DEFAULT_PULSES    2     // Pulses per cycle

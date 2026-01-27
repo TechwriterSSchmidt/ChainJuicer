@@ -318,17 +318,15 @@ bool ImuHandler::isMotionDetected() {
 
 bool ImuHandler::isLeaningTowardsTire(float thresholdDeg) {
     if (!_available) return false;
-    
-    // Default Left = Negative Roll
-    bool isLeaningLeft = (_roll < -thresholdDeg);
 
+    bool isLeaningLeft = (_roll < -thresholdDeg);
+    bool isLeaningRight = (_roll > thresholdDeg);
+
+    // Chain right -> tire left
     if (_chainOnRight) {
-        // Chain Right -> Tire Left
-        // Unsafe if leaning LEFT
         return isLeaningLeft;
-    } else {
-        // Chain Left -> Tire Right
-        // Unsafe if leaning RIGHT (which is !Left)
-        return !isLeaningLeft;
     }
+
+    // Chain left -> tire right
+    return isLeaningRight;
 }
